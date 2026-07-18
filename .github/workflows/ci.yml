@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install ruff
+        run: pip install ruff
+      - name: Ruff check
+        run: ruff check .
+      - name: Ruff format check
+        run: ruff format --check .
+
+  tests:
+    runs-on: ubuntu-latest
+    # NOTE: this bench runs Frappe 15.115.0 / ERPNext 15.117.0 inside Docker
+    # (Frappe-Docker). This job sets up an equivalent bare bench for CI
+    # purposes only - adjust the versions below if the platform baseline
+    # changes (Decision Log #1).
+    services:
+      mariadb:
+        image: mariadb:10.6
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis-cache:
+        image: redis:6.2-alpine
+        ports:
+          - 13000:6379
+      redis-queue:
+        image: redis:6.2-alpine
+        ports:
+          - 11000:6379
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: apps/itag_engineering
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install bench
+        run: pip install frappe-bench
+
+      - name: Init bench
+        run: |
+          bench init --skip-assets --python "$(which python)" --frappe-branch version-15 frappe-bench
+          cd frappe-bench
+          bench get-app erpnext --branch version-15
+          bench get-app itag_engineering "$GITHUB_WORKSPACE/apps/itag_engineering"
+
+      - name: New site
+        working-directory: frappe-bench
+        run: |
+          bench new-site test-site --force \
+            --mariadb-root-password root \
+            --admin-password admin \
+            --no-mariadb-socket
+          bench --site test-site install-app erpnext
+          bench --site test-site install-app itag_engineering
+
+      - name: Run tests
+        working-directory: frappe-bench
+        run: bench --site test-site run-tests --app itag_engineering
