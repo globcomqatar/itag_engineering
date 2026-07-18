@@ -1,33 +1,43 @@
-### ITAG Engineering Management
+# ITAG Engineering Management
 
-Engineering Management and Product Lifecycle control layer for ERPNext Manufacturing (valve manufacturing)
+Engineering Management and Product Lifecycle control layer for ERPNext Manufacturing
+(valve manufacturing), built per `ITAG_Engineering_Management_Master_Roadmap_v1.0(Approved).md`.
 
-### Installation
+This is Build `ITAG-0.1.0` — Application Foundation. See the roadmap document (Engineering
+Management working directory) and `doc/ITAG_Decisions.md` (bench root) for the full
+program plan and the Phase 0 decisions this build implements.
 
-You can install this app using the [bench](https://github.com/frappe/bench) CLI:
+## What this build provides
 
-```bash
-cd $PATH_TO_YOUR_BENCH
-bench get-app $URL_OF_THIS_REPO --branch develop
-bench install-app itag_engineering
+- App foundation, installable and migratable on Frappe v15 / ERPNext v15.
+- Engineering Settings (single DocType) with a Validate Configuration action that gates
+  production-blocking flags behind a "Ready" readiness check.
+- The 16 engineering roles used throughout the roadmap, created idempotently on install.
+- A base "ITAG Engineering Management" workspace shell.
+- Foundation code: standard API response envelope, base exception/error-code pattern,
+  a dedicated logger channel, a compatibility-mode service skeleton, and a `ping` health
+  check API.
+
+## Local development
+
+This app runs inside the `frappe-docker_devcontainer-frappe-1` container, bench at
+`/workspace/development/frappe-bench`, site `frappedevelopment.localhost`.
+
+Install app (already done for this build):
+```
+bench --site frappedevelopment.localhost install-app itag_engineering
 ```
 
-### Contributing
-
-This app uses `pre-commit` for code formatting and linting. Please [install pre-commit](https://pre-commit.com/#installation) and enable it for this repository:
-
-```bash
-cd apps/itag_engineering
-pre-commit install
+Run the test suite:
+```
+bench --site frappedevelopment.localhost run-tests --app itag_engineering
 ```
 
-Pre-commit is configured to use the following tools for checking and formatting your code:
+Migrate:
+```
+bench --site frappedevelopment.localhost migrate
+```
 
-- ruff
-- eslint
-- prettier
-- pyupgrade
+## License
 
-### License
-
-mit
+MIT
