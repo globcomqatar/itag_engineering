@@ -1,0 +1,238 @@
+{
+ "actions": [],
+ "creation": "2026-07-19 00:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "System",
+ "engine": "InnoDB",
+ "field_order": [
+  "general_tab",
+  "platform_section",
+  "compatibility_mode",
+  "column_break_platform_1",
+  "default_company",
+  "default_engineering_facility",
+  "enforcement_tab",
+  "readiness_section",
+  "configuration_readiness_status",
+  "column_break_readiness_1",
+  "last_validated_on",
+  "enforcement_section",
+  "engineering_release_enforcement",
+  "work_order_baseline_enforcement",
+  "column_break_enforcement_1",
+  "traceability_enabled",
+  "storage_tab",
+  "storage_section",
+  "default_drawing_storage_mode",
+  "column_break_storage_1",
+  "notify_on_engineering_events",
+  "advanced_tab",
+  "background_job_section",
+  "background_job_queue",
+  "column_break_advanced_1",
+  "audit_retention_days",
+  "feature_activation_section",
+  "feature_activation_status"
+ ],
+ "fields": [
+  {
+   "fieldname": "general_tab",
+   "fieldtype": "Tab Break",
+   "label": "General"
+  },
+  {
+   "fieldname": "platform_section",
+   "fieldtype": "Section Break",
+   "label": "Platform & Scope"
+  },
+  {
+   "default": "v15",
+   "description": "Per Decision Log #1: v15 only for this release. Dual v15/v16 compatibility is not implemented and must not be selected until a compatibility-service update adds it.",
+   "fieldname": "compatibility_mode",
+   "fieldtype": "Select",
+   "label": "Compatibility Mode",
+   "options": "v15",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_platform_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Per Decision Log #2: single company/facility scope for v1 (ITAG International Company). Must be created as a standard ERPNext Company before it can be selected here.",
+   "fieldname": "default_company",
+   "fieldtype": "Link",
+   "label": "Default Company",
+   "options": "Company"
+  },
+  {
+   "description": "Free-text facility identifier. No dedicated Facility DocType exists yet - recorded as text per Decision Log #2 pending a formal facility model in a later build.",
+   "fieldname": "default_engineering_facility",
+   "fieldtype": "Data",
+   "label": "Default Engineering Facility"
+  },
+  {
+   "fieldname": "enforcement_tab",
+   "fieldtype": "Tab Break",
+   "label": "Enforcement"
+  },
+  {
+   "fieldname": "readiness_section",
+   "fieldtype": "Section Break",
+   "label": "Configuration Readiness"
+  },
+  {
+   "default": "Not Configured",
+   "description": "Set by the Validate Configuration action. Production-blocking flags below cannot be enabled until this reads Ready (roadmap Section 9.4).",
+   "fieldname": "configuration_readiness_status",
+   "fieldtype": "Select",
+   "label": "Configuration Readiness Status",
+   "options": "Not Configured\nPartially Configured\nReady",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_readiness_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "When Validate Configuration last ran.",
+   "fieldname": "last_validated_on",
+   "fieldtype": "Datetime",
+   "label": "Last Validated On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "enforcement_section",
+   "fieldtype": "Section Break",
+   "label": "Baseline Enforcement (Production-Blocking)"
+  },
+  {
+   "default": "0",
+   "description": "Build ITAG-0.5.0 feature. Cannot be enabled while Configuration Readiness Status is not Ready. Has no effect until Engineering Release is implemented.",
+   "fieldname": "engineering_release_enforcement",
+   "fieldtype": "Check",
+   "label": "Engineering Release Enforcement"
+  },
+  {
+   "default": "0",
+   "description": "Build ITAG-0.5.0 feature. Cannot be enabled while Configuration Readiness Status is not Ready. Has no effect until Work Order baseline freeze is implemented.",
+   "fieldname": "work_order_baseline_enforcement",
+   "fieldtype": "Check",
+   "label": "Work Order Baseline Enforcement"
+  },
+  {
+   "fieldname": "column_break_enforcement_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Build ITAG-0.10.0 feature. Cannot be enabled while Configuration Readiness Status is not Ready. Has no effect until the traceability service is implemented.",
+   "fieldname": "traceability_enabled",
+   "fieldtype": "Check",
+   "label": "Traceability Enabled"
+  },
+  {
+   "fieldname": "storage_tab",
+   "fieldtype": "Tab Break",
+   "label": "Storage & Notifications"
+  },
+  {
+   "fieldname": "storage_section",
+   "fieldtype": "Section Break",
+   "label": "Drawing Storage"
+  },
+  {
+   "default": "ERP Attachment",
+   "description": "Per Decision Log #5: ERP attachment (private Frappe file + checksum) is the only supported mode for v1. No external DMS/CAD-PDM integration exists.",
+   "fieldname": "default_drawing_storage_mode",
+   "fieldtype": "Select",
+   "label": "Default Drawing Storage Mode",
+   "options": "ERP Attachment",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_storage_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "description": "Coarse on/off default for engineering notifications. Granular per-event notification configuration is introduced by the builds that create those events (e.g. ECR/ECO in Build ITAG-0.6.0).",
+   "fieldname": "notify_on_engineering_events",
+   "fieldtype": "Check",
+   "label": "Notify On Engineering Events"
+  },
+  {
+   "fieldname": "advanced_tab",
+   "fieldtype": "Tab Break",
+   "label": "Advanced"
+  },
+  {
+   "fieldname": "background_job_section",
+   "fieldtype": "Section Break",
+   "label": "Background Jobs"
+  },
+  {
+   "default": "default",
+   "description": "Restricted to Frappe's standard queue names. Per Decision Log #13 (small shop scale, ~15-25 Work Orders/month), the long queue is expected to be needed only by later builds (e.g. Change Impact Analysis, Build ITAG-0.7.0).",
+   "fieldname": "background_job_queue",
+   "fieldtype": "Select",
+   "label": "Background Job Queue",
+   "options": "default\nlong",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_advanced_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Days to retain audit/log records. 0 = retain indefinitely. Per Decision Log #12: no specific regulatory retention period has been identified yet.",
+   "fieldname": "audit_retention_days",
+   "fieldtype": "Int",
+   "label": "Audit Retention (Days)",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "feature_activation_section",
+   "fieldtype": "Section Break",
+   "label": "Feature Activation"
+  },
+  {
+   "default": "Foundation Only",
+   "description": "System-managed. Reflects which build tier's features are active on this instance. Extended by each later build's patch as its capabilities go live.",
+   "fieldname": "feature_activation_status",
+   "fieldtype": "Select",
+   "label": "Feature Activation Status",
+   "options": "Foundation Only",
+   "read_only": 1
+  }
+ ],
+ "icon": "fa fa-cog",
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-07-19 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Engineering Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
