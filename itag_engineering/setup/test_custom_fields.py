@@ -42,3 +42,32 @@ class TestCustomFields(FrappeTestCase):
 		sync_custom_fields()
 		count = frappe.db.count("Custom Field", {"dt": "Item", "fieldname": "itag_product_family"})
 		self.assertEqual(count, 1)
+
+	def test_all_bom_fields_exist(self):
+		meta = frappe.get_meta("BOM")
+		for fieldname in (
+			"itag_engineering_revision",
+			"itag_product_revision",
+			"itag_drawing_revision",
+			"itag_engineering_status",
+			"itag_engineering_release",
+			"itag_effective_from",
+			"itag_effective_to",
+			"itag_applicable_eco",
+			"itag_design_standard",
+			"itag_customer_specification",
+			"itag_change_classification",
+			"itag_obsolescence_status",
+			"itag_release_readiness_status",
+		):
+			self.assertTrue(meta.has_field(fieldname), f"BOM missing field {fieldname}")
+
+	def test_engineering_release_and_applicable_eco_are_data_fields(self):
+		meta = frappe.get_meta("BOM")
+		for fieldname in ("itag_engineering_release", "itag_applicable_eco"):
+			df = meta.get_field(fieldname)
+			self.assertEqual(
+				df.fieldtype,
+				"Data",
+				f"{fieldname} must be Data (forward reference to a not-yet-built DocType), not Link",
+			)
