@@ -1,0 +1,226 @@
+{
+ "actions": [],
+ "autoname": "field:specification_number",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "specification_number",
+  "revision",
+  "title",
+  "column_break_1",
+  "approval_status",
+  "description_section",
+  "description",
+  "related_item",
+  "product_family",
+  "scope_section",
+  "customer_or_project",
+  "column_break_2",
+  "effective_from",
+  "effective_to",
+  "requirements_section",
+  "applicable_standards",
+  "material_requirements",
+  "column_break_3",
+  "pressure_limit",
+  "temperature_limit",
+  "constraints_section",
+  "design_constraints",
+  "testing_requirements",
+  "certification_requirements",
+  "critical_requirements_section",
+  "critical_requirements"
+ ],
+ "fields": [
+  {
+   "fieldname": "specification_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Specification Number",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "revision",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Revision",
+   "reqd": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "approval_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Approval Status",
+   "options": "Draft\nUnder Review\nApproved\nSuperseded\nObsolete",
+   "read_only": 1
+  },
+  {
+   "fieldname": "description_section",
+   "fieldtype": "Section Break",
+   "label": "Description"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "related_item",
+   "fieldtype": "Link",
+   "label": "Related Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "product_family",
+   "fieldtype": "Data",
+   "label": "Product Family"
+  },
+  {
+   "fieldname": "scope_section",
+   "fieldtype": "Section Break",
+   "label": "Scope"
+  },
+  {
+   "fieldname": "customer_or_project",
+   "fieldtype": "Data",
+   "label": "Customer Or Project"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "effective_from",
+   "fieldtype": "Date",
+   "label": "Effective From"
+  },
+  {
+   "fieldname": "effective_to",
+   "fieldtype": "Date",
+   "label": "Effective To"
+  },
+  {
+   "fieldname": "requirements_section",
+   "fieldtype": "Section Break",
+   "label": "Requirements"
+  },
+  {
+   "fieldname": "applicable_standards",
+   "fieldtype": "Small Text",
+   "label": "Applicable Standards"
+  },
+  {
+   "fieldname": "material_requirements",
+   "fieldtype": "Small Text",
+   "label": "Material Requirements"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pressure_limit",
+   "fieldtype": "Data",
+   "label": "Pressure Limit"
+  },
+  {
+   "fieldname": "temperature_limit",
+   "fieldtype": "Data",
+   "label": "Temperature Limit"
+  },
+  {
+   "fieldname": "constraints_section",
+   "fieldtype": "Section Break",
+   "label": "Design & Testing"
+  },
+  {
+   "fieldname": "design_constraints",
+   "fieldtype": "Small Text",
+   "label": "Design Constraints"
+  },
+  {
+   "fieldname": "testing_requirements",
+   "fieldtype": "Small Text",
+   "label": "Testing Requirements"
+  },
+  {
+   "fieldname": "certification_requirements",
+   "fieldtype": "Small Text",
+   "label": "Certification Requirements"
+  },
+  {
+   "fieldname": "critical_requirements_section",
+   "fieldtype": "Section Break",
+   "label": "Critical Requirements"
+  },
+  {
+   "fieldname": "critical_requirements",
+   "fieldtype": "Table",
+   "label": "Critical Requirements",
+   "options": "Critical Requirement"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Technical Specification",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Creator",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Checker",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Approver",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
