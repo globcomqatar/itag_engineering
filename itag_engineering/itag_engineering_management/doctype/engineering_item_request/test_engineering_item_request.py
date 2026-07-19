@@ -7,14 +7,10 @@ from frappe.tests.utils import FrappeTestCase
 
 class TestEngineeringItemRequest(FrappeTestCase):
 	def setUp(self):
-		frappe.db.delete(
-			"Engineering Item Request", {"request_title": ["like", "EIR Test%"]}
-		)
+		frappe.db.delete("Engineering Item Request", {"request_title": ["like", "EIR Test%"]})
 
 	def tearDown(self):
-		frappe.db.delete(
-			"Engineering Item Request", {"request_title": ["like", "EIR Test%"]}
-		)
+		frappe.db.delete("Engineering Item Request", {"request_title": ["like", "EIR Test%"]})
 
 	def test_create_eir_defaults_to_draft_workflow_state(self):
 		eir = frappe.get_doc(

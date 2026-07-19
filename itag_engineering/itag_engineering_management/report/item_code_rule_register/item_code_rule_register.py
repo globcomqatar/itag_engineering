@@ -3,7 +3,13 @@ import frappe
 
 def execute(filters=None):
 	columns = [
-		{"label": "Rule Name", "fieldname": "name", "fieldtype": "Link", "options": "Item Code Rule", "width": 200},
+		{
+			"label": "Rule Name",
+			"fieldname": "name",
+			"fieldtype": "Link",
+			"options": "Item Code Rule",
+			"width": 200,
+		},
 		{"label": "Priority", "fieldname": "priority", "fieldtype": "Int", "width": 80},
 		{"label": "Active", "fieldname": "is_active", "fieldtype": "Check", "width": 80},
 		{"label": "Product Family", "fieldname": "product_family", "fieldtype": "Data", "width": 150},

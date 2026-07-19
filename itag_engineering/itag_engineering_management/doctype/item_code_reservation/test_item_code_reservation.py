@@ -61,10 +61,14 @@ class TestItemCodeReservation(FrappeTestCase):
 	def test_release_reservation_marks_released(self):
 		code = reserve_item_code(self.rule.name, {"itag_product_family": "gate"})
 		release_reservation(code)
-		self.assertEqual(frappe.db.get_value("Item Code Reservation", {"item_code": code}, "status"), "Released")
+		self.assertEqual(
+			frappe.db.get_value("Item Code Reservation", {"item_code": code}, "status"), "Released"
+		)
 
 	def test_release_does_not_affect_consumed_reservation(self):
 		code = reserve_item_code(self.rule.name, {"itag_product_family": "gate"})
 		frappe.db.set_value("Item Code Reservation", {"item_code": code}, "status", "Consumed")
 		release_reservation(code)
-		self.assertEqual(frappe.db.get_value("Item Code Reservation", {"item_code": code}, "status"), "Consumed")
+		self.assertEqual(
+			frappe.db.get_value("Item Code Reservation", {"item_code": code}, "status"), "Consumed"
+		)
