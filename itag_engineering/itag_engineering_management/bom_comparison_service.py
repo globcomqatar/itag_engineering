@@ -24,8 +24,24 @@ had its qty/uom/bom_no edited. Material substitution (the same BOM row
 position now carrying a different item_code) is the one comparison that
 genuinely needs row-position matching instead, since by definition an
 item-code substitution changes the very value that would otherwise be used
-as the matching key - it is detected separately by walking both item tables
-in row-position order.
+as the matching key.
+
+That row-position matching cannot be a naive row-1-vs-row-1,
+row-2-vs-row-2, ... walk, though: removing (or adding) a component anywhere
+before the end of the list shifts every following row's index, and a naive
+walk misreports that shift as a chain of bogus substitutions (e.g. BOM A
+[A, B, C] -> BOM B [B, C, D], with A removed from the front and D added at
+the end, would misreport A->B, B->C, C->D even though B and C never
+changed). `_compare_component_positions` instead diffs the two item_code
+sequences with `difflib.SequenceMatcher` - the same LCS-based approach
+`diff`/`git diff` use - and only reports a 'replace' opcode (a component
+that doesn't align with anything on either side, at a position genuinely not
+explained by an insertion/deletion elsewhere) as a material change. A
+component that merely shifted position ends up inside an 'equal' block
+instead, because it's still found in the same relative order in both lists,
+so it is correctly left out of material_changes (it is already accounted
+for by added_components/removed_components' item-code-keyed set matching
+when a genuine remove+add happened, or by neither when it just moved).
 
 Operations are matched by (description, sequence_id), per the roadmap
 12.5 wording ("operation changes ... by description+sequence").
@@ -47,6 +63,8 @@ otherwise the key is omitted rather than reporting a 0 -> 0 (or non-zero ->
 0) diff that would misleadingly read as "no cost impact" when really no cost
 was ever calculated.
 """
+
+import difflib
 
 import frappe
 
@@ -127,16 +145,23 @@ def compare_bom_revisions(bom_a, bom_b):
 
 def _compare_component_positions(items_a, items_b):
 	"""Material changes: a component swapped for a different item_code at
-	the same BOM row position (not merely reordered - see module docstring
-	for why this is the one comparison matched by position instead of
-	item_code)."""
+	the same BOM row position (not merely reordered, and not a shift caused
+	by an add/remove elsewhere in the list - see module docstring for why
+	this needs a sequence diff rather than a naive index-by-index walk)."""
+	codes_a = [row.item_code for row in items_a]
+	codes_b = [row.item_code for row in items_b]
+	matcher = difflib.SequenceMatcher(None, codes_a, codes_b, autojunk=False)
+
 	changes = []
-	for idx in range(min(len(items_a), len(items_b))):
-		row_a, row_b = items_a[idx], items_b[idx]
-		if row_a.item_code != row_b.item_code:
+	for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+		if tag != "replace":
+			continue
+		for offset in range(min(i2 - i1, j2 - j1)):
+			row_a = items_a[i1 + offset]
+			row_b = items_b[j1 + offset]
 			changes.append(
 				{
-					"row": idx + 1,
+					"row": i1 + offset + 1,
 					"from_item_code": row_a.item_code,
 					"to_item_code": row_b.item_code,
 				}

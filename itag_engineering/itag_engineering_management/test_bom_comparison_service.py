@@ -264,3 +264,114 @@ class TestBomComparisonService(FrappeTestCase):
 
 		frappe.db.delete("BOM", {"name": ["in", [bom_1.name, bom_2.name]]})
 		frappe.db.delete("Item", {"item_code": ["in", [assembly.name, component.name]]})
+
+	def _make_item(self, item_code):
+		return frappe.get_doc(
+			{
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"item_group": "Products",
+				"stock_uom": "Nos",
+				"is_stock_item": 1,
+			}
+		).insert()
+
+	def test_material_changes_ignores_shift_caused_by_add_and_remove_elsewhere(self):
+		# Reproduction of the reviewer's finding: BOM A [A, B, C] -> BOM B
+		# [B, C, D]. A is removed from the front and D is added at the end;
+		# B and C are completely unchanged, merely shifted up one row because
+		# A was removed ahead of them. A naive row-1-vs-row-1,
+		# row-2-vs-row-2, ... positional walk misreports this as three
+		# substitutions (A->B, B->C, C->D). None of those are real changes:
+		# added_components/removed_components already correctly capture the
+		# actual add (D) and remove (A) via item-code set matching, so
+		# material_changes must be empty here.
+		item_a = self._make_item("BCS-TEST-COMP-A")
+		item_b = self._make_item("BCS-TEST-COMP-B")
+		item_c = self._make_item("BCS-TEST-COMP-C")
+		item_d = self._make_item("BCS-TEST-COMP-D")
+
+		bom_1 = frappe.get_doc(
+			{
+				"doctype": "BOM",
+				"item": self.item,
+				"quantity": 1,
+				"company": self.company,
+				"items": [
+					{"item_code": item_a.name, "qty": 1, "uom": "Nos"},
+					{"item_code": item_b.name, "qty": 1, "uom": "Nos"},
+					{"item_code": item_c.name, "qty": 1, "uom": "Nos"},
+				],
+			}
+		).insert()
+		bom_2 = frappe.get_doc(
+			{
+				"doctype": "BOM",
+				"item": self.item,
+				"quantity": 1,
+				"company": self.company,
+				"items": [
+					{"item_code": item_b.name, "qty": 1, "uom": "Nos"},
+					{"item_code": item_c.name, "qty": 1, "uom": "Nos"},
+					{"item_code": item_d.name, "qty": 1, "uom": "Nos"},
+				],
+			}
+		).insert()
+
+		result = compare_bom_revisions(bom_1.name, bom_2.name)
+
+		self.assertEqual(len(result["added_components"]), 1)
+		self.assertEqual(result["added_components"][0]["item_code"], item_d.name)
+		self.assertEqual(len(result["removed_components"]), 1)
+		self.assertEqual(result["removed_components"][0]["item_code"], item_a.name)
+		self.assertEqual(result["material_changes"], [])
+
+	def test_material_change_still_detected_when_same_length_and_order_otherwise(self):
+		# Counterpart to the false-positive case above: BOM A [X, Y, Z] ->
+		# BOM B [X, W, Z]. Y is genuinely replaced by W at the same row,
+		# nothing added or removed elsewhere in the list, so this must still
+		# be reported as a material change - the fix must not overcorrect
+		# into silence for a real substitution.
+		item_x = self._make_item("BCS-TEST-COMP-X")
+		item_y = self._make_item("BCS-TEST-COMP-Y")
+		item_z = self._make_item("BCS-TEST-COMP-Z")
+		item_w = self._make_item("BCS-TEST-COMP-W")
+
+		bom_1 = frappe.get_doc(
+			{
+				"doctype": "BOM",
+				"item": self.item,
+				"quantity": 1,
+				"company": self.company,
+				"items": [
+					{"item_code": item_x.name, "qty": 1, "uom": "Nos"},
+					{"item_code": item_y.name, "qty": 1, "uom": "Nos"},
+					{"item_code": item_z.name, "qty": 1, "uom": "Nos"},
+				],
+			}
+		).insert()
+		bom_2 = frappe.get_doc(
+			{
+				"doctype": "BOM",
+				"item": self.item,
+				"quantity": 1,
+				"company": self.company,
+				"items": [
+					{"item_code": item_x.name, "qty": 1, "uom": "Nos"},
+					{"item_code": item_w.name, "qty": 1, "uom": "Nos"},
+					{"item_code": item_z.name, "qty": 1, "uom": "Nos"},
+				],
+			}
+		).insert()
+
+		result = compare_bom_revisions(bom_1.name, bom_2.name)
+
+		self.assertEqual(len(result["material_changes"]), 1)
+		self.assertEqual(result["material_changes"][0]["from_item_code"], item_y.name)
+		self.assertEqual(result["material_changes"][0]["to_item_code"], item_w.name)
+		self.assertEqual(result["material_changes"][0]["row"], 2)
+		self.assertEqual(len(result["added_components"]), 1)
+		self.assertEqual(result["added_components"][0]["item_code"], item_w.name)
+		self.assertEqual(len(result["removed_components"]), 1)
+		self.assertEqual(result["removed_components"][0]["item_code"], item_y.name)
