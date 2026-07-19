@@ -42,9 +42,7 @@ class TestBomComparisonService(FrappeTestCase):
 		).insert()
 		result = compare_bom_revisions(bom_1.name, bom_2.name)
 		self.assertIn("quantity_changes", result)
-		self.assertTrue(
-			any(c["item_code"] == self.component_a for c in result["quantity_changes"])
-		)
+		self.assertTrue(any(c["item_code"] == self.component_a for c in result["quantity_changes"]))
 
 	def test_self_comparison_shows_no_changes(self):
 		bom = frappe.get_doc(

@@ -183,9 +183,7 @@ def _compare_operations(operations_a, operations_b):
 	for key, row_b in map_b.items():
 		row_a = map_a.get(key)
 		if row_a is None:
-			operation_changes.append(
-				{"description": key[0], "sequence_id": key[1], "change": "added"}
-			)
+			operation_changes.append({"description": key[0], "sequence_id": key[1], "change": "added"})
 			continue
 
 		changed_fields = {
@@ -210,9 +208,7 @@ def _compare_operations(operations_a, operations_b):
 
 	for key in map_a:
 		if key not in map_b:
-			operation_changes.append(
-				{"description": key[0], "sequence_id": key[1], "change": "removed"}
-			)
+			operation_changes.append({"description": key[0], "sequence_id": key[1], "change": "removed"})
 
 	return operation_changes, inspection_changes
 
