@@ -1,0 +1,229 @@
+{
+ "actions": [],
+ "autoname": "format:{item}-PR-{revision_number}",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "item",
+  "revision_number",
+  "column_break_1",
+  "revision_status",
+  "workflow_state",
+  "release_readiness_status",
+  "baseline_section",
+  "drawing_revision",
+  "bom_revision_reference",
+  "column_break_2",
+  "routing_revision_reference",
+  "inspection_plan_revision_reference",
+  "specifications_section",
+  "product_revision_specifications",
+  "revision_history_section",
+  "previous_revision",
+  "superseding_revision",
+  "column_break_3",
+  "interchangeability_decision",
+  "applicable_eco",
+  "scope_section",
+  "customer_or_project",
+  "effective_from",
+  "effective_to"
+ ],
+ "fields": [
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "revision_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Revision Number",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "revision_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Revision Status",
+   "options": "Draft\nUnder Review\nApproved\nRelease Ready\nReleased\nSuperseded\nObsolete",
+   "read_only": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "workflow_state",
+   "fieldtype": "Select",
+   "label": "Workflow State",
+   "options": "Draft\nUnder Review\nApproved\nRelease Ready\nReleased\nSuperseded\nObsolete",
+   "read_only": 1
+  },
+  {
+   "default": "Not Ready",
+   "fieldname": "release_readiness_status",
+   "fieldtype": "Select",
+   "label": "Release Readiness Status",
+   "options": "Not Ready\nReady",
+   "read_only": 1
+  },
+  {
+   "fieldname": "baseline_section",
+   "fieldtype": "Section Break",
+   "label": "Manufacturing Baseline"
+  },
+  {
+   "fieldname": "drawing_revision",
+   "fieldtype": "Link",
+   "label": "Drawing Revision",
+   "options": "Engineering Drawing",
+   "reqd": 1
+  },
+  {
+   "description": "Placeholder - real BOM linkage is Build ITAG-0.4.0's scope.",
+   "fieldname": "bom_revision_reference",
+   "fieldtype": "Data",
+   "label": "BOM Revision Reference"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Placeholder - real Routing linkage is Build ITAG-0.4.0's scope.",
+   "fieldname": "routing_revision_reference",
+   "fieldtype": "Data",
+   "label": "Routing Revision Reference"
+  },
+  {
+   "description": "Placeholder - real Inspection Plan linkage is Build ITAG-0.4.0's scope.",
+   "fieldname": "inspection_plan_revision_reference",
+   "fieldtype": "Data",
+   "label": "Inspection Plan Revision Reference"
+  },
+  {
+   "fieldname": "specifications_section",
+   "fieldtype": "Section Break",
+   "label": "Technical Specifications"
+  },
+  {
+   "fieldname": "product_revision_specifications",
+   "fieldtype": "Table",
+   "label": "Technical Specifications",
+   "options": "Product Revision Specification"
+  },
+  {
+   "fieldname": "revision_history_section",
+   "fieldtype": "Section Break",
+   "label": "Revision History"
+  },
+  {
+   "fieldname": "previous_revision",
+   "fieldtype": "Link",
+   "label": "Previous Revision",
+   "options": "Product Revision"
+  },
+  {
+   "fieldname": "superseding_revision",
+   "fieldtype": "Link",
+   "label": "Superseding Revision",
+   "options": "Product Revision",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "interchangeability_decision",
+   "fieldtype": "Select",
+   "label": "Interchangeability Decision",
+   "options": "\nInterchangeable\nNot Interchangeable"
+  },
+  {
+   "description": "Placeholder - real ECO linkage is Build ITAG-0.6.0's scope.",
+   "fieldname": "applicable_eco",
+   "fieldtype": "Data",
+   "label": "Applicable ECO"
+  },
+  {
+   "fieldname": "scope_section",
+   "fieldtype": "Section Break",
+   "label": "Scope & Effective Period"
+  },
+  {
+   "fieldname": "customer_or_project",
+   "fieldtype": "Data",
+   "label": "Customer Or Project"
+  },
+  {
+   "fieldname": "effective_from",
+   "fieldtype": "Date",
+   "label": "Effective From"
+  },
+  {
+   "fieldname": "effective_to",
+   "fieldtype": "Date",
+   "label": "Effective To"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Product Revision",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Creator",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Checker",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Approver",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Production Planner"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

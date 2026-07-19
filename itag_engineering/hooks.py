@@ -28,6 +28,16 @@ before_tests = "itag_engineering.install.before_tests"
 fixtures = [
 	{
 		"doctype": "Workflow",
-		"filters": [["name", "in", ["Engineering Item Request Workflow", "Engineering Drawing Workflow"]]],
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"Engineering Item Request Workflow",
+					"Engineering Drawing Workflow",
+					"Product Revision Workflow",
+				],
+			]
+		],
 	},
 ]
