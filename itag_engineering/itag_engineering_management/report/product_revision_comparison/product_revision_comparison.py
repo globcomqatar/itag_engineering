@@ -6,9 +6,21 @@ import frappe
 
 def execute(filters=None):
 	columns = [
-		{"label": "Revision", "fieldname": "name", "fieldtype": "Link", "options": "Product Revision", "width": 180},
+		{
+			"label": "Revision",
+			"fieldname": "name",
+			"fieldtype": "Link",
+			"options": "Product Revision",
+			"width": 180,
+		},
 		{"label": "Item", "fieldname": "item", "fieldtype": "Link", "options": "Item", "width": 150},
-		{"label": "Superseding Revision", "fieldname": "superseding_revision", "fieldtype": "Link", "options": "Product Revision", "width": 180},
+		{
+			"label": "Superseding Revision",
+			"fieldname": "superseding_revision",
+			"fieldtype": "Link",
+			"options": "Product Revision",
+			"width": 180,
+		},
 	]
 	data = frappe.get_all(
 		"Product Revision",

@@ -6,7 +6,13 @@ import frappe
 
 def execute(filters=None):
 	columns = [
-		{"label": "Drawing", "fieldname": "name", "fieldtype": "Link", "options": "Engineering Drawing", "width": 160},
+		{
+			"label": "Drawing",
+			"fieldname": "name",
+			"fieldtype": "Link",
+			"options": "Engineering Drawing",
+			"width": 160,
+		},
 		{"label": "Drawing Number", "fieldname": "drawing_number", "fieldtype": "Data", "width": 140},
 		{"label": "Revision", "fieldname": "drawing_revision", "fieldtype": "Data", "width": 80},
 		{"label": "Title", "fieldname": "drawing_title", "fieldtype": "Data", "width": 200},
