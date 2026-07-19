@@ -84,3 +84,27 @@ class TestCustomFields(FrappeTestCase):
 			"itag_release_status",
 		):
 			self.assertTrue(meta.has_field(fieldname), f"Routing missing field {fieldname}")
+
+	def test_all_bom_operation_fields_exist(self):
+		meta = frappe.get_meta("BOM Operation")
+		for fieldname in (
+			"itag_operation_revision",
+			"itag_work_instruction",
+			"itag_drawing_reference",
+			"itag_required_skill",
+			"itag_required_tool_or_fixture",
+			"itag_setup_time",
+			"itag_hold_point",
+			"itag_witness_point",
+			"itag_inspection_requirement",
+			"itag_acceptance_criteria",
+			"itag_safety_instruction",
+		):
+			self.assertTrue(meta.has_field(fieldname), f"BOM Operation missing field {fieldname}")
+
+	def test_bom_operation_fields_available_via_both_bom_and_routing(self):
+		meta = frappe.get_meta("BOM Operation")
+		self.assertTrue(meta.has_field("itag_hold_point"))
+		# BOM Operation is the shared child doctype for both BOM.operations and
+		# Routing.operations (confirmed via source: both fields' `options` = "BOM Operation").
+		# A single field-set addition here is sufficient - no separate Routing Operation doctype exists.

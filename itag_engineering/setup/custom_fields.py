@@ -388,7 +388,115 @@ def get_routing_fields():
 	}
 
 
+def get_bom_operation_fields():
+	return {
+		"BOM Operation": [
+			{
+				"fieldname": "itag_engineering_section",
+				"fieldtype": "Section Break",
+				"label": "Engineering Control",
+				# Verified via bom_operation.json and a live tabDocField query:
+				# "sequence_id" exists on BOM Operation (Int field), and both
+				# BOM.operations and Routing.operations point their `options` at
+				# "BOM Operation" - confirming this is the single shared child
+				# doctype. Anchor confirmed correct as proposed in the brief.
+				"insert_after": "sequence_id",
+			},
+			{
+				"fieldname": "itag_operation_revision",
+				"fieldtype": "Data",
+				"label": "Operation Revision",
+				"insert_after": "itag_engineering_section",
+			},
+			{
+				"fieldname": "itag_drawing_reference",
+				"fieldtype": "Link",
+				"label": "Drawing Reference",
+				"options": "Engineering Drawing",
+				"insert_after": "itag_operation_revision",
+			},
+			{
+				"fieldname": "itag_column_break_bomop_1",
+				"fieldtype": "Column Break",
+				"insert_after": "itag_drawing_reference",
+			},
+			{
+				"fieldname": "itag_required_skill",
+				"fieldtype": "Data",
+				"label": "Required Skill",
+				"insert_after": "itag_column_break_bomop_1",
+			},
+			{
+				"fieldname": "itag_required_tool_or_fixture",
+				"fieldtype": "Data",
+				"label": "Required Tool or Fixture",
+				"insert_after": "itag_required_skill",
+			},
+			{
+				"fieldname": "itag_setup_time",
+				"fieldtype": "Float",
+				"label": "Setup Time (Minutes)",
+				"insert_after": "itag_required_tool_or_fixture",
+			},
+			{
+				"fieldname": "itag_instructions_section",
+				"fieldtype": "Section Break",
+				"label": "Instructions",
+				"insert_after": "itag_setup_time",
+			},
+			{
+				"fieldname": "itag_work_instruction",
+				"fieldtype": "Text",
+				"label": "Work Instruction",
+				"insert_after": "itag_instructions_section",
+			},
+			{
+				"fieldname": "itag_safety_instruction",
+				"fieldtype": "Small Text",
+				"label": "Safety Instruction",
+				"insert_after": "itag_work_instruction",
+			},
+			{
+				"fieldname": "itag_quality_section",
+				"fieldtype": "Section Break",
+				"label": "Quality Control Points",
+				"insert_after": "itag_safety_instruction",
+			},
+			{
+				"fieldname": "itag_hold_point",
+				"fieldtype": "Check",
+				"label": "Hold Point",
+				"insert_after": "itag_quality_section",
+			},
+			{
+				"fieldname": "itag_witness_point",
+				"fieldtype": "Check",
+				"label": "Witness Point",
+				"insert_after": "itag_hold_point",
+			},
+			{
+				"fieldname": "itag_column_break_bomop_2",
+				"fieldtype": "Column Break",
+				"insert_after": "itag_witness_point",
+			},
+			{
+				"fieldname": "itag_inspection_requirement",
+				"fieldtype": "Small Text",
+				"label": "Inspection Requirement",
+				"insert_after": "itag_column_break_bomop_2",
+			},
+			{
+				"fieldname": "itag_acceptance_criteria",
+				"fieldtype": "Small Text",
+				"label": "Acceptance Criteria",
+				"insert_after": "itag_inspection_requirement",
+			},
+		]
+	}
+
+
 def sync_custom_fields():
 	create_custom_fields(get_custom_fields(), update=True)
 	create_custom_fields(get_bom_fields(), update=True)
 	create_custom_fields(get_routing_fields(), update=True)
+	create_custom_fields(get_bom_operation_fields(), update=True)
