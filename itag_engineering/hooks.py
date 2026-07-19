@@ -12,6 +12,11 @@ required_apps = ["erpnext"]
 
 after_install = "itag_engineering.install.after_install"
 
+# Migration
+# ---------
+
+after_migrate = "itag_engineering.setup.custom_fields.sync_custom_fields"
+
 # Testing
 # -------
 
