@@ -1,0 +1,58 @@
+{
+ "actions": [],
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "segment_type",
+  "fixed_value",
+  "source_fieldname",
+  "sequence_digits"
+ ],
+ "fields": [
+  {
+   "fieldname": "segment_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Segment Type",
+   "options": "Fixed Prefix\nProduct Family\nValve Type\nNominal Size\nPressure Class\nMaterial\nEnd Connection\nManufacturing Classification\nSequence\nCustom Field",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:[\"Fixed Prefix\", \"Custom Field\"].includes(doc.segment_type)",
+   "fieldname": "fixed_value",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Fixed Value"
+  },
+  {
+   "depends_on": "eval:!([\"Fixed Prefix\", \"Sequence\", \"Custom Field\"].includes(doc.segment_type))",
+   "description": "Item field this segment reads from, e.g. itag_product_family",
+   "fieldname": "source_fieldname",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Source Fieldname"
+  },
+  {
+   "default": "3",
+   "depends_on": "eval:doc.segment_type==\"Sequence\"",
+   "fieldname": "sequence_digits",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Sequence Digits",
+   "non_negative": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Item Code Rule Segment",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

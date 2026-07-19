@@ -1,0 +1,158 @@
+{
+ "actions": [],
+ "autoname": "field:rule_name",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "rule_name",
+  "is_active",
+  "column_break_1",
+  "priority",
+  "scope_section",
+  "company",
+  "item_category",
+  "product_family",
+  "column_break_2",
+  "effective_from",
+  "effective_to",
+  "format_section",
+  "separator",
+  "case_conversion",
+  "preview_template",
+  "segments_section",
+  "segments"
+ ],
+ "fields": [
+  {
+   "fieldname": "rule_name",
+   "fieldtype": "Data",
+   "label": "Rule Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "description": "Higher priority rules are evaluated first when more than one rule matches the same Item.",
+   "fieldname": "priority",
+   "fieldtype": "Int",
+   "label": "Priority"
+  },
+  {
+   "fieldname": "scope_section",
+   "fieldtype": "Section Break",
+   "label": "Scope"
+  },
+  {
+   "description": "Leave blank for a global rule (per Decision Log #2, single-company scope for v1 - this field exists for forward compatibility, not current use).",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "item_category",
+   "fieldtype": "Data",
+   "label": "Item Category"
+  },
+  {
+   "fieldname": "product_family",
+   "fieldtype": "Data",
+   "label": "Product Family"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "effective_from",
+   "fieldtype": "Date",
+   "label": "Effective From"
+  },
+  {
+   "fieldname": "effective_to",
+   "fieldtype": "Date",
+   "label": "Effective To"
+  },
+  {
+   "fieldname": "format_section",
+   "fieldtype": "Section Break",
+   "label": "Format"
+  },
+  {
+   "default": "-",
+   "fieldname": "separator",
+   "fieldtype": "Data",
+   "label": "Separator",
+   "reqd": 1
+  },
+  {
+   "default": "Upper",
+   "fieldname": "case_conversion",
+   "fieldtype": "Select",
+   "label": "Case Conversion",
+   "options": "As Entered\nUpper\nLower",
+   "reqd": 1
+  },
+  {
+   "fieldname": "preview_template",
+   "fieldtype": "Data",
+   "label": "Preview Template",
+   "read_only": 1,
+   "description": "Set by the Preview Item Code action."
+  },
+  {
+   "fieldname": "segments_section",
+   "fieldtype": "Section Break",
+   "label": "Segments"
+  },
+  {
+   "fieldname": "segments",
+   "fieldtype": "Table",
+   "label": "Segments",
+   "options": "Item Code Rule Segment",
+   "reqd": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Item Code Rule",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Manager"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
