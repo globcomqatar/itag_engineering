@@ -87,10 +87,14 @@ class EngineeringDrawing(Document):
 		The workflow's own "Release" transition (Approved -> Released) only
 		flips workflow_state/release_status and saves - nothing in the
 		workflow definition itself computes file_checksum from the approved
-		file (automatic computation from the file's content is Build
-		ITAG-0.3.0 Task 3's checksum_service, a `before_save` doc_event that
-		will populate file_checksum before this validate() runs). Whether the
-		checksum was populated automatically or entered by hand, it must
+		file. Automatic computation from the file's content is
+		sync_file_checksum() above (Build ITAG-0.3.0 Task 3's
+		checksum_service), called directly from validate() one statement
+		before this guard runs - not a `before_save` doc_event, since
+		before_save always runs after validate() and would populate
+		file_checksum one statement too late for this guard to see it on the
+		same save. Whether the checksum was populated automatically or
+		entered by hand, it must
 		already exist by the time the drawing reaches Released - a released
 		engineering record with no checksum has no auditable identity of what
 		file was actually approved, and once Released, the immutability guard
