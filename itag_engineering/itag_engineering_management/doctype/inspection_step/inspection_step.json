@@ -1,0 +1,36 @@
+{
+ "actions": [],
+ "creation": "2026-07-19 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "step_number",
+  "description",
+  "column_break_1",
+  "hold_point",
+  "witness_point",
+  "acceptance_criteria",
+  "required_equipment"
+ ],
+ "fields": [
+  {"fieldname": "step_number", "fieldtype": "Int", "label": "Step Number", "in_list_view": 1},
+  {"fieldname": "description", "fieldtype": "Small Text", "label": "Description", "reqd": 1, "in_list_view": 1},
+  {"fieldname": "column_break_1", "fieldtype": "Column Break"},
+  {"fieldname": "hold_point", "fieldtype": "Check", "label": "Hold Point", "in_list_view": 1},
+  {"fieldname": "witness_point", "fieldtype": "Check", "label": "Witness Point", "in_list_view": 1},
+  {"fieldname": "acceptance_criteria", "fieldtype": "Small Text", "label": "Acceptance Criteria"},
+  {"fieldname": "required_equipment", "fieldtype": "Data", "label": "Required Equipment"}
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-19 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Inspection Step",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,51 @@
+{
+ "actions": [],
+ "autoname": "field:plan_number",
+ "creation": "2026-07-19 00:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "engine": "InnoDB",
+ "field_order": [
+  "plan_number",
+  "revision",
+  "column_break_1",
+  "release_status",
+  "related_item",
+  "related_bom",
+  "section_break_1",
+  "inspection_steps"
+ ],
+ "fields": [
+  {"fieldname": "plan_number", "fieldtype": "Data", "label": "Plan Number", "reqd": 1, "unique": 1},
+  {"fieldname": "revision", "fieldtype": "Data", "label": "Revision", "reqd": 1},
+  {"fieldname": "column_break_1", "fieldtype": "Column Break"},
+  {
+   "default": "Draft",
+   "fieldname": "release_status",
+   "fieldtype": "Select",
+   "label": "Release Status",
+   "options": "Draft\nApproved\nReleased\nObsolete"
+  },
+  {"fieldname": "related_item", "fieldtype": "Link", "label": "Related Item", "options": "Item"},
+  {"fieldname": "related_bom", "fieldtype": "Link", "label": "Related BOM", "options": "BOM"},
+  {"fieldname": "section_break_1", "fieldtype": "Section Break", "label": "Inspection Steps"},
+  {"fieldname": "inspection_steps", "fieldtype": "Table", "options": "Inspection Step"}
+ ],
+ "links": [],
+ "modified": "2026-07-19 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Engineering Inspection Plan",
+ "owner": "Administrator",
+ "permissions": [
+  {"create": 1, "delete": 1, "read": 1, "role": "System Manager", "share": 1, "write": 1},
+  {"create": 1, "delete": 1, "read": 1, "role": "ITAG Engineering Administrator", "share": 1, "write": 1},
+  {"create": 1, "read": 1, "role": "Quality Engineer", "write": 1},
+  {"create": 1, "read": 1, "role": "Quality Manager", "write": 1},
+  {"read": 1, "role": "Engineering Manager", "write": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
