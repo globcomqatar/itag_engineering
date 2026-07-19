@@ -71,3 +71,16 @@ class TestCustomFields(FrappeTestCase):
 				"Data",
 				f"{fieldname} must be Data (forward reference to a not-yet-built DocType), not Link",
 			)
+
+	def test_all_routing_fields_exist(self):
+		meta = frappe.get_meta("Routing")
+		for fieldname in (
+			"itag_routing_revision",
+			"itag_product_revision",
+			"itag_engineering_release",
+			"itag_effective_from",
+			"itag_effective_to",
+			"itag_applicable_eco",
+			"itag_release_status",
+		):
+			self.assertTrue(meta.has_field(fieldname), f"Routing missing field {fieldname}")

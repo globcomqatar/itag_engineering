@@ -320,6 +320,75 @@ def get_bom_fields():
 	}
 
 
+def get_routing_fields():
+	return {
+		"Routing": [
+			{
+				"fieldname": "itag_engineering_section",
+				"fieldtype": "Section Break",
+				"label": "Engineering",
+				# Verified via routing.json and a live tabDocField query: Routing has
+				# only routing_name (Data), disabled (Check), and operations (Table).
+				# "disabled" is the last non-table field, so it is a safe anchor.
+				"insert_after": "disabled",
+			},
+			{
+				"fieldname": "itag_routing_revision",
+				"fieldtype": "Data",
+				"label": "Routing Revision",
+				"insert_after": "itag_engineering_section",
+			},
+			{
+				"fieldname": "itag_product_revision",
+				"fieldtype": "Link",
+				"label": "Product Revision",
+				"options": "Product Revision",
+				"insert_after": "itag_routing_revision",
+			},
+			{
+				"fieldname": "itag_column_break_routing_1",
+				"fieldtype": "Column Break",
+				"insert_after": "itag_product_revision",
+			},
+			{
+				"fieldname": "itag_engineering_release",
+				"fieldtype": "Data",
+				"label": "Engineering Release",
+				"description": "Free-text identifier for now - Engineering Release (Build ITAG-0.5.0) does not exist yet.",
+				"insert_after": "itag_column_break_routing_1",
+			},
+			{
+				"fieldname": "itag_applicable_eco",
+				"fieldtype": "Data",
+				"label": "Applicable ECO",
+				"description": "Free-text identifier for now - ECR/ECO (Build ITAG-0.6.0) does not exist yet.",
+				"insert_after": "itag_engineering_release",
+			},
+			{
+				"fieldname": "itag_effective_from",
+				"fieldtype": "Date",
+				"label": "Effective From",
+				"insert_after": "itag_applicable_eco",
+			},
+			{
+				"fieldname": "itag_effective_to",
+				"fieldtype": "Date",
+				"label": "Effective To",
+				"insert_after": "itag_effective_from",
+			},
+			{
+				"fieldname": "itag_release_status",
+				"fieldtype": "Select",
+				"label": "Release Status",
+				"options": "\nDraft\nApproved\nReleased\nObsolete",
+				"default": "Draft",
+				"insert_after": "itag_effective_to",
+			},
+		]
+	}
+
+
 def sync_custom_fields():
 	create_custom_fields(get_custom_fields(), update=True)
 	create_custom_fields(get_bom_fields(), update=True)
+	create_custom_fields(get_routing_fields(), update=True)
