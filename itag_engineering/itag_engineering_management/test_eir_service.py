@@ -58,6 +58,22 @@ class TestEirService(FrappeTestCase):
 		self.assertEqual(results, [])
 		self.assertEqual(self.eir.duplicate_check_status, "No Duplicates Found")
 
+	def test_non_privileged_user_cannot_run_duplicate_check(self):
+		frappe.set_user("Guest")
+		try:
+			with self.assertRaises(frappe.PermissionError):
+				run_duplicate_check(self.eir.name)
+		finally:
+			frappe.set_user("Administrator")
+
+	def test_privileged_user_can_run_duplicate_check(self):
+		# Administrator (the default test user) has System Manager, one of
+		# CREATE_ITEM_ROLES, so this must still succeed.
+		results = run_duplicate_check(self.eir.name)
+		self.eir.reload()
+		self.assertEqual(results, [])
+		self.assertEqual(self.eir.duplicate_check_status, "No Duplicates Found")
+
 	def test_create_item_requires_approved_state(self):
 		with self.assertRaises(frappe.ValidationError):
 			create_item_from_eir(self.eir.name)

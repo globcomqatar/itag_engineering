@@ -32,6 +32,7 @@ CREATE_ITEM_ROLES = (
 
 
 def run_duplicate_check(eir_name):
+	_check_eir_action_permission()
 	eir = frappe.get_doc("Engineering Item Request", eir_name)
 	results = find_possible_duplicates(
 		product_family=eir.product_family,
@@ -52,10 +53,13 @@ def run_duplicate_check(eir_name):
 	return results
 
 
-def _check_create_item_permission():
+def _check_eir_action_permission():
+	"""Shared role gate for EIR actions (duplicate check, Item creation):
+	only CREATE_ITEM_ROLES may trigger writes to an Engineering Item Request
+	via these service functions."""
 	if not set(CREATE_ITEM_ROLES).intersection(frappe.get_roles()):
 		frappe.throw(
-			_("Only {0} may create an Item from an Engineering Item Request.").format(
+			_("Only {0} may perform this action on an Engineering Item Request.").format(
 				_(" or ").join(CREATE_ITEM_ROLES)
 			),
 			frappe.PermissionError,
@@ -65,7 +69,7 @@ def _check_create_item_permission():
 def create_item_from_eir(eir_name):
 	"""Idempotent: if this EIR already has created_item set, return it
 	without creating a second Item or consuming a second reservation."""
-	_check_create_item_permission()
+	_check_eir_action_permission()
 	eir = frappe.get_doc("Engineering Item Request", eir_name)
 
 	if eir.created_item:
