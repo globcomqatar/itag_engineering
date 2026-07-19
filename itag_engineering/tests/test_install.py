@@ -16,9 +16,7 @@ class TestInstall(FrappeTestCase):
 	def test_after_install_creates_all_roles(self):
 		after_install()
 		for role_name in ROLES:
-			self.assertTrue(
-				frappe.db.exists("Role", role_name), f"{role_name} was not created"
-			)
+			self.assertTrue(frappe.db.exists("Role", role_name), f"{role_name} was not created")
 
 	def test_after_install_is_idempotent(self):
 		after_install()
