@@ -20,9 +20,39 @@ POST_RELEASE_ALLOWED_FIELDS = {
 
 class EngineeringDrawing(Document):
 	def validate(self):
+		self.sync_release_status_from_workflow_state()
 		self.validate_release_requires_checksum()
 		self.validate_immutable_once_released()
 		self.validate_file_not_replaced_after_release()
+
+	def sync_release_status_from_workflow_state(self):
+		"""release_status is meant to be a denormalized mirror of workflow_state,
+		but Frappe's real Workflow engine (frappe.model.workflow.apply_workflow)
+		only ever does `doc.set("workflow_state", next_state); doc.save()` - it
+		has no knowledge of release_status and nothing in this build's Workflow
+		fixture (an update_field/update_value action on a state) keeps the two
+		fields in step either.
+
+		Without this, a document driven through the real workflow UI/engine can
+		reach workflow_state == "Released" while release_status is still stuck
+		at whatever it was initialized to (e.g. "Draft"), which silently
+		disables both validate_release_requires_checksum() and
+		validate_immutable_once_released() below - defeating this DocType's
+		entire immutability guarantee for the only path (the Workflow engine)
+		real users actually take.
+
+		Keeping this as the unconditional first statement in validate() means
+		release_status can never diverge from workflow_state for any save path
+		that runs validate() - the real workflow engine, a direct API/script
+		save, or test code alike - so the guards that follow can keep trusting
+		release_status (and get_doc_before_save().release_status) as an
+		accurate reflection of real state.
+
+		(frappe.db.set_value bypasses validate() entirely and is therefore not
+		a path this can or needs to close - the same is true elsewhere in this
+		app, e.g. the doc_status/submission fields on other doctypes.)
+		"""
+		self.release_status = self.workflow_state
 
 	def validate_release_requires_checksum(self):
 		"""Structural guard against Frappe's raw workflow engine (
@@ -65,7 +95,21 @@ class EngineeringDrawing(Document):
 		for fieldname in self.meta.get_valid_columns():
 			if fieldname in POST_RELEASE_ALLOWED_FIELDS:
 				continue
-			if self.get(fieldname) != before.get(fieldname):
+			current = self.get(fieldname)
+			previous = before.get(fieldname)
+			if fieldname == "creation":
+				# self.creation is set as a string at insert time and is never
+				# re-hydrated afterwards, while get_doc_before_save() always
+				# reloads a fresh Document from the database, where the ORM
+				# returns a real datetime object for this column. Comparing
+				# the two directly (str != datetime) is always True even when
+				# the creation timestamp never actually changed, which would
+				# incorrectly block every legitimate post-release transition
+				# (e.g. Released -> Superseded). Normalize both sides to
+				# datetime so only a genuine change is caught.
+				current = frappe.utils.get_datetime(current)
+				previous = frappe.utils.get_datetime(previous)
+			if current != previous:
 				frappe.throw(
 					_("{0} cannot be changed once the drawing is Released.").format(
 						self.meta.get_label(fieldname)
