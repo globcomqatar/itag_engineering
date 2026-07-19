@@ -29,6 +29,14 @@ program plan and the Phase 0 decisions this build implements.
 - Idempotent EIR-to-Item creation, gated on Approved state and resolved duplicates.
 - 6 reports: EIR Register, Item Code Rule Register, Item Code Reservation Report, Possible Duplicate Item Report, Item Engineering Baseline, Items Missing Engineering Classification.
 
+## Build ITAG-0.3.0 — Drawing, Specification, and Product Revision
+
+- Technical Specification with a Critical Requirements child table.
+- Engineering Drawing with a full release workflow (Draft through Released/Superseded/Obsolete), server-side immutability once Released, and automatic SHA-256 file-checksum computation on the approved attachment.
+- Product Revision, which can only reference a Released Engineering Drawing, with its own release workflow and immutability.
+- Drawing and Product Revision revision-creation, comparison, and effective-resolution services.
+- 7 reports: Drawing Revision Register, Drawing Approval Aging, Missing Released Drawing File, Technical Specification Register, Product Revision History, Product Revision Comparison, Superseded and Obsolete Engineering Records.
+
 ## Local development
 
 This app runs inside the `frappe-docker_devcontainer-frappe-1` container, bench at

@@ -88,3 +88,41 @@ def create_test_eir(**overrides):
 	}
 	fields.update(overrides)
 	return frappe.get_doc(fields).insert(ignore_permissions=True)
+
+
+def create_released_test_drawing(drawing_number="Factory Test Drawing"):
+	if frappe.db.exists("Engineering Drawing", f"{drawing_number}-A"):
+		return frappe.get_doc("Engineering Drawing", f"{drawing_number}-A")
+	drawing = frappe.get_doc(
+		{
+			"doctype": "Engineering Drawing",
+			"drawing_number": drawing_number,
+			"drawing_revision": "A",
+			"drawing_title": "Factory Test Drawing Title",
+			"drawing_type": "Assembly",
+		}
+	).insert(ignore_permissions=True)
+	frappe.db.set_value(
+		"Engineering Drawing",
+		drawing.name,
+		{
+			"workflow_state": "Released",
+			"release_status": "Released",
+			"file_checksum": "factory-test-checksum",
+		},
+	)
+	drawing.reload()
+	return drawing
+
+
+def create_test_product_revision(item=None, drawing=None):
+	item = item or (ensure_test_company() and frappe.db.get_value("Item", {}, "name"))
+	drawing = drawing or create_released_test_drawing()
+	return frappe.get_doc(
+		{
+			"doctype": "Product Revision",
+			"item": item,
+			"revision_number": "1",
+			"drawing_revision": drawing.name,
+		}
+	).insert(ignore_permissions=True)
