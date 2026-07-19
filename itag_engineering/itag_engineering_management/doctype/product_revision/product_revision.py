@@ -102,3 +102,41 @@ class ProductRevision(Document):
 						self.meta.get_label(fieldname)
 					)
 				)
+
+		# get_valid_columns() above only ever returns real DB columns on the
+		# parent - Table (child table) fields such as
+		# product_revision_specifications are never real columns on the
+		# parent and are never included, so that loop can never detect a row
+		# added, edited, or removed in a child table. Without this, a
+		# released Product Revision's specifications - exactly the part of
+		# the record the roadmap's Section 4.2 guarantee is meant to
+		# protect - could be silently mutated forever.
+		#
+		# Child Document objects compare by identity, not value, so
+		# has_value_changed() cannot be used here either: compare the
+		# serialized content of the child rows between the current in-memory
+		# doc and get_doc_before_save() instead. as_dict(no_default_fields=
+		# True, no_child_table_fields=True) strips name/idx/creation/
+		# modified/modified_by/owner/docstatus (frappe.model.default_fields)
+		# and parent/parentfield/parenttype (frappe.model.child_table_fields)
+		# from each row before comparing, so a row's `modified` timestamp
+		# being bumped by this same parent save (Frappe always re-saves every
+		# child row alongside its parent) never produces a false positive -
+		# only an actual change to a row's real field values, or a row being
+		# added or removed, does.
+		for table_field in self.meta.get_table_fields():
+			fieldname = table_field.fieldname
+			current_rows = [
+				row.as_dict(no_default_fields=True, no_child_table_fields=True)
+				for row in (self.get(fieldname) or [])
+			]
+			previous_rows = [
+				row.as_dict(no_default_fields=True, no_child_table_fields=True)
+				for row in (before.get(fieldname) or [])
+			]
+			if current_rows != previous_rows:
+				frappe.throw(
+					_("{0} cannot be changed once the Product Revision is Released.").format(
+						self.meta.get_label(fieldname)
+					)
+				)
