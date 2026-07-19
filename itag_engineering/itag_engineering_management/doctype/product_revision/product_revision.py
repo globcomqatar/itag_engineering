@@ -13,6 +13,7 @@ POST_RELEASE_ALLOWED_FIELDS = {
 	"workflow_state",
 	"revision_status",
 	"superseding_revision",
+	"previous_revision",
 	"modified",
 	"modified_by",
 }

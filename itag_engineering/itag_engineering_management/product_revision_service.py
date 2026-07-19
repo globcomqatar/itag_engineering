@@ -47,7 +47,11 @@ def supersede_revision(old_revision_name, new_revision_name):
 	frappe.db.set_value(
 		"Product Revision",
 		old_revision_name,
-		{"superseding_revision": new_revision_name, "workflow_state": "Superseded", "revision_status": "Superseded"},
+		{
+			"superseding_revision": new_revision_name,
+			"workflow_state": "Superseded",
+			"revision_status": "Superseded",
+		},
 	)
 	if not frappe.db.get_value("Product Revision", new_revision_name, "previous_revision"):
 		frappe.db.set_value("Product Revision", new_revision_name, "previous_revision", old_revision_name)
