@@ -247,3 +247,35 @@ class TestProductRevision(FrappeTestCase):
 		self.assertEqual(revision.workflow_state, "Superseded")
 		self.assertEqual(revision.revision_status, "Superseded")
 		self.assertEqual(len(revision.product_revision_specifications), 1)
+
+	# --- Finding 2 (Important): validate_drawing_is_released() must not
+	# re-fire on every save of an already-existing Product Revision. It only
+	# needs to run at creation (or when drawing_revision itself changes) -
+	# otherwise, once the referenced drawing is later superseded by a newer
+	# drawing revision (a normal lifecycle event, unrelated to this Product
+	# Revision), its own release_status stops being exactly "Released" and
+	# every subsequent save of this Product Revision - including its own
+	# legitimate Released -> Superseded transition - would be falsely
+	# blocked.
+
+	def test_drawing_superseded_after_release_does_not_block_product_revision_supersession(self):
+		spec = self._create_test_spec("PRTEST-SPEC-001")
+		revision = self._create_released_revision_with_spec(spec.name)
+
+		# The underlying drawing is later superseded by a newer drawing
+		# revision - driven through the real workflow-transition mechanism,
+		# exactly as Engineering Drawing's own tests do it.
+		drawing = frappe.get_doc("Engineering Drawing", self.drawing.name)
+		drawing.set("workflow_state", "Superseded")
+		drawing.superseded_date = frappe.utils.today()
+		drawing.save()
+		drawing.reload()
+		self.assertEqual(drawing.release_status, "Superseded")
+
+		# PR-1's own supersession transition must still succeed - it has
+		# nothing to do with re-validating the drawing link, and
+		# drawing_revision itself never changed.
+		_advance_workflow_state(revision, "Superseded")
+		revision.reload()
+		self.assertEqual(revision.workflow_state, "Superseded")
+		self.assertEqual(revision.revision_status, "Superseded")

@@ -62,7 +62,35 @@ class ProductRevision(Document):
 		workflow_state) - release_status is the field Task 2 established as
 		the trustworthy mirror of the drawing's real state, kept in sync with
 		workflow_state unconditionally in Engineering Drawing.validate().
+
+		Only runs when the drawing link is being set for the first time (a
+		new Product Revision) or is actually changing - not on every save of
+		an already-existing document. This guard exists to stop a NEW Product
+		Revision from being created against (or re-pointed to) an unreleased
+		drawing; it has nothing to do with re-validating a link that was
+		already accepted.
+
+		Without this guard clause, the check re-fires unconditionally on
+		every save, including a save that only advances workflow_state (e.g.
+		Released -> Superseded via the real workflow engine's
+		`doc.set("workflow_state", next_state); doc.save()`). If the
+		referenced drawing is itself later superseded by a newer drawing
+		revision - a completely normal, expected lifecycle event - its own
+		release_status stops being exactly "Released", and re-running this
+		check on every subsequent Product Revision save would then falsely
+		block that Product Revision's own legitimate state transitions
+		forever, even though drawing_revision itself never changed.
+
+		This is safe to narrow this way because drawing_revision is not in
+		POST_RELEASE_ALLOWED_FIELDS: validate_immutable_once_released() below
+		already permanently freezes it once the Product Revision is Released,
+		so has_value_changed("drawing_revision") can only be True pre-release
+		- exactly the window (creation, or an edit while still Draft/Under
+		Review/etc.) where re-checking the drawing's current release_status
+		is actually meaningful.
 		"""
+		if not (self.is_new() or self.has_value_changed("drawing_revision")):
+			return
 		if not self.drawing_revision:
 			return
 		status = frappe.db.get_value("Engineering Drawing", self.drawing_revision, "release_status")
