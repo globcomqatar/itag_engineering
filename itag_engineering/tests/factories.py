@@ -115,6 +115,39 @@ def create_released_test_drawing(drawing_number="Factory Test Drawing"):
 	return drawing
 
 
+def create_fresh_stock_item(prefix="TEST-ITEM"):
+	"""Create and return a brand-new stock Item, unique per call, so
+	BOM-related tests never reuse an arbitrary pre-existing Item.
+
+	Build ITAG-0.4.0's BOM test suites (readiness/comparison/traversal)
+	used to pick an existing stock Item via
+	frappe.db.get_value("Item", {"is_stock_item": 1}, "name") and build new
+	BOMs against it. This site carries real ERPNext demo/seed BOMs (e.g.
+	against "_Test FG Item 2", "_Test Variant Item"), so an arbitrarily
+	picked Item can already have BOM history - inserting or linking (via
+	bom_no) a new BOM against it then collides with that pre-existing
+	structure and trips ERPNext's own genuine
+	erpnext.manufacturing.doctype.bom.bom.BOMRecursionError. A freshly
+	created Item has zero BOM history by construction, so it can never
+	collide.
+
+	`prefix` should match the calling test file's own item-cleanup
+	convention (e.g. "BRS-TEST", "BCS-TEST", "BTS-TEST") so a
+	frappe.db.delete("Item", {"item_code": ["like", f"{prefix}%"]})
+	tearDown continues to catch every Item this creates."""
+	item_code = f"{prefix}-{frappe.generate_hash(length=8).upper()}"
+	return frappe.get_doc(
+		{
+			"doctype": "Item",
+			"item_code": item_code,
+			"item_name": item_code,
+			"item_group": "Products",
+			"stock_uom": "Nos",
+			"is_stock_item": 1,
+		}
+	).insert(ignore_permissions=True)
+
+
 def create_test_product_revision(item=None, drawing=None):
 	item = item or (ensure_test_company() and frappe.db.get_value("Item", {}, "name"))
 	drawing = drawing or create_released_test_drawing()

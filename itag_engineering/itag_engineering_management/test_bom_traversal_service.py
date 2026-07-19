@@ -8,17 +8,21 @@ from itag_engineering.itag_engineering_management.bom_traversal_service import (
 	find_where_used,
 	get_multi_level_bom_tree,
 )
+from itag_engineering.tests.factories import create_fresh_stock_item
 
 
 class TestBomTraversalService(FrappeTestCase):
 	def setUp(self):
-		frappe.db.delete("BOM", {"name": ["like", "%BTS-TEST%"]})
+		frappe.db.delete("BOM", {"item": ["like", "BTS-TEST-%"]})
+		frappe.db.delete("Item", {"item_code": ["like", "BTS-TEST-%"]})
 		self.company = frappe.db.get_value("Company", {}, "name")
-		items = frappe.get_all("Item", {"is_stock_item": 1}, ["name"], limit=3)
-		self.parent_item, self.sub_item, self.leaf_item = (i.name for i in items[:3])
+		self.parent_item = create_fresh_stock_item("BTS-TEST-PARENT").name
+		self.sub_item = create_fresh_stock_item("BTS-TEST-SUB").name
+		self.leaf_item = create_fresh_stock_item("BTS-TEST-LEAF").name
 
 	def tearDown(self):
-		frappe.db.delete("BOM", {"name": ["like", "%BTS-TEST%"]})
+		frappe.db.delete("BOM", {"item": ["like", "BTS-TEST-%"]})
+		frappe.db.delete("Item", {"item_code": ["like", "BTS-TEST-%"]})
 
 	def _bom(self, item, components):
 		return frappe.get_doc(

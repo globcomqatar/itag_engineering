@@ -5,21 +5,20 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 
 from itag_engineering.itag_engineering_management.bom_comparison_service import compare_bom_revisions
+from itag_engineering.tests.factories import create_fresh_stock_item
 
 
 class TestBomComparisonService(FrappeTestCase):
 	def setUp(self):
-		frappe.db.delete("BOM", {"name": ["like", "%BCS-TEST%"]})
-		frappe.db.delete("Item", {"item_code": ["like", "BCS-TEST%"]})
+		frappe.db.delete("BOM", {"item": ["like", "BCS-TEST-%"]})
+		frappe.db.delete("Item", {"item_code": ["like", "BCS-TEST-%"]})
 		self.company = frappe.db.get_value("Company", {}, "name")
-		self.item = frappe.db.get_value("Item", {"is_stock_item": 1}, "name")
-		self.component_a = frappe.db.get_value(
-			"Item", {"is_stock_item": 1, "name": ["!=", self.item]}, "name"
-		)
+		self.item = create_fresh_stock_item("BCS-TEST-ITEM").name
+		self.component_a = create_fresh_stock_item("BCS-TEST-COMP-A").name
 
 	def tearDown(self):
-		frappe.db.delete("BOM", {"name": ["like", "%BCS-TEST%"]})
-		frappe.db.delete("Item", {"item_code": ["like", "BCS-TEST%"]})
+		frappe.db.delete("BOM", {"item": ["like", "BCS-TEST-%"]})
+		frappe.db.delete("Item", {"item_code": ["like", "BCS-TEST-%"]})
 
 	def test_detects_added_and_quantity_changed_components(self):
 		bom_1 = frappe.get_doc(
@@ -69,11 +68,7 @@ class TestBomComparisonService(FrappeTestCase):
 		# A second real component, distinct from self.component_a, so we can
 		# reorder components across the two BOMs (item_code matching must not
 		# be fooled by the row-position shuffle) and also drop/add one.
-		component_b = frappe.db.get_value(
-			"Item",
-			{"is_stock_item": 1, "name": ["not in", [self.item, self.component_a]]},
-			"name",
-		)
+		component_b = create_fresh_stock_item("BCS-TEST-COMP-B").name
 		bom_1 = frappe.get_doc(
 			{
 				"doctype": "BOM",
@@ -124,11 +119,7 @@ class TestBomComparisonService(FrappeTestCase):
 		self.assertEqual(result["uom_changes"], [])
 
 	def test_material_substitution_detected_by_row_position(self):
-		component_b = frappe.db.get_value(
-			"Item",
-			{"is_stock_item": 1, "name": ["not in", [self.item, self.component_a]]},
-			"name",
-		)
+		component_b = create_fresh_stock_item("BCS-TEST-COMP-B").name
 		bom_1 = frappe.get_doc(
 			{
 				"doctype": "BOM",
