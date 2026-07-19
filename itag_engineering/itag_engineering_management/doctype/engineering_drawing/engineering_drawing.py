@@ -92,24 +92,25 @@ class EngineeringDrawing(Document):
 			return
 		# Already released (or later): only a transition into Superseded/Obsolete
 		# (and the bookkeeping fields that go with it) may still change.
+		#
+		# Use Document.has_value_changed() rather than a manual `!=` comparison
+		# here. `self`'s in-memory value for a field (e.g. `creation`, set as a
+		# str at insert time and never re-hydrated; or a Date field like
+		# `revision_date`/`effective_date` set from a str) can be a different
+		# Python type from the value get_doc_before_save() reloads fresh from
+		# MariaDB (a native datetime/date object), even when the value never
+		# actually changed. A raw `!=` treats that type mismatch as a change
+		# and incorrectly blocks every legitimate post-release transition
+		# (e.g. Released -> Superseded) for any drawing where such a field is
+		# populated. has_value_changed() (frappe/model/document.py) already
+		# normalizes both sides via get_datetime()/getdate()/get_timedelta()
+		# based on the type of the *previous* value before comparing, for any
+		# field type - which is exactly the primitive Frappe itself uses for
+		# this - so no per-field special case is needed here.
 		for fieldname in self.meta.get_valid_columns():
 			if fieldname in POST_RELEASE_ALLOWED_FIELDS:
 				continue
-			current = self.get(fieldname)
-			previous = before.get(fieldname)
-			if fieldname == "creation":
-				# self.creation is set as a string at insert time and is never
-				# re-hydrated afterwards, while get_doc_before_save() always
-				# reloads a fresh Document from the database, where the ORM
-				# returns a real datetime object for this column. Comparing
-				# the two directly (str != datetime) is always True even when
-				# the creation timestamp never actually changed, which would
-				# incorrectly block every legitimate post-release transition
-				# (e.g. Released -> Superseded). Normalize both sides to
-				# datetime so only a genuine change is caught.
-				current = frappe.utils.get_datetime(current)
-				previous = frappe.utils.get_datetime(previous)
-			if current != previous:
+			if self.has_value_changed(fieldname):
 				frappe.throw(
 					_("{0} cannot be changed once the drawing is Released.").format(
 						self.meta.get_label(fieldname)

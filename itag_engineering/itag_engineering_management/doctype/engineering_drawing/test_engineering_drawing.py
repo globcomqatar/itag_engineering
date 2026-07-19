@@ -138,6 +138,56 @@ class TestEngineeringDrawing(FrappeTestCase):
 		self.assertEqual(drawing.workflow_state, "Superseded")
 		self.assertEqual(drawing.release_status, "Superseded")
 
+	def test_released_drawing_with_dates_can_transition_to_superseded(self):
+		"""Regression test for the review finding that the same str-vs-native-type
+		bug fixed for `creation` also independently affects `revision_date` and
+		`effective_date` (both Date fields). get_doc_before_save() reloads these
+		as native `datetime.date` objects from MariaDB, while the in-memory doc
+		may hold a str - a manual `!=` comparison treats that as "changed" even
+		when the date never actually changed, incorrectly blocking every
+		legitimate Released -> Superseded transition for any drawing with either
+		field populated. This asserts a legitimate transition still succeeds
+		when both date fields are set."""
+		drawing = self._new_drawing()
+		drawing.revision_date = frappe.utils.today()
+		drawing.effective_date = frappe.utils.today()
+		drawing.save()
+
+		for next_state in ("Engineering Review", "Checked", "Approved"):
+			_advance_workflow_state(drawing, next_state)
+
+		drawing.file_checksum = "abc123checksum"
+		drawing.save()
+
+		_advance_workflow_state(drawing, "Released")
+
+		drawing.set("workflow_state", "Superseded")
+		drawing.superseded_date = frappe.utils.today()
+		drawing.save()
+		self.assertEqual(drawing.workflow_state, "Superseded")
+		self.assertEqual(drawing.release_status, "Superseded")
+
+	def test_revision_date_change_blocked_after_release(self):
+		"""Confirms the has_value_changed()-based fix doesn't overcorrect into
+		never blocking anything: an actual change to revision_date while
+		Released must still be rejected."""
+		drawing = self._new_drawing()
+		drawing.revision_date = frappe.utils.today()
+		drawing.save()
+
+		for next_state in ("Engineering Review", "Checked", "Approved"):
+			_advance_workflow_state(drawing, next_state)
+
+		drawing.file_checksum = "abc123checksum"
+		drawing.save()
+
+		_advance_workflow_state(drawing, "Released")
+
+		drawing.revision_date = frappe.utils.add_days(drawing.revision_date, 5)
+		with self.assertRaises(frappe.ValidationError) as ctx:
+			drawing.save()
+		self.assertIn("Revision Date", str(ctx.exception))
+
 	def test_workflow_exists_with_expected_states(self):
 		workflow = frappe.get_doc("Workflow", "Engineering Drawing Workflow")
 		state_names = [s.state for s in workflow.states]
