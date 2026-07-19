@@ -4,6 +4,10 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
+from itag_engineering.itag_engineering_management.checksum_service import (
+	compute_file_checksum_from_content,
+)
+
 
 def _advance_workflow_state(doc, next_state):
 	"""Replicate exactly what frappe.model.workflow.apply_workflow does for a
@@ -187,6 +191,80 @@ class TestEngineeringDrawing(FrappeTestCase):
 		with self.assertRaises(frappe.ValidationError) as ctx:
 			drawing.save()
 		self.assertIn("Revision Date", str(ctx.exception))
+
+	def test_before_save_populates_file_checksum_from_approved_file(self):
+		"""Build ITAG-0.3.0 Task 3: attaching a real approved_file and saving
+		must populate file_checksum automatically - it is not left for a human
+		to fill in. Attaching a real file in a test requires creating a File
+		document first (an Attach field just stores a file_url string; it
+		doesn't create the File record on its own)."""
+		drawing = self._new_drawing()
+		file_doc = frappe.get_doc(
+			{
+				"doctype": "File",
+				# Deliberately not a .pdf extension: this Frappe version's
+				# File.check_content() parses .pdf-named attachments as real
+				# PDF binaries (via pypdf) to scan for embedded JS, and plain
+				# test content isn't a valid PDF - it would crash at File
+				# creation, before checksum logic even runs. The checksum
+				# service itself is content-type-agnostic, so a plain-text
+				# fixture exercises the same logic without tripping Frappe's
+				# unrelated PDF validator.
+				"file_name": "test.txt",
+				"content": "test content",
+				"attached_to_doctype": "Engineering Drawing",
+				"attached_to_name": drawing.name,
+				"is_private": 1,
+			}
+		).insert()
+		drawing.approved_file = file_doc.file_url
+		drawing.save()
+
+		self.assertEqual(drawing.file_checksum, compute_file_checksum_from_content(b"test content"))
+
+	def test_release_succeeds_with_only_an_attached_file_and_no_manual_checksum(self):
+		"""Regression test for the exact ordering bug this task's review
+		uncovered: Frappe's Document.run_before_save_methods() always runs
+		`validate` before `before_save` for the "save" action (verified
+		against frappe/model/document.py), so wiring checksum population as a
+		`doc_events.before_save` hook alone would populate file_checksum one
+		step too late - validate_release_requires_checksum() (which runs
+		inside validate()) would already have inspected file_checksum on the
+		very save that was supposed to compute it, and would incorrectly
+		block a drawing with a real approved_file attached from ever reaching
+		Released. This drives a drawing through every real workflow
+		transition using only an attached file - no hand-set file_checksum
+		anywhere - and asserts the release transition succeeds because
+		checksum population happens inside validate() itself, before the
+		release-requires-checksum guard runs."""
+		drawing = self._new_drawing()
+		file_doc = frappe.get_doc(
+			{
+				"doctype": "File",
+				"file_name": "release-test.txt",
+				"content": "drawing content for release",
+				"attached_to_doctype": "Engineering Drawing",
+				"attached_to_name": drawing.name,
+				"is_private": 1,
+			}
+		).insert()
+		drawing.approved_file = file_doc.file_url
+		drawing.save()
+		self.assertEqual(
+			drawing.file_checksum,
+			compute_file_checksum_from_content(b"drawing content for release"),
+		)
+
+		for next_state in ("Engineering Review", "Checked", "Approved", "Released"):
+			_advance_workflow_state(drawing, next_state)
+
+		drawing.reload()
+		self.assertEqual(drawing.workflow_state, "Released")
+		self.assertEqual(drawing.release_status, "Released")
+		self.assertEqual(
+			drawing.file_checksum,
+			compute_file_checksum_from_content(b"drawing content for release"),
+		)
 
 	def test_workflow_exists_with_expected_states(self):
 		workflow = frappe.get_doc("Workflow", "Engineering Drawing Workflow")

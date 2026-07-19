@@ -5,6 +5,8 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+from itag_engineering.itag_engineering_management.checksum_service import sync_drawing_checksum
+
 RELEASED_STATES = ("Released", "Superseded", "Obsolete")
 
 # Fields a transition INTO Superseded/Obsolete is allowed to change, on top of
@@ -21,9 +23,31 @@ POST_RELEASE_ALLOWED_FIELDS = {
 class EngineeringDrawing(Document):
 	def validate(self):
 		self.sync_release_status_from_workflow_state()
+		self.sync_file_checksum()
 		self.validate_release_requires_checksum()
 		self.validate_immutable_once_released()
 		self.validate_file_not_replaced_after_release()
+
+	def sync_file_checksum(self):
+		"""Populate file_checksum automatically from approved_file's content
+		(Build ITAG-0.3.0 Task 3's checksum_service) - called directly here,
+		as the second statement in validate(), rather than relying solely on
+		a `doc_events.before_save` hook.
+
+		Frappe's Document.run_before_save_methods() (frappe/model/document.py)
+		always runs `validate` before `before_save` for the "save" action, in
+		that order, within the same call - never the reverse - so a
+		before_save-only hook would populate file_checksum one statement too
+		late: validate_release_requires_checksum() below (inside this same
+		validate()) would already have inspected file_checksum on the very
+		save that is supposed to compute it, and would incorrectly block a
+		drawing with a real approved_file attached from ever reaching
+		Released. Calling checksum_service.sync_drawing_checksum() here,
+		before that guard runs, is what actually makes checksum population
+		automatic for the release-gating path. See checksum_service.py for
+		the full explanation and why this was verified against Frappe's
+		actual save order rather than assumed."""
+		sync_drawing_checksum(self)
 
 	def sync_release_status_from_workflow_state(self):
 		"""release_status is meant to be a denormalized mirror of workflow_state,
