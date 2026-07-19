@@ -13,7 +13,17 @@ from itag_engineering.itag_engineering_management.item_code_service import (
 
 class TestItemCodeService(FrappeTestCase):
 	def setUp(self):
+		# frappe.db.delete() is a raw SQL DELETE and does not cascade to child
+		# tables, so the Item Code Rule Segment rows from a previous test
+		# method's rule (same deterministic docname, since autoname is
+		# field:rule_name) must be deleted explicitly too - otherwise they
+		# accumulate across test methods within one bench run-tests
+		# transaction (FrappeTestCase only rolls back once per class).
 		frappe.db.delete("Item Code Rule", {"rule_name": ["like", "ICS Test%"]})
+		frappe.db.delete(
+			"Item Code Rule Segment",
+			{"parent": ["like", "ICS Test%"]},
+		)
 		self.rule = frappe.get_doc(
 			{
 				"doctype": "Item Code Rule",
@@ -49,6 +59,10 @@ class TestItemCodeService(FrappeTestCase):
 
 	def tearDown(self):
 		frappe.db.delete("Item Code Rule", {"rule_name": ["like", "ICS Test%"]})
+		frappe.db.delete(
+			"Item Code Rule Segment",
+			{"parent": ["like", "ICS Test%"]},
+		)
 
 	def test_resolve_rule_picks_highest_priority_active_rule(self):
 		rule = resolve_rule()
