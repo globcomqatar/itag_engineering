@@ -51,3 +51,40 @@ def configure_test_engineering_settings():
 	)
 	settings.reload()
 	return settings
+
+
+def create_test_item_code_rule(rule_name="Factory Test Rule"):
+	if frappe.db.exists("Item Code Rule", rule_name):
+		return frappe.get_doc("Item Code Rule", rule_name)
+	return frappe.get_doc(
+		{
+			"doctype": "Item Code Rule",
+			"rule_name": rule_name,
+			"is_active": 1,
+			"priority": 50,
+			"separator": "-",
+			"case_conversion": "Upper",
+			"segments": [
+				{"segment_type": "Product Family", "source_fieldname": "itag_product_family"},
+				{"segment_type": "Valve Type", "source_fieldname": "itag_valve_type"},
+				{"segment_type": "Sequence", "sequence_digits": 3},
+			],
+		}
+	).insert(ignore_permissions=True)
+
+
+def create_test_eir(**overrides):
+	rule = create_test_item_code_rule()
+	fields = {
+		"doctype": "Engineering Item Request",
+		"request_title": "Factory Test Valve Request",
+		"item_category": "Manufactured",
+		"product_family": "GATE",
+		"valve_type": "BALL",
+		"nominal_size": "6IN",
+		"pressure_class": "CL300",
+		"is_new_item_code": 1,
+		"item_code_rule": rule.name,
+	}
+	fields.update(overrides)
+	return frappe.get_doc(fields).insert(ignore_permissions=True)

@@ -18,6 +18,16 @@ program plan and the Phase 0 decisions this build implements.
   a dedicated logger channel, a compatibility-mode service skeleton, and a `ping` health
   check API.
 
+## Build ITAG-0.2.0 — Item Engineering and Coding
+
+- Item Code Rule (+ segment child table) with server-side preview/resolution (`item_code_service.py`).
+- Item Code Reservation with collision-safe sequence assignment.
+- Standard Item engineering extension fields (`itag_*`).
+- Possible-duplicate Item detection (`duplicate_service.py`).
+- Engineering Item Request with a full approval workflow (Draft through Item Created/Closed, plus Rejected/Cancelled).
+- Idempotent EIR-to-Item creation, gated on Approved state and resolved duplicates.
+- 6 reports: EIR Register, Item Code Rule Register, Item Code Reservation Report, Possible Duplicate Item Report, Item Engineering Baseline, Items Missing Engineering Classification.
+
 ## Local development
 
 This app runs inside the `frappe-docker_devcontainer-frappe-1` container, bench at
