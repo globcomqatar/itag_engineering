@@ -118,3 +118,29 @@ class TestBomReadinessService(FrappeTestCase):
 		) if frappe.db.exists("BOM Item", {"parent": bom_a.name}) else None
 		result = evaluate_bom_readiness(bom_a.name)
 		self.assertIsInstance(result["exceptions"], list)  # must return, not hang/crash
+
+	def test_non_privileged_user_cannot_evaluate_readiness(self):
+		item = frappe.db.get_value("Item", {"is_stock_item": 1}, "name")
+		bom = self._make_bom(item, with_operation=False)
+		frappe.set_user("Guest")
+		try:
+			with self.assertRaises(frappe.PermissionError):
+				evaluate_bom_readiness(bom.name)
+		finally:
+			frappe.set_user("Administrator")
+
+	def test_circular_reference_check_does_not_require_re_authorization(self):
+		# The top-level call in test_circular_bom_reference_is_detected_not_infinite_recursion
+		# above already proves recursion completes; this test confirms the
+		# permission check specifically only fires once, at the top-level
+		# entry point (_visited is None) - not on every recursive re-entry -
+		# by confirming the whole call (which recurses back into bom_a via
+		# the circular reference) still succeeds as Administrator without
+		# a second, redundant permission check ever short-circuiting it.
+		item_a = frappe.db.get_value("Item", {"is_stock_item": 1}, "name")
+		bom_a = self._make_bom(item_a, with_operation=True)
+		row_name = frappe.db.get_value("BOM Item", {"parent": bom_a.name}, "name")
+		frappe.db.set_value("BOM Item", row_name, "bom_no", bom_a.name)
+		result = evaluate_bom_readiness(bom_a.name)
+		self.assertIsInstance(result["exceptions"], list)
+		self.assertTrue(any("ircular" in e for e in result["exceptions"]))

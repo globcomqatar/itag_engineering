@@ -29,8 +29,15 @@ def evaluate_bom_readiness(bom_name, _visited=None):
 	`_visited` is an internal recursion guard (a set of BOM names already
 	on the current call stack) used by criterion 4/10's sub-assembly
 	recursion; callers should never pass it explicitly.
+
+	Permission-gated the same way as eir_service.py's service functions
+	(not just their _api wrappers): the check runs once, at the top-level
+	call (_visited is None), not on every recursive sub-assembly call -
+	those are internal, made under the same caller's permission, not
+	independent external invocations.
 	"""
 	if _visited is None:
+		_check_bom_readiness_permission()
 		_visited = set()
 
 	exceptions = []
@@ -240,8 +247,11 @@ def _check_bom_readiness_permission():
 	"""Shared role gate, following eir_service.py's
 	_check_eir_action_permission() pattern: only CREATE_ITEM_ROLES may
 	trigger a BOM release-readiness evaluation (a write, via
-	frappe.db.set_value on itag_release_readiness_status) through the
-	whitelisted API wrapper."""
+	frappe.db.set_value on itag_release_readiness_status). Called from
+	inside evaluate_bom_readiness() itself (top-level call only), not just
+	the whitelisted API wrapper below - so any future direct caller of the
+	bare function is gated identically to the API, matching eir_service.py's
+	established pattern rather than only gating at the API boundary."""
 	if not set(CREATE_ITEM_ROLES).intersection(frappe.get_roles()):
 		frappe.throw(
 			_("Only {0} may evaluate BOM release-readiness.").format(_(" or ").join(CREATE_ITEM_ROLES)),
@@ -251,5 +261,4 @@ def _check_bom_readiness_permission():
 
 @frappe.whitelist()
 def evaluate_bom_readiness_api(bom_name):
-	_check_bom_readiness_permission()
 	return success(data=evaluate_bom_readiness(bom_name))
