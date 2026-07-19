@@ -32,5 +32,33 @@
    {"state": "Approved", "action": "Create Item", "next_state": "Item Created", "allowed": "Engineering Approver"},
    {"state": "Item Created", "action": "Close", "next_state": "Closed", "allowed": "Engineering Manager"}
   ]
+ },
+ {
+  "doctype": "Workflow",
+  "name": "Engineering Drawing Workflow",
+  "workflow_name": "Engineering Drawing Workflow",
+  "document_type": "Engineering Drawing",
+  "workflow_state_field": "workflow_state",
+  "is_active": 1,
+  "override_status": 1,
+  "send_email_alert": 0,
+  "states": [
+   {"state": "Draft", "doc_status": "0", "allow_edit": "Engineering Creator"},
+   {"state": "Engineering Review", "doc_status": "0", "allow_edit": "Engineering Creator"},
+   {"state": "Checked", "doc_status": "0", "allow_edit": "Engineering Checker"},
+   {"state": "Approved", "doc_status": "0", "allow_edit": "Engineering Approver"},
+   {"state": "Released", "doc_status": "0", "allow_edit": "Engineering Approver"},
+   {"state": "Superseded", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Obsolete", "doc_status": "0", "allow_edit": "Engineering Manager"}
+  ],
+  "transitions": [
+   {"state": "Draft", "action": "Submit for Review", "next_state": "Engineering Review", "allowed": "Engineering Creator", "allow_self_approval": 1},
+   {"state": "Engineering Review", "action": "Mark Checked", "next_state": "Checked", "allowed": "Engineering Checker"},
+   {"state": "Checked", "action": "Approve", "next_state": "Approved", "allowed": "Engineering Approver"},
+   {"state": "Approved", "action": "Release", "next_state": "Released", "allowed": "Engineering Approver"},
+   {"state": "Released", "action": "Supersede", "next_state": "Superseded", "allowed": "Engineering Manager"},
+   {"state": "Released", "action": "Obsolete", "next_state": "Obsolete", "allowed": "Engineering Manager"},
+   {"state": "Superseded", "action": "Obsolete", "next_state": "Obsolete", "allowed": "Engineering Manager"}
+  ]
  }
 ]

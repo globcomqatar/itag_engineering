@@ -1,0 +1,268 @@
+{
+ "actions": [],
+ "autoname": "format:{drawing_number}-{drawing_revision}",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "drawing_number",
+  "drawing_revision",
+  "drawing_title",
+  "column_break_1",
+  "drawing_type",
+  "release_status",
+  "workflow_state",
+  "classification_section",
+  "related_item",
+  "product_family",
+  "applicable_standard",
+  "column_break_2",
+  "security_classification",
+  "applicable_eco",
+  "reference_section",
+  "cad_pdm_reference",
+  "native_file_reference",
+  "related_bom",
+  "file_section",
+  "approved_file",
+  "file_checksum",
+  "approval_section",
+  "prepared_by",
+  "checked_by",
+  "column_break_3",
+  "approved_by",
+  "revision_date",
+  "dates_section",
+  "effective_date",
+  "superseded_date",
+  "change_description"
+ ],
+ "fields": [
+  {
+   "fieldname": "drawing_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Drawing Number",
+   "reqd": 1
+  },
+  {
+   "fieldname": "drawing_revision",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Drawing Revision",
+   "reqd": 1
+  },
+  {
+   "fieldname": "drawing_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Drawing Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "drawing_type",
+   "fieldtype": "Select",
+   "label": "Drawing Type",
+   "options": "Assembly\nDetail\nSchematic\nGeneral Arrangement"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "release_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Release Status",
+   "options": "Draft\nEngineering Review\nChecked\nApproved\nReleased\nSuperseded\nObsolete",
+   "read_only": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "workflow_state",
+   "fieldtype": "Select",
+   "label": "Workflow State",
+   "options": "Draft\nEngineering Review\nChecked\nApproved\nReleased\nSuperseded\nObsolete",
+   "read_only": 1
+  },
+  {
+   "fieldname": "classification_section",
+   "fieldtype": "Section Break",
+   "label": "Classification"
+  },
+  {
+   "fieldname": "related_item",
+   "fieldtype": "Link",
+   "label": "Related Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "product_family",
+   "fieldtype": "Data",
+   "label": "Product Family"
+  },
+  {
+   "fieldname": "applicable_standard",
+   "fieldtype": "Data",
+   "label": "Applicable Standard"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "security_classification",
+   "fieldtype": "Select",
+   "label": "Security Classification",
+   "options": "\nInternal\nConfidential\nCustomer Controlled"
+  },
+  {
+   "description": "Placeholder - real ECO linkage is Build ITAG-0.6.0's scope.",
+   "fieldname": "applicable_eco",
+   "fieldtype": "Data",
+   "label": "Applicable ECO"
+  },
+  {
+   "fieldname": "reference_section",
+   "fieldtype": "Section Break",
+   "label": "External References"
+  },
+  {
+   "fieldname": "cad_pdm_reference",
+   "fieldtype": "Data",
+   "label": "CAD/PDM Reference"
+  },
+  {
+   "fieldname": "native_file_reference",
+   "fieldtype": "Data",
+   "label": "Native File Reference"
+  },
+  {
+   "description": "Placeholder - real BOM linkage is Build ITAG-0.4.0's scope.",
+   "fieldname": "related_bom",
+   "fieldtype": "Data",
+   "label": "Related BOM"
+  },
+  {
+   "fieldname": "file_section",
+   "fieldtype": "Section Break",
+   "label": "Approved File"
+  },
+  {
+   "fieldname": "approved_file",
+   "fieldtype": "Attach",
+   "label": "Approved File"
+  },
+  {
+   "description": "SHA-256 checksum of the approved file, computed automatically. Immutable once the drawing is Released.",
+   "fieldname": "file_checksum",
+   "fieldtype": "Data",
+   "label": "File Checksum",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approval_section",
+   "fieldtype": "Section Break",
+   "label": "Approval"
+  },
+  {
+   "fieldname": "prepared_by",
+   "fieldtype": "Link",
+   "label": "Prepared By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checked_by",
+   "fieldtype": "Link",
+   "label": "Checked By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "revision_date",
+   "fieldtype": "Date",
+   "label": "Revision Date"
+  },
+  {
+   "fieldname": "dates_section",
+   "fieldtype": "Section Break",
+   "label": "Effective Period"
+  },
+  {
+   "fieldname": "effective_date",
+   "fieldtype": "Date",
+   "label": "Effective Date"
+  },
+  {
+   "fieldname": "superseded_date",
+   "fieldtype": "Date",
+   "label": "Superseded Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "change_description",
+   "fieldtype": "Small Text",
+   "label": "Change Description"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Engineering Drawing",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Creator",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Checker",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Approver",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
