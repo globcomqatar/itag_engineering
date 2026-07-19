@@ -3,7 +3,8 @@
 Engineering Management and Product Lifecycle control layer for ERPNext Manufacturing
 (valve manufacturing), built per `ITAG_Engineering_Management_Master_Roadmap_v1.0(Approved).md`.
 
-This is Build `ITAG-0.1.0` — Application Foundation. See the roadmap document (Engineering
+Build `ITAG-0.1.0` (Application Foundation) and Build `ITAG-0.2.0` (Item Engineering and
+Coding) are both implemented. See the roadmap document (Engineering
 Management working directory) and `doc/ITAG_Decisions.md` (bench root) for the full
 program plan and the Phase 0 decisions this build implements.
 

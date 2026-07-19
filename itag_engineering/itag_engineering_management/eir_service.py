@@ -102,7 +102,11 @@ def create_item_from_eir(eir_name):
 	item = frappe.get_doc(item_fields)
 	item.insert(ignore_permissions=True)
 
-	frappe.db.set_value("Item Code Reservation", {"item_code": item_code}, "status", "Consumed")
+	frappe.db.set_value(
+		"Item Code Reservation",
+		{"item_code": item_code},
+		{"status": "Consumed", "consumed_by_item": item.item_code},
+	)
 	frappe.db.set_value(
 		"Engineering Item Request",
 		eir_name,
