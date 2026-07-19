@@ -21,3 +21,10 @@ after_migrate = "itag_engineering.setup.custom_fields.sync_custom_fields"
 # -------
 
 before_tests = "itag_engineering.install.before_tests"
+
+# Fixtures
+# --------
+
+fixtures = [
+	{"doctype": "Workflow", "filters": [["name", "=", "Engineering Item Request Workflow"]]},
+]

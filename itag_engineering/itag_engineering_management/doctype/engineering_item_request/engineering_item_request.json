@@ -1,0 +1,234 @@
+{
+ "actions": [],
+ "autoname": "EIR-.#####",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "request_title",
+  "requested_by",
+  "workflow_state",
+  "engineering_section",
+  "item_category",
+  "product_family",
+  "valve_type",
+  "column_break_1",
+  "nominal_size",
+  "pressure_class",
+  "body_material",
+  "trim_material",
+  "end_connection",
+  "drawing_number",
+  "manufacturer_part_number",
+  "revision_section",
+  "existing_item_reference",
+  "is_new_item_code",
+  "duplicate_section",
+  "duplicate_check_status",
+  "possible_duplicates_json",
+  "coding_section",
+  "item_code_rule",
+  "reserved_item_code",
+  "created_item"
+ ],
+ "fields": [
+  {
+   "fieldname": "request_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Request Title",
+   "reqd": 1
+  },
+  {
+   "default": "__user",
+   "fieldname": "requested_by",
+   "fieldtype": "Link",
+   "label": "Requested By",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "workflow_state",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Workflow State",
+   "options": "Draft\nDuplicate Review\nEngineering Review\nReturned for Correction\nApproved\nItem Created\nClosed\nRejected\nCancelled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "engineering_section",
+   "fieldtype": "Section Break",
+   "label": "Engineering Classification"
+  },
+  {
+   "fieldname": "item_category",
+   "fieldtype": "Select",
+   "label": "Item Category",
+   "options": "\nManufactured\nPurchased\nRaw Material\nSub-Assembly"
+  },
+  {
+   "fieldname": "product_family",
+   "fieldtype": "Data",
+   "label": "Product Family"
+  },
+  {
+   "fieldname": "valve_type",
+   "fieldtype": "Data",
+   "label": "Valve Type"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "nominal_size",
+   "fieldtype": "Data",
+   "label": "Nominal Size"
+  },
+  {
+   "fieldname": "pressure_class",
+   "fieldtype": "Data",
+   "label": "Pressure Class"
+  },
+  {
+   "fieldname": "body_material",
+   "fieldtype": "Data",
+   "label": "Body Material"
+  },
+  {
+   "fieldname": "trim_material",
+   "fieldtype": "Data",
+   "label": "Trim Material"
+  },
+  {
+   "fieldname": "end_connection",
+   "fieldtype": "Data",
+   "label": "End Connection"
+  },
+  {
+   "fieldname": "drawing_number",
+   "fieldtype": "Data",
+   "label": "Drawing Number"
+  },
+  {
+   "fieldname": "manufacturer_part_number",
+   "fieldtype": "Data",
+   "label": "Manufacturer Part Number"
+  },
+  {
+   "fieldname": "revision_section",
+   "fieldtype": "Section Break",
+   "label": "New Code vs. Revision (Decision Log #4)"
+  },
+  {
+   "description": "Set only when this request is a revision of an existing Item, not a new Item Code.",
+   "fieldname": "existing_item_reference",
+   "fieldtype": "Link",
+   "label": "Existing Item Reference",
+   "options": "Item"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_new_item_code",
+   "fieldtype": "Check",
+   "label": "Is New Item Code"
+  },
+  {
+   "fieldname": "duplicate_section",
+   "fieldtype": "Section Break",
+   "label": "Duplicate Review"
+  },
+  {
+   "default": "Not Checked",
+   "fieldname": "duplicate_check_status",
+   "fieldtype": "Select",
+   "label": "Duplicate Check Status",
+   "options": "Not Checked\nNo Duplicates Found\nPossible Duplicates Found\nDuplicates Resolved",
+   "read_only": 1
+  },
+  {
+   "fieldname": "possible_duplicates_json",
+   "fieldtype": "Long Text",
+   "label": "Possible Duplicates (JSON)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "coding_section",
+   "fieldtype": "Section Break",
+   "label": "Item Coding"
+  },
+  {
+   "fieldname": "item_code_rule",
+   "fieldtype": "Link",
+   "label": "Item Code Rule",
+   "options": "Item Code Rule"
+  },
+  {
+   "fieldname": "reserved_item_code",
+   "fieldtype": "Data",
+   "label": "Reserved Item Code",
+   "read_only": 1
+  },
+  {
+   "fieldname": "created_item",
+   "fieldtype": "Link",
+   "label": "Created Item",
+   "options": "Item",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Engineering Item Request",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Requestor",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Creator",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Checker",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Approver",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

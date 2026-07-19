@@ -1,0 +1,36 @@
+[
+ {
+  "doctype": "Workflow",
+  "name": "Engineering Item Request Workflow",
+  "workflow_name": "Engineering Item Request Workflow",
+  "document_type": "Engineering Item Request",
+  "is_active": 1,
+  "override_status": 1,
+  "send_email_alert": 0,
+  "workflow_state_field": "workflow_state",
+  "states": [
+   {"state": "Draft", "doc_status": "0", "allow_edit": "Engineering Requestor"},
+   {"state": "Duplicate Review", "doc_status": "0", "allow_edit": "Engineering Creator"},
+   {"state": "Engineering Review", "doc_status": "0", "allow_edit": "Engineering Checker"},
+   {"state": "Returned for Correction", "doc_status": "0", "allow_edit": "Engineering Requestor"},
+   {"state": "Approved", "doc_status": "0", "allow_edit": "Engineering Approver"},
+   {"state": "Item Created", "doc_status": "0", "allow_edit": "Engineering Approver"},
+   {"state": "Closed", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Rejected", "doc_status": "0", "allow_edit": "Engineering Approver"},
+   {"state": "Cancelled", "doc_status": "0", "allow_edit": "Engineering Requestor"}
+  ],
+  "transitions": [
+   {"state": "Draft", "action": "Submit for Duplicate Review", "next_state": "Duplicate Review", "allowed": "Engineering Requestor", "allow_self_approval": 1},
+   {"state": "Draft", "action": "Cancel", "next_state": "Cancelled", "allowed": "Engineering Requestor", "allow_self_approval": 1},
+   {"state": "Duplicate Review", "action": "No Duplicates - Proceed", "next_state": "Engineering Review", "allowed": "Engineering Creator"},
+   {"state": "Duplicate Review", "action": "Return for Correction", "next_state": "Returned for Correction", "allowed": "Engineering Creator"},
+   {"state": "Duplicate Review", "action": "Reject", "next_state": "Rejected", "allowed": "Engineering Creator"},
+   {"state": "Engineering Review", "action": "Approve", "next_state": "Approved", "allowed": "Engineering Approver"},
+   {"state": "Engineering Review", "action": "Return for Correction", "next_state": "Returned for Correction", "allowed": "Engineering Checker"},
+   {"state": "Engineering Review", "action": "Reject", "next_state": "Rejected", "allowed": "Engineering Approver"},
+   {"state": "Returned for Correction", "action": "Resubmit for Duplicate Review", "next_state": "Duplicate Review", "allowed": "Engineering Requestor", "allow_self_approval": 1},
+   {"state": "Approved", "action": "Create Item", "next_state": "Item Created", "allowed": "Engineering Approver"},
+   {"state": "Item Created", "action": "Close", "next_state": "Closed", "allowed": "Engineering Manager"}
+  ]
+ }
+]
