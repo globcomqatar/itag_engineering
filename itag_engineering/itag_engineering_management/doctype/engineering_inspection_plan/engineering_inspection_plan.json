@@ -29,7 +29,7 @@
   {"fieldname": "related_item", "fieldtype": "Link", "label": "Related Item", "options": "Item"},
   {"fieldname": "related_bom", "fieldtype": "Link", "label": "Related BOM", "options": "BOM"},
   {"fieldname": "section_break_1", "fieldtype": "Section Break", "label": "Inspection Steps"},
-  {"fieldname": "inspection_steps", "fieldtype": "Table", "options": "Inspection Step"}
+  {"fieldname": "inspection_steps", "fieldtype": "Table", "label": "Inspection Steps", "options": "Inspection Step"}
  ],
  "links": [],
  "modified": "2026-07-19 00:00:00.000000",
