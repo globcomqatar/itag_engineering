@@ -1,0 +1,303 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "release_status",
+  "column_break_header",
+  "release_classification",
+  "release_checksum",
+  "baseline_section",
+  "company",
+  "facility",
+  "item",
+  "column_break_baseline",
+  "product_revision",
+  "drawing_revision",
+  "bom",
+  "routing",
+  "inspection_plan",
+  "specs_section",
+  "specifications",
+  "applicable_standards",
+  "column_break_specs",
+  "customer",
+  "project",
+  "effective_section",
+  "effective_datetime",
+  "superseded_release",
+  "applicable_eco",
+  "checklist_section",
+  "release_checklist",
+  "approval_section",
+  "approval_matrix",
+  "requires_cost_review",
+  "column_break_approval",
+  "requires_customer_review",
+  "approval_steps",
+  "distribution_section",
+  "distribution_list"
+ ],
+ "fields": [
+  {
+   "default": "ER-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "ER-.YYYY.-"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "release_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Release Status",
+   "options": "Draft\nEngineering Review\nEngineering Checked\nQuality Review\nManufacturing Review\nCost Review\nCustomer Review\nEngineering Approved\nReleased for Production\nSuspended\nWithdrawn\nSuperseded\nObsolete",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Standard",
+   "fieldname": "release_classification",
+   "fieldtype": "Select",
+   "label": "Release Classification",
+   "options": "Standard\nCustomer-Specific\nEmergency"
+  },
+  {
+   "description": "SHA-256 of item|product_revision|drawing_revision|bom|routing|inspection_plan, computed by submit_engineering_release() at the moment of release - not before.",
+   "fieldname": "release_checksum",
+   "fieldtype": "Data",
+   "label": "Release Checksum",
+   "read_only": 1
+  },
+  {
+   "fieldname": "baseline_section",
+   "fieldtype": "Section Break",
+   "label": "Engineering Baseline"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "description": "Free-text only - no standalone Facility DocType exists (Decision Log #2, single-facility scope).",
+   "fieldname": "facility",
+   "fieldtype": "Data",
+   "label": "Facility"
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_baseline",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "product_revision",
+   "fieldtype": "Link",
+   "label": "Product Revision",
+   "options": "Product Revision",
+   "reqd": 1
+  },
+  {
+   "fieldname": "drawing_revision",
+   "fieldtype": "Link",
+   "label": "Drawing Revision",
+   "options": "Engineering Drawing",
+   "reqd": 1
+  },
+  {
+   "description": "The specific BOM record IS the revision (Build ITAG-0.4.0's itag_engineering_revision field on BOM) - there is no separate BOM Revision doctype.",
+   "fieldname": "bom",
+   "fieldtype": "Link",
+   "label": "BOM",
+   "options": "BOM",
+   "reqd": 1
+  },
+  {
+   "description": "Optional - not every Item requires a distinct Routing.",
+   "fieldname": "routing",
+   "fieldtype": "Link",
+   "label": "Routing",
+   "options": "Routing"
+  },
+  {
+   "fieldname": "inspection_plan",
+   "fieldtype": "Link",
+   "label": "Inspection Plan",
+   "options": "Engineering Inspection Plan"
+  },
+  {
+   "fieldname": "specs_section",
+   "fieldtype": "Section Break",
+   "label": "Specifications & Standards"
+  },
+  {
+   "fieldname": "specifications",
+   "fieldtype": "Table",
+   "label": "Specifications",
+   "options": "Engineering Release Specification"
+  },
+  {
+   "fieldname": "applicable_standards",
+   "fieldtype": "Small Text",
+   "label": "Applicable Standards"
+  },
+  {
+   "fieldname": "column_break_specs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "effective_section",
+   "fieldtype": "Section Break",
+   "label": "Effective Date & Supersession"
+  },
+  {
+   "fieldname": "effective_datetime",
+   "fieldtype": "Datetime",
+   "label": "Effective Datetime",
+   "reqd": 1
+  },
+  {
+   "fieldname": "superseded_release",
+   "fieldtype": "Link",
+   "label": "Superseded Release",
+   "options": "Engineering Release"
+  },
+  {
+   "description": "Free-text forward-reference placeholder - Build ITAG-0.6.0 (ECR/ECO) does not exist yet.",
+   "fieldname": "applicable_eco",
+   "fieldtype": "Data",
+   "label": "Applicable ECO"
+  },
+  {
+   "fieldname": "checklist_section",
+   "fieldtype": "Section Break",
+   "label": "Release Checklist"
+  },
+  {
+   "fieldname": "release_checklist",
+   "fieldtype": "Table",
+   "label": "Release Checklist",
+   "options": "Release Checklist"
+  },
+  {
+   "fieldname": "approval_section",
+   "fieldtype": "Section Break",
+   "label": "Approval"
+  },
+  {
+   "description": "Set by resolve_release_approval_matrix() - not editable directly.",
+   "fieldname": "approval_matrix",
+   "fieldtype": "Link",
+   "label": "Approval Matrix",
+   "options": "Engineering Approval Matrix",
+   "read_only": 1
+  },
+  {
+   "fieldname": "requires_cost_review",
+   "fieldtype": "Check",
+   "label": "Requires Cost Review",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_approval",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "requires_customer_review",
+   "fieldtype": "Check",
+   "label": "Requires Customer Review",
+   "read_only": 1
+  },
+  {
+   "description": "Materialized by resolve_release_approval_matrix(), one row per resolved discipline.",
+   "fieldname": "approval_steps",
+   "fieldtype": "Table",
+   "label": "Approval Steps",
+   "options": "Approval Step",
+   "read_only": 1
+  },
+  {
+   "fieldname": "distribution_section",
+   "fieldtype": "Section Break",
+   "label": "Distribution"
+  },
+  {
+   "fieldname": "distribution_list",
+   "fieldtype": "Table",
+   "label": "Distribution List",
+   "options": "Release Distribution"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Engineering Release",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Quality Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Approver",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

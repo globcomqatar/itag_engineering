@@ -88,5 +88,47 @@
    {"state": "Released", "action": "Obsolete", "next_state": "Obsolete", "allowed": "Engineering Manager"},
    {"state": "Superseded", "action": "Obsolete", "next_state": "Obsolete", "allowed": "Engineering Manager"}
   ]
+ },
+ {
+  "doctype": "Workflow",
+  "name": "Engineering Release Workflow",
+  "workflow_name": "Engineering Release Workflow",
+  "document_type": "Engineering Release",
+  "workflow_state_field": "release_status",
+  "is_active": 1,
+  "override_status": 1,
+  "send_email_alert": 0,
+  "states": [
+   {"state": "Draft", "doc_status": "0", "allow_edit": "Engineering Creator"},
+   {"state": "Engineering Review", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Engineering Checked", "doc_status": "0", "allow_edit": "ITAG Engineering Administrator"},
+   {"state": "Quality Review", "doc_status": "0", "allow_edit": "Quality Manager"},
+   {"state": "Manufacturing Review", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Cost Review", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Customer Review", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Engineering Approved", "doc_status": "0", "allow_edit": "Engineering Approver"},
+   {"state": "Released for Production", "doc_status": "0", "allow_edit": "Engineering Approver"},
+   {"state": "Suspended", "doc_status": "0", "allow_edit": "ITAG Engineering Administrator"},
+   {"state": "Withdrawn", "doc_status": "0", "allow_edit": "ITAG Engineering Administrator"},
+   {"state": "Superseded", "doc_status": "0", "allow_edit": "ITAG Engineering Administrator"},
+   {"state": "Obsolete", "doc_status": "0", "allow_edit": "ITAG Engineering Administrator"}
+  ],
+  "transitions": [
+   {"state": "Draft", "action": "Submit for Engineering Review", "next_state": "Engineering Review", "allowed": "Engineering Manager", "allow_self_approval": 1},
+   {"state": "Engineering Review", "action": "Mark Checked", "next_state": "Engineering Checked", "allowed": "ITAG Engineering Administrator", "allow_self_approval": 1},
+   {"state": "Engineering Checked", "action": "Submit for Quality Review", "next_state": "Quality Review", "allowed": "Quality Manager", "allow_self_approval": 1},
+   {"state": "Quality Review", "action": "Submit for Manufacturing Review", "next_state": "Manufacturing Review", "allowed": "Engineering Manager", "allow_self_approval": 1},
+   {"state": "Manufacturing Review", "action": "Submit for Cost Review", "next_state": "Cost Review", "allowed": "Engineering Manager", "allow_self_approval": 1, "condition": "doc.requires_cost_review == 1"},
+   {"state": "Manufacturing Review", "action": "Submit for Customer Review", "next_state": "Customer Review", "allowed": "Engineering Manager", "allow_self_approval": 1, "condition": "doc.requires_cost_review == 0 and doc.requires_customer_review == 1"},
+   {"state": "Manufacturing Review", "action": "Approve", "next_state": "Engineering Approved", "allowed": "Engineering Manager", "allow_self_approval": 1, "condition": "doc.requires_cost_review == 0 and doc.requires_customer_review == 0"},
+   {"state": "Cost Review", "action": "Submit for Customer Review", "next_state": "Customer Review", "allowed": "Engineering Manager", "allow_self_approval": 1, "condition": "doc.requires_customer_review == 1"},
+   {"state": "Cost Review", "action": "Approve", "next_state": "Engineering Approved", "allowed": "Engineering Manager", "allow_self_approval": 1, "condition": "doc.requires_customer_review == 0"},
+   {"state": "Customer Review", "action": "Approve", "next_state": "Engineering Approved", "allowed": "Engineering Manager", "allow_self_approval": 1},
+   {"state": "Engineering Approved", "action": "Release for Production", "next_state": "Released for Production", "allowed": "Engineering Approver", "allow_self_approval": 1},
+   {"state": "Released for Production", "action": "Suspend", "next_state": "Suspended", "allowed": "ITAG Engineering Administrator", "allow_self_approval": 1},
+   {"state": "Released for Production", "action": "Withdraw", "next_state": "Withdrawn", "allowed": "ITAG Engineering Administrator", "allow_self_approval": 1},
+   {"state": "Released for Production", "action": "Supersede", "next_state": "Superseded", "allowed": "ITAG Engineering Administrator", "allow_self_approval": 1},
+   {"state": "Released for Production", "action": "Obsolete", "next_state": "Obsolete", "allowed": "ITAG Engineering Administrator", "allow_self_approval": 1}
+  ]
  }
 ]

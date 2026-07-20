@@ -36,6 +36,7 @@ fixtures = [
 					"Engineering Item Request Workflow",
 					"Engineering Drawing Workflow",
 					"Product Revision Workflow",
+					"Engineering Release Workflow",
 				],
 			]
 		],
