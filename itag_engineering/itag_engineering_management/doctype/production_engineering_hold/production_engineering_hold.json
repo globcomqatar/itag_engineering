@@ -1,0 +1,221 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "hold_scope",
+  "column_break_header",
+  "status",
+  "reference_section",
+  "reference_doctype",
+  "reference_name",
+  "column_break_reference",
+  "quantity",
+  "uom",
+  "related_eco",
+  "reason_section",
+  "hold_reason",
+  "blocked_actions_section",
+  "blocked_actions",
+  "placement_section",
+  "placed_by",
+  "placed_on",
+  "column_break_placement",
+  "release_section",
+  "released_by",
+  "released_on",
+  "release_reason"
+ ],
+ "fields": [
+  {
+   "default": "HOLD-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "HOLD-.YYYY.-"
+  },
+  {
+   "fieldname": "hold_scope",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Hold Scope",
+   "options": "Work Order\nJob Card\nItem\nProduct Revision\nEngineering Release\nBatch\nSerial Number\nWarehouse Stock\nPurchase Receipt\nDelivery\nCustomer Project\nSpecific Quantity or WIP Unit",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Active\nReleased",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reference_section",
+   "fieldtype": "Section Break",
+   "label": "Reference"
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Select",
+   "label": "Reference Doctype",
+   "options": "Work Order\nJob Card\nItem\nProduct Revision\nEngineering Release\nBatch\nSerial No\nWarehouse\nPurchase Receipt\nDelivery Note\nProject",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "label": "Reference Name",
+   "options": "reference_doctype",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_reference",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Only meaningful for \"Specific Quantity or WIP Unit\" scope.",
+   "fieldname": "quantity",
+   "fieldtype": "Float",
+   "label": "Quantity"
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Data",
+   "label": "UOM"
+  },
+  {
+   "fieldname": "related_eco",
+   "fieldtype": "Link",
+   "label": "Related ECO",
+   "options": "Engineering Change Order"
+  },
+  {
+   "fieldname": "reason_section",
+   "fieldtype": "Section Break",
+   "label": "Reason"
+  },
+  {
+   "fieldname": "hold_reason",
+   "fieldtype": "Text",
+   "label": "Hold Reason",
+   "reqd": 1
+  },
+  {
+   "fieldname": "blocked_actions_section",
+   "fieldtype": "Section Break",
+   "label": "Blocked Actions"
+  },
+  {
+   "description": "Defaults to all actions blocked when a new hold is created (place_hold() seeds this - a hold blocks broadly unless deliberately scoped down).",
+   "fieldname": "blocked_actions",
+   "fieldtype": "Table",
+   "label": "Blocked Actions",
+   "options": "Hold Blocked Action"
+  },
+  {
+   "fieldname": "placement_section",
+   "fieldtype": "Section Break",
+   "label": "Placement"
+  },
+  {
+   "default": "__user",
+   "fieldname": "placed_by",
+   "fieldtype": "Link",
+   "label": "Placed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "default": "now",
+   "fieldname": "placed_on",
+   "fieldtype": "Datetime",
+   "label": "Placed On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_placement",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "release_section",
+   "fieldtype": "Section Break",
+   "label": "Release"
+  },
+  {
+   "fieldname": "released_by",
+   "fieldtype": "Link",
+   "label": "Released By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "released_on",
+   "fieldtype": "Datetime",
+   "label": "Released On",
+   "read_only": 1
+  },
+  {
+   "description": "Required when releasing a hold - enforced by hold_service.release_hold().",
+   "fieldname": "release_reason",
+   "fieldtype": "Text",
+   "label": "Release Reason",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Production Engineering Hold",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Quality Manager"
+  },
+  {
+   "read": 1,
+   "role": "Production Supervisor"
+  },
+  {
+   "read": 1,
+   "role": "Production Planner"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
