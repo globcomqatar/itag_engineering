@@ -72,7 +72,7 @@ def evaluate_bom_readiness(bom_name, _visited=None):
 	ready = not exceptions
 	status = READY_STATUS if ready else NOT_READY_STATUS
 
-	frappe.db.set_value("BOM", bom_name, "itag_release_readiness_status", status)
+	frappe.db.set_value("BOM", bom_name, "itag_release_readiness_status", status, update_modified=False)
 
 	return {"ready": ready, "status": status, "exceptions": exceptions}
 
