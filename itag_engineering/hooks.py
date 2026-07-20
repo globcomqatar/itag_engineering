@@ -52,6 +52,27 @@ doc_events = {
 	"Work Order": {
 		"before_submit": "itag_engineering.itag_engineering_management.work_order_baseline.freeze_baseline_before_submit",
 	},
+	"Job Card": {
+		# Job Card's "start"/"complete" actions are status transitions, not
+		# submit/cancel (confirm against frappe.get_meta("Job Card") on a
+		# live bench before trusting this - not verified in this
+		# environment) - wired to validate() so both fire on the same save
+		# that actually changes status, and both no-op via
+		# has_value_changed("status") on any other save.
+		"validate": [
+			"itag_engineering.itag_engineering_management.hold_service.block_job_card_start",
+			"itag_engineering.itag_engineering_management.hold_service.block_job_card_operation_completion",
+		],
+	},
+	"Stock Entry": {
+		"before_submit": "itag_engineering.itag_engineering_management.hold_service.block_stock_entry_transfer_or_consumption",
+	},
+	"Quality Inspection": {
+		"before_submit": "itag_engineering.itag_engineering_management.hold_service.block_quality_inspection_submission",
+	},
+	"Delivery Note": {
+		"before_submit": "itag_engineering.itag_engineering_management.hold_service.block_delivery_of_held_serial_or_batch",
+	},
 }
 
 # Scheduled Tasks
