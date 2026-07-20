@@ -1,0 +1,21 @@
+{
+ "add_total_row": 0,
+ "creation": "2026-07-20 00:00:00.000000",
+ "disabled": 0,
+ "doctype": "Report",
+ "is_standard": "Yes",
+ "module": "ITAG Engineering Management",
+ "name": "Backward Traceability",
+ "prepared_report": 0,
+ "ref_doctype": "WIP Unit Register",
+ "report_name": "Backward Traceability",
+ "report_type": "Script Report",
+ "roles": [
+  {"role": "System Manager"},
+  {"role": "ITAG Engineering Administrator"},
+  {"role": "Engineering Manager"},
+  {"role": "Production Manager"},
+  {"role": "Production Supervisor"},
+  {"role": "Quality Manager"}
+ ]
+}

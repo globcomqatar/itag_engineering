@@ -342,6 +342,34 @@ def _strip_customer_fields(value):
 	return value
 
 
+def flatten_backward_trace(root):
+	"""Flattens backward_traceability()'s nested "components" tree into a
+	list of rows (one per WIP Unit level, with a `depth` column) - shared
+	by the Backward Traceability and Finished Valve Manufacturing History
+	reports (Task 5) so neither duplicates this tree-walk itself."""
+	rows = []
+	_flatten_backward_trace(root, depth=0, rows=rows)
+	return rows
+
+
+def _flatten_backward_trace(node, depth, rows):
+	if node.get("wip_unit"):
+		rows.append(
+			{
+				"depth": depth,
+				"wip_unit": node.get("wip_unit"),
+				"item": node.get("item"),
+				"quantity": node.get("quantity"),
+				"original_work_order": node.get("original_work_order"),
+				"eco": node.get("eco"),
+				"quality_status": node.get("quality_status"),
+				"hold_status": node.get("hold_status"),
+			}
+		)
+	for component in node.get("components", []):
+		_flatten_backward_trace(component, depth + 1, rows)
+
+
 def _check_traceability_permission():
 	if not set(TRACEABILITY_ROLES).intersection(frappe.get_roles()):
 		frappe.throw(
