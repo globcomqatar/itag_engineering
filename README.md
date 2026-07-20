@@ -3,12 +3,79 @@
 Engineering Management and Product Lifecycle control layer for ERPNext Manufacturing
 (valve manufacturing), built per `ITAG_Engineering_Management_Master_Roadmap_v1.0(Approved).md`.
 
-Build `ITAG-0.1.0` (Application Foundation) and Build `ITAG-0.2.0` (Item Engineering and
-Coding) are both implemented. See the roadmap document (Engineering
-Management working directory) and `doc/ITAG_Decisions.md` (bench root) for the full
-program plan and the Phase 0 decisions this build implements.
+**All 12 planned builds (`ITAG-0.1.0` through `ITAG-1.0.0`) are implemented.** This is the
+complete, roadmap-approved application: from foundation and item coding, through drawing/
+product-revision control, BOM/routing/inspection governance, engineering release, ECR/ECO
+change control, change-impact analysis, engineering hold and material disposition, production
+continuation and rework, WIP identity and full traceability, security/audit/observability, to
+this build's own production-release documentation and certification-preparation deliverables.
 
-## What this build provides
+## Application at a glance
+
+- **39 DocTypes**, **77 Script Reports**, **73 test files** (363 individual test methods),
+  **18 Roles** (Decision Log #4's list, including `Production Manager` and
+  `ITAG Integration User` added in ITAG-0.11.0), **6 Workflows** driving every controlled
+  document's lifecycle (Engineering Item Request, Engineering Drawing, Product Revision,
+  Engineering Release, Engineering Change Request, Engineering Change Order).
+- **Every roadmap capability domain is covered**: item coding and duplicate prevention;
+  drawing/product-revision immutability and segregation of duties; BOM/routing
+  release-readiness (11 criteria); engineering release with approval-matrix-driven
+  segregation of duties and frozen Work Order baselines; ECR/ECO change control;
+  background change-impact analysis across 18 domains with staleness detection;
+  engineering hold enforcement across 4 core ERPNext transaction points; material
+  disposition with real Stock Entry movement; deviation/concession usage validated in
+  real time; production stop-and-continue with idempotent successor Work Orders; rework
+  with per-row completion gating; policy-driven WIP identity and cycle-safe genealogy;
+  full forward/backward traceability with customer-identity permission masking; an
+  append-only audit log covering 23 event types; and a full security/observability report
+  suite.
+- **No ERPNext or Frappe core file is modified anywhere in this program** — every
+  extension uses Frappe's own sanctioned mechanisms (Custom Fields, DocTypes, Workflow
+  fixtures, `doc_events`, `scheduler_events`, `permission_query_conditions`,
+  `frappe.enqueue`).
+- See each `## Build ITAG-X.X.0` section below for what that specific build added, and
+  `doc/ITAG_*` (bench root) for this final build's operating procedures, training
+  materials, UAT sign-off tracking, cutover checklist, and certification record.
+
+## Known Limitations at 1.0.0
+
+This section is the single place every deferred/gated item flagged across every prior
+build's own section is tracked to completion — nothing below should be treated as
+silently resolved just because the build that flagged it has since been merged.
+
+1. **Data migration toolkit is NOT built (Build ITAG-0.11.0 Task 6, gated).** No Decision
+   Log entry naming an actual source system/format was ever made in this program. No
+   `Migration Batch`/`Migration Exception` DocTypes, `migration_service.py`, or migration
+   reports exist. Formally accepted as a known exception for this session's own
+   documentation work (`doc/ITAG_Final_Regression_Evidence.md` §4); NOT resolved for real
+   Production go-live — see `doc/ITAG_Cutover_Readiness_Checklist.md` item 12/16.
+2. **Dashboards and Manufacturing Record Book deferred (Build ITAG-0.10.0).** No Frappe
+   Dashboard/Dashboard Chart/Number Card fixtures and no compiled Manufacturing Record
+   Book print output exist — hand-authoring version-sensitive fixture JSON with no live
+   bench to verify it against was judged too risky for zero verified benefit. The 10
+   WIP/Traceability Script Reports (and every other build's own reports) are the interim
+   data source.
+3. **`allow_self_approval` sweep not performed (Build ITAG-0.11.0 Task 1).** Whether
+   Frappe's real default value for this Workflow Transition field, and its interaction
+   with the Administrator-as-test-owner pattern used across this whole test suite,
+   actually behaves as assumed has not been confirmed on a live bench — deliberately left
+   untouched rather than risk a blind, unverified change across all 6 Workflow fixtures.
+4. **EXPLAIN-driven performance index review not performed (Build ITAG-0.11.0 Task 5).**
+   Requires a live MariaDB query planner this program has never had access to. Per the
+   roadmap's own instruction, no speculative index was added without one.
+5. **No live Frappe/ERPNext bench has EVER been available in this entire program.** Every
+   build's own "Note on this build's provenance" section, and `doc/ITAG_Final_Regression_
+   Evidence.md`, disclose this individually — it is the single constraint underlying
+   every other item in this list. Substitute verification throughout has been
+   `python3 -m py_compile` plus `ruff check`/`ruff format --check`, both clean
+   repository-wide as of this build, but NEITHER a real Frappe test run NOR a genuine
+   fresh-site install/`bench migrate` has ever been executed for this application.
+6. **UAT sign-off and Production certification are real human processes, not simulated.**
+   `doc/ITAG_UAT_Signoff.md` and `doc/ITAG_Production_Certification.md` are the artifacts
+   real business owners and the 7 named approvers review — every sign-off line in both
+   documents is intentionally left pending, not filled in on anyone's behalf.
+
+## What Build ITAG-0.1.0/0.2.0 provide
 
 - App foundation, installable and migratable on Frappe v15 / ERPNext v15.
 - Engineering Settings (single DocType) with a Validate Configuration action that gates
@@ -129,6 +196,20 @@ program plan and the Phase 0 decisions this build implements.
 - **Task 7 — full UAT regression.** `tests/test_full_uat_regression.py` (NEW) re-exports all 24 `TestUAT*` classes built across Builds ITAG-0.2.0 through 0.10.0 (covering UAT-001 through UAT-020 — several numbers have more than one distinct scenario class, e.g. UAT-003 has 4, UAT-005 has 3, UAT-011 and UAT-018 each have 2; every one is re-collected, not sampled) by their original names, so any test runner that discovers tests by module re-executes each one from this single file.
 
 **Note on this build's provenance — the same "no live bench" constraint as every prior build, at a HIGHER bar given this build's own subject matter:** every function/query/index decision above whose correctness depends on a real Frappe/MariaDB runtime (`RQ Job`'s actual field set, whether `ValidationError`s land in Error Log, the real query plans behind the roadmap's 9 listed performance-sensitive operations) is flagged individually above rather than assumed. This build's own exit gate (roadmap Section 22.12) requires a full suite pass, 3 clean `bench migrate` runs, and app-wide `ruff` cleanliness — `ruff format --check .` and `ruff check .` were run clean across the WHOLE repository in this session (no violations), and every `.py` file compiles (`python3 -m py_compile`), but the full Frappe test suite and repeated `bench migrate` were NOT run — there is no bench in this environment. Per the user's own explicit instruction, live testing against a real bench and site happens at the end, separately from this session's build-out work. Before treating Build ITAG-0.11.0 (or the app as a whole) as verified: run `bench migrate` 3 times clean, run the full test suite (including `tests/test_full_uat_regression.py`), and confirm every item flagged above and in every prior build's own "Note on this build's provenance" section.
+
+## Build ITAG-1.0.0 — Production Release and Certification
+
+**This build adds no new business DocTypes or services (roadmap Section 24.2).** Its deliverables are final regression evidence, operating procedures, training materials, a cutover checklist, and certification-preparation documents — all under bench-root `doc/`, per Decision Log #16's convention.
+
+- **Task 1 — final regression evidence.** `doc/ITAG_Final_Regression_Evidence.md` confirms all 11 prior builds are present in the release candidate and that no new material capability was added; records this session's substitute-verification sweep (repo-wide `py_compile`/`ruff`, both clean) in place of a real `bench run-tests`; discloses that neither a genuine fresh-site install test nor 3x `bench migrate` was performed (no bench exists in this environment); formally accepts Build ITAG-0.11.0 Task 6's gated migration toolkit as a known exception for this session's documentation work only.
+- **Task 2 — UAT sign-off cross-reference.** `doc/ITAG_UAT_Signoff.md` maps all 26 UAT scenario rows (several numbers have more than one distinct test class) to their owning build, test file, and class — no bench-level "Appendix B UAT Ownership Matrix" exists anywhere in this repository (confirmed by search), so business-owner cells are role-title placeholders, not invented names. Every real sign-off cell is left `☐ Pending`.
+- **Task 3 — 19 operating procedures.** `doc/ITAG_Operating_Procedures/` — one practical runbook per roadmap Section 24.5 topic (20 named topics, despite the plan's own "19-item" label), each grounded in the actual DocTypes/functions/reports built. An independent spot-check (a fresh subagent with no memory of this session, reading only the live source) verified 5 of the 20 against real code and confirmed accuracy; one minor incompleteness (Engineering Hold's scope enumeration) was found and fixed.
+- **Task 4 — 13 role-based training materials.** `doc/ITAG_Training_Materials/` — one document per Section 24.6 role, scoped to that role's actual DocType/service permissions. `00_Training_Evidence_Tracking.md` proposes (does not assume) a default answer to the plan's own explicitly-flagged tracking-mechanism question, disclosed as a placeholder pending real user confirmation.
+- **Task 5 — cutover checklist and deployment record.** `doc/ITAG_Cutover_Readiness_Checklist.md` scores all 19 §24.7 items honestly against this session's real constraints (0 fully verified, 2 explicitly NOT MET, 15 Not Verified, 1 N/A, 1 partial) rather than assuming completion. `doc/ITAG_Deployment_Record.md` is an explicitly blank §24.8 template — no real Production environment has ever been named in this program, and no deployment step was executed.
+- **Task 6 — final README consolidation.** This section, the "Application at a glance" summary, and the "Known Limitations at 1.0.0" section at the top of this file.
+- **Task 7 — production certification.** `doc/ITAG_Production_Certification.md` assembles every artifact from Tasks 1-6 for the 7 named human approvers to actually review and sign — an agent facilitates this document, it does not and cannot substitute for the real sign-off.
+
+**Note on this build's provenance:** the same "no live bench" constraint as every prior build, now compounded by "no named Production environment" and "no access to real human approvers" — both genuinely required to complete roadmap Section 24's exit gate for real. This build's own plan explicitly anticipated this: *"UAT sign-off... requires actual human business-owner approval, which an agent cannot substitute for"* and *"do not execute any deployment step against a real Production environment without explicit user confirmation."* Every document produced in this build says so explicitly, rather than presenting simulated approval as real. **Roadmap Section 24.10's Exit Gate is NOT met by this session's work alone** — items 2 (real UAT sign-off), 3 (migration reconciliation), 4 (Production deployment), 5 (smoke tests), and 8 (signed certification) all require genuine human/operational action this session could not perform. What this build DOES deliver is everything an agent legitimately can: complete, accurate, ready-to-use documentation for every one of those human steps to be carried out against.
 
 ## Local development
 
