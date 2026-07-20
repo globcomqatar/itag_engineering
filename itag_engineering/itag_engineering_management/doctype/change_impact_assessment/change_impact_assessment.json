@@ -1,0 +1,264 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "eco",
+  "analysis_version",
+  "column_break_header",
+  "analysis_status",
+  "staleness_status",
+  "timing_section",
+  "started_at",
+  "completed_at",
+  "column_break_timing",
+  "effective_cutoff",
+  "progress",
+  "scope_section",
+  "scope",
+  "company",
+  "column_break_scope",
+  "facility",
+  "input_checksum",
+  "error_status",
+  "results_section",
+  "impact_results",
+  "summary_counts",
+  "review_section",
+  "analyst_review",
+  "final_approval",
+  "column_break_review",
+  "approved_by",
+  "approved_on"
+ ],
+ "fields": [
+  {
+   "default": "CIA-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "CIA-.YYYY.-"
+  },
+  {
+   "fieldname": "eco",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Engineering Change Order",
+   "options": "Engineering Change Order",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "description": "Incremented each time a fresh analysis is (re-)run for the same ECO.",
+   "fieldname": "analysis_version",
+   "fieldtype": "Int",
+   "label": "Analysis Version"
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Queued",
+   "fieldname": "analysis_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Analysis Status",
+   "options": "Queued\nRunning\nComplete\nFailed",
+   "read_only": 1
+  },
+  {
+   "default": "Fresh",
+   "description": "Set by impact_staleness_service.check_staleness() - not editable directly.",
+   "fieldname": "staleness_status",
+   "fieldtype": "Select",
+   "label": "Staleness Status",
+   "options": "Fresh\nStale",
+   "read_only": 1
+  },
+  {
+   "fieldname": "timing_section",
+   "fieldtype": "Section Break",
+   "label": "Timing"
+  },
+  {
+   "fieldname": "started_at",
+   "fieldtype": "Datetime",
+   "label": "Started At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "completed_at",
+   "fieldtype": "Datetime",
+   "label": "Completed At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_timing",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "The \"as of\" instant the analysis scans transaction state against.",
+   "fieldname": "effective_cutoff",
+   "fieldtype": "Datetime",
+   "label": "Effective Cutoff",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "progress",
+   "fieldtype": "Percent",
+   "label": "Progress",
+   "read_only": 1
+  },
+  {
+   "fieldname": "scope_section",
+   "fieldtype": "Section Break",
+   "label": "Scope"
+  },
+  {
+   "description": "Free-text description of which impact domains were included, e.g. \"All domains\" or a comma-joined subset.",
+   "fieldname": "scope",
+   "fieldtype": "Small Text",
+   "label": "Scope"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "column_break_scope",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Free-text only - no standalone Facility DocType exists (Decision Log #2, single-facility scope), matching Build ITAG-0.5.0's precedent.",
+   "fieldname": "facility",
+   "fieldtype": "Data",
+   "label": "Facility"
+  },
+  {
+   "description": "SHA-256 of the ECO's serialized controlled_changes + effective_method + ANALYSIS_ALGORITHM_VERSION, computed at enqueue time.",
+   "fieldname": "input_checksum",
+   "fieldtype": "Data",
+   "label": "Input Checksum",
+   "read_only": 1
+  },
+  {
+   "fieldname": "error_status",
+   "fieldtype": "Small Text",
+   "label": "Error Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "results_section",
+   "fieldtype": "Section Break",
+   "label": "Impact Results"
+  },
+  {
+   "description": "One dict keyed by domain name holding each domain's scan result - not exploded into per-domain child tables.",
+   "fieldname": "impact_results",
+   "fieldtype": "JSON",
+   "label": "Impact Results",
+   "read_only": 1
+  },
+  {
+   "description": "A flat {domain: count} dict derived from impact_results, kept separately so reports can read a cheap summary without deserializing the full results blob.",
+   "fieldname": "summary_counts",
+   "fieldtype": "JSON",
+   "label": "Summary Counts",
+   "read_only": 1
+  },
+  {
+   "fieldname": "review_section",
+   "fieldtype": "Section Break",
+   "label": "Review"
+  },
+  {
+   "fieldname": "analyst_review",
+   "fieldtype": "Text",
+   "label": "Analyst Review"
+  },
+  {
+   "default": "0",
+   "fieldname": "final_approval",
+   "fieldtype": "Check",
+   "label": "Final Approval"
+  },
+  {
+   "fieldname": "column_break_review",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approved_on",
+   "fieldtype": "Datetime",
+   "label": "Approved On",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Change Impact Assessment",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Approver"
+  },
+  {
+   "read": 1,
+   "role": "Quality Manager"
+  },
+  {
+   "read": 1,
+   "role": "Quality Engineer"
+  },
+  {
+   "read": 1,
+   "role": "Purchase Manager"
+  },
+  {
+   "read": 1,
+   "role": "Sales Manager"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
