@@ -42,3 +42,12 @@ fixtures = [
 		],
 	},
 ]
+
+# Doc Events
+# ----------
+
+doc_events = {
+	"Work Order": {
+		"before_submit": "itag_engineering.itag_engineering_management.work_order_baseline.freeze_baseline_before_submit",
+	},
+}

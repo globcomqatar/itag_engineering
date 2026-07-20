@@ -242,3 +242,100 @@ def create_test_bom_with_operations(item=None, drawing=None, product_revision=No
 		}
 	).insert(ignore_permissions=True)
 	return bom
+
+
+def create_fully_approved_engineering_release(item=None):
+	"""Build ITAG-0.5.0 baseline factory shared by every later build's tests
+	that need a real "Released for Production" Engineering Release rather
+	than mocking one: creates a release-ready BOM (via
+	create_test_bom_with_operations), a single-discipline Engineering
+	Approval Matrix test rule (idempotent, priority 100 - kept distinct from
+	other test suites' own wildcard-matching matrix rules, e.g.
+	test_release_service.py's "RS-TEST-Default" at priority 50, so two
+	always-active rules never collide on the same priority and trip
+	approval_matrix_service's ambiguous-match guard), resolves and approves
+	its one Approval Step, and submits the release for real via
+	release_service.submit_engineering_release() - not a db_set shortcut -
+	so the release genuinely reaches "Released for Production" with a real
+	release_checksum and distribution_list.
+
+	A single discipline (Engineering / Engineering Manager, approved by
+	Administrator) is used deliberately - this factory is meant to be a
+	simple, always-available baseline; tests that specifically need
+	multiple disciplines or segregation-of-duties scenarios build their own
+	Engineering Approval Matrix rule instead (see test_release_service.py).
+	"""
+	from itag_engineering.itag_engineering_management.release_service import (
+		resolve_release_approval_matrix,
+		submit_engineering_release,
+	)
+
+	item = item or create_fresh_stock_item("FACTORY-ER-ITEM").name
+	bom = create_test_bom_with_operations(item=item)
+
+	matrix_name = "Factory Test Approval Matrix"
+	if not frappe.db.exists("Engineering Approval Matrix", matrix_name):
+		frappe.get_doc(
+			{
+				"doctype": "Engineering Approval Matrix",
+				"rule_name": matrix_name,
+				"priority": 100,
+				"is_active": 1,
+				"required_disciplines": [
+					{"sequence": 1, "discipline": "Engineering", "required_role": "Engineering Manager"},
+				],
+			}
+		).insert(ignore_permissions=True)
+
+	release = frappe.get_doc(
+		{
+			"doctype": "Engineering Release",
+			"company": ensure_test_company(),
+			"item": bom.item,
+			"product_revision": bom.itag_product_revision,
+			"drawing_revision": bom.itag_drawing_revision,
+			"bom": bom.name,
+			"effective_datetime": frappe.utils.now_datetime(),
+		}
+	).insert(ignore_permissions=True)
+
+	resolve_release_approval_matrix(release.name)
+	release.reload()
+	release.approval_steps[0].approver = "Administrator"
+	release.approval_steps[0].status = "Approved"
+	release.save(ignore_permissions=True)
+
+	submit_engineering_release(release.name)
+	release.reload()
+	return release
+
+
+def create_test_work_order(release=None, item=None, qty=1):
+	"""Create (but do not submit) a Work Order against a real Released for
+	Production Engineering Release baseline for `item` - auto-creating one
+	via create_fully_approved_engineering_release() if `release` is not
+	given. Returns the Work Order doc, still docstatus 0 - the caller
+	submits it to exercise Build ITAG-0.5.0 Task 6's
+	freeze_baseline_before_submit before_submit doc_event.
+
+	Resolves a real, non-group Warehouse for the test Company dynamically
+	(never hardcodes an ERPNext demo-data warehouse abbreviation like
+	"Stores - TC", which only exists on ERPNext's own default demo company,
+	not necessarily this site's "ITAG International Company").
+	"""
+	release = release or create_fully_approved_engineering_release(item=item)
+	company = ensure_test_company()
+	warehouse = frappe.db.get_value("Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name")
+	if not warehouse:
+		frappe.throw("No non-group Warehouse exists for the test Company - required for Work Order tests.")
+	return frappe.get_doc(
+		{
+			"doctype": "Work Order",
+			"production_item": release.item,
+			"bom_no": release.bom,
+			"qty": qty,
+			"company": company,
+			"wip_warehouse": warehouse,
+			"fg_warehouse": warehouse,
+		}
+	).insert(ignore_permissions=True)
