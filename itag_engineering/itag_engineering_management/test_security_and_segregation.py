@@ -86,6 +86,19 @@ class TestIntegrationUserDenied(FrappeTestCase):
 		from itag_engineering.tests.factories import create_test_eir
 
 		eir = create_test_eir(request_title="SECAUDIT Integration User EIR")
+		# Reload as a fresh Document instance rather than reusing the object
+		# the factory returned. `create_test_eir()` calls `.insert(
+		# ignore_permissions=True)`, which sets `flags.ignore_permissions =
+		# True` on that Python object - and `frappe.model.document.get_doc()`
+		# returns the SAME object unchanged when it is already a Document
+		# instance (`if isinstance(args[0], BaseDocument): return args[0]`),
+		# which is exactly what `apply_workflow()` calls internally. Reusing
+		# the factory's object here would silently carry that stale
+		# ignore_permissions flag into apply_workflow()'s internal
+		# `doc.check_permission("read")` call, bypassing the real permission
+		# check entirely and masking the PermissionError this test exists to
+		# prove - a fresh `frappe.get_doc()` call has no such flag set.
+		eir = frappe.get_doc("Engineering Item Request", eir.name)
 		email = _ensure_user(
 			"secaudit-integration@example.com", "SECAUDIT Integration", ["ITAG Integration User"]
 		)
@@ -160,7 +173,19 @@ class TestSegregationOfDuties(FrappeTestCase):
 		creator_email = _ensure_user(
 			"secaudit-drawing-creator@example.com",
 			"SECAUDIT Drawing Creator",
-			["Engineering Creator", "Engineering Approver"],
+			# All three roles are needed to walk the fixture drawing through
+			# Draft -> Engineering Review -> Checked -> Approved via direct
+			# .save() calls below: Document.validate_workflow() checks the
+			# *current session user's* frappe.get_roles() against each
+			# Workflow Transition's `allowed` role regardless of
+			# ignore_permissions=True (that flag only bypasses
+			# Document.check_permission(), never the separate
+			# validate_workflow() role gate) - so without "Engineering
+			# Checker" here, the fixture itself fails at the
+			# "Engineering Review" -> "Checked" transition, before the
+			# actual creator-cannot-release assertion below is ever
+			# exercised.
+			["Engineering Creator", "Engineering Checker", "Engineering Approver"],
 		)
 		frappe.set_user(creator_email)
 		drawing = frappe.get_doc(
