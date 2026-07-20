@@ -1,0 +1,220 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "related_eco",
+  "engineering_hold",
+  "column_break_header",
+  "status",
+  "item_section",
+  "item",
+  "revision",
+  "column_break_item",
+  "batch",
+  "serial_number",
+  "heat_number",
+  "location_section",
+  "warehouse",
+  "work_order",
+  "column_break_location",
+  "job_card",
+  "quantity_section",
+  "assessed_quantity",
+  "uom",
+  "column_break_quantity",
+  "total_reconciled_quantity",
+  "decisions_section",
+  "decisions"
+ ],
+ "fields": [
+  {
+   "default": "MD-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "MD-.YYYY.-"
+  },
+  {
+   "fieldname": "related_eco",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Related ECO",
+   "options": "Engineering Change Order",
+   "reqd": 1
+  },
+  {
+   "fieldname": "engineering_hold",
+   "fieldtype": "Link",
+   "label": "Engineering Hold",
+   "options": "Production Engineering Hold"
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Draft\nSubmitted\nReconciled\nExecuting\nComplete",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_section",
+   "fieldtype": "Section Break",
+   "label": "Item"
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "revision",
+   "fieldtype": "Data",
+   "label": "Revision"
+  },
+  {
+   "fieldname": "column_break_item",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "batch",
+   "fieldtype": "Link",
+   "label": "Batch",
+   "options": "Batch"
+  },
+  {
+   "fieldname": "serial_number",
+   "fieldtype": "Link",
+   "label": "Serial Number",
+   "options": "Serial No"
+  },
+  {
+   "description": "No dedicated Heat Number doctype exists yet - free-text until Build ITAG-0.10.0's traceability work introduces a real heat-number identity model.",
+   "fieldname": "heat_number",
+   "fieldtype": "Data",
+   "label": "Heat Number"
+  },
+  {
+   "fieldname": "location_section",
+   "fieldtype": "Section Break",
+   "label": "Location"
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "work_order",
+   "fieldtype": "Link",
+   "label": "Work Order",
+   "options": "Work Order"
+  },
+  {
+   "fieldname": "column_break_location",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "job_card",
+   "fieldtype": "Link",
+   "label": "Job Card",
+   "options": "Job Card"
+  },
+  {
+   "fieldname": "quantity_section",
+   "fieldtype": "Section Break",
+   "label": "Quantity"
+  },
+  {
+   "fieldname": "assessed_quantity",
+   "fieldtype": "Float",
+   "label": "Assessed Quantity",
+   "reqd": 1
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Data",
+   "label": "UOM",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_quantity",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Computed = sum of decisions.quantity - see validate().",
+   "fieldname": "total_reconciled_quantity",
+   "fieldtype": "Float",
+   "label": "Total Reconciled Quantity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "decisions_section",
+   "fieldtype": "Section Break",
+   "label": "Decisions"
+  },
+  {
+   "fieldname": "decisions",
+   "fieldtype": "Table",
+   "label": "Decisions",
+   "options": "Material Disposition Decision",
+   "reqd": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Material Disposition",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Quality Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Production Supervisor"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
