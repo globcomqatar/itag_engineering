@@ -159,3 +159,86 @@ def create_test_product_revision(item=None, drawing=None):
 			"drawing_revision": drawing.name,
 		}
 	).insert(ignore_permissions=True)
+
+
+def create_test_bom_with_operations(item=None, drawing=None, product_revision=None):
+	"""A release-ready-eligible BOM: engineering-classified item and
+	component, Released drawing and Released product revision linked, one
+	hold-point operation with its inspection requirement filled in, and
+	valid qty/uom on every component row. Meant to be the known-good
+	starting point for later builds' tests - mutate one field at a time
+	from this baseline to test a specific readiness exception.
+
+	This deviates from task-9-brief.md's literal snippet in four ways,
+	each verified live rather than assumed:
+
+	1. Both `item` and the BOM's single component are created via
+	   create_fresh_stock_item() rather than picked from an arbitrary
+	   existing stock Item (frappe.db.get_value("Item", {"is_stock_item": 1},
+	   ...)). This site carries real ERPNext demo/seed BOMs, so an
+	   arbitrarily picked Item risks colliding with pre-existing BOM
+	   structure - the exact bug already hit and fixed for Tasks 5/6/7's
+	   test suites (see create_fresh_stock_item's own docstring).
+	2. The component Item also gets itag_engineering_classification set,
+	   not just the parent `item`. bom_readiness_service.
+	   check_item_engineering_classification (criterion 1) checks
+	   {bom.item} | every component's item_code - the brief's snippet only
+	   classified the parent, which would leave this "release-ready"
+	   fixture reporting a classification exception against its own
+	   component.
+	3. `itag_drawing_revision` is set to drawing.name (a string), not the
+	   `drawing` Document object itself - itag_drawing_revision is a Link
+	   to Engineering Drawing and must hold the document name, matching how
+	   `itag_product_revision` is already handled (product_revision.name)
+	   in the same dict.
+	4. The operations row fills in `operation` ("_Test Operation 1") and
+	   `workstation` ("_Test Workstation 1") - both mandatory on BOM
+	   Operation for ERPNext's own validate_operations() to allow insert,
+	   confirmed live and already the established pattern in
+	   test_bom_readiness_service.py's `_make_bom` helper. The brief's
+	   literal operations row omits both and is not insertable as-is.
+
+	The auto-created component Item's prefix is derived from the (possibly
+	auto-created) `item` value itself - "{item}-COMP" - rather than a fixed
+	literal, so it always falls under the same item-code-prefix family as
+	whatever cleanup pattern the calling test's tearDown already uses for
+	`item` (e.g. a caller using create_fresh_stock_item("UAT003BOM-SUB") for
+	`item` gets a component named "UAT003BOM-SUB-<hash>-COMP-<hash>", still
+	matched by a `{"item_code": ["like", "UAT003BOM-%"]}` tearDown filter).
+	"""
+	company = ensure_test_company()
+	item = item or create_fresh_stock_item("BOMOPS-TEST-ITEM").name
+	frappe.db.set_value("Item", item, "itag_engineering_classification", "Manufactured")
+	drawing = drawing or create_released_test_drawing()
+	product_revision = product_revision or create_test_product_revision(item=item, drawing=drawing)
+	frappe.db.set_value(
+		"Product Revision",
+		product_revision.name,
+		{"workflow_state": "Released", "revision_status": "Released"},
+	)
+	component = create_fresh_stock_item(f"{item}-COMP").name
+	frappe.db.set_value("Item", component, "itag_engineering_classification", "Manufactured")
+	bom = frappe.get_doc(
+		{
+			"doctype": "BOM",
+			"item": item,
+			"quantity": 1,
+			"company": company,
+			"itag_product_revision": product_revision.name,
+			"itag_drawing_revision": drawing.name,
+			"itag_design_standard": "API 600",
+			"items": [{"item_code": component, "qty": 1, "uom": "Nos"}],
+			"with_operations": 1,
+			"operations": [
+				{
+					"operation": "_Test Operation 1",
+					"workstation": "_Test Workstation 1",
+					"description": "Final hydrostatic test",
+					"time_in_mins": 15,
+					"itag_hold_point": 1,
+					"itag_inspection_requirement": "Hold for QC witness before release",
+				}
+			],
+		}
+	).insert(ignore_permissions=True)
+	return bom
