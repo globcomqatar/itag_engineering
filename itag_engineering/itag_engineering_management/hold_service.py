@@ -160,6 +160,114 @@ def block_delivery_of_held_serial_or_batch(doc, method=None):
 				_raise_if_held("Serial No", serial_no, "Deliver Serial or Batch")
 
 
+def find_active_holds_for_items(item_codes):
+	"""Every Active Production Engineering Hold relevant to any of
+	`item_codes` - a direct Item-scope hold, a hold on one of that item's
+	own Batches/Serial Numbers, or a hold on a Work Order/Product
+	Revision/Engineering Release that a Work Order building that item is
+	tied to (the same transitive scopes is_reference_held() checks, run in
+	reverse: starting from a set of items rather than a single reference).
+	Shared by Build ITAG-0.8.0's impact-analysis backfill
+	(scan_engineering_hold_stock()) and this module's own enforcement hooks,
+	so both use exactly one definition of "held" rather than two that could
+	drift apart.
+	"""
+	if not item_codes:
+		return []
+
+	hold_names = set(
+		frappe.get_all(
+			"Production Engineering Hold",
+			filters={"status": "Active", "reference_doctype": "Item", "reference_name": ["in", item_codes]},
+			pluck="name",
+		)
+	)
+
+	batch_names = frappe.get_all("Batch", filters={"item": ["in", item_codes]}, pluck="name")
+	if batch_names:
+		hold_names.update(
+			frappe.get_all(
+				"Production Engineering Hold",
+				filters={
+					"status": "Active",
+					"reference_doctype": "Batch",
+					"reference_name": ["in", batch_names],
+				},
+				pluck="name",
+			)
+		)
+
+	serial_names = frappe.get_all("Serial No", filters={"item_code": ["in", item_codes]}, pluck="name")
+	if serial_names:
+		hold_names.update(
+			frappe.get_all(
+				"Production Engineering Hold",
+				filters={
+					"status": "Active",
+					"reference_doctype": "Serial No",
+					"reference_name": ["in", serial_names],
+				},
+				pluck="name",
+			)
+		)
+
+	work_orders = frappe.get_all(
+		"Work Order",
+		filters={"production_item": ["in", item_codes]},
+		fields=["name", "itag_product_revision", "itag_engineering_release"],
+	)
+	work_order_names = [row.name for row in work_orders]
+	if work_order_names:
+		hold_names.update(
+			frappe.get_all(
+				"Production Engineering Hold",
+				filters={
+					"status": "Active",
+					"reference_doctype": "Work Order",
+					"reference_name": ["in", work_order_names],
+				},
+				pluck="name",
+			)
+		)
+
+	revisions = sorted({row.itag_product_revision for row in work_orders if row.itag_product_revision})
+	if revisions:
+		hold_names.update(
+			frappe.get_all(
+				"Production Engineering Hold",
+				filters={
+					"status": "Active",
+					"reference_doctype": "Product Revision",
+					"reference_name": ["in", revisions],
+				},
+				pluck="name",
+			)
+		)
+
+	releases = sorted({row.itag_engineering_release for row in work_orders if row.itag_engineering_release})
+	if releases:
+		hold_names.update(
+			frappe.get_all(
+				"Production Engineering Hold",
+				filters={
+					"status": "Active",
+					"reference_doctype": "Engineering Release",
+					"reference_name": ["in", releases],
+				},
+				pluck="name",
+			)
+		)
+
+	if not hold_names:
+		return []
+	return frappe.get_all(
+		"Production Engineering Hold",
+		filters={"name": ["in", sorted(hold_names)]},
+		fields=["name", "hold_scope", "reference_doctype", "reference_name", "hold_reason", "status"],
+		order_by="placed_on desc",
+	)
+
+
 def place_hold(**fields):
 	"""Permission-gated creation API (Global Constraint #2). Defaults
 	blocked_actions to all 9 actions if the caller didn't specify any -

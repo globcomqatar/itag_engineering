@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import frappe
 from frappe.tests.utils import FrappeTestCase
-from frappe.utils import now_datetime
+from frappe.utils import add_days, now_datetime, today
 
 from itag_engineering.itag_engineering_management import impact_analysis_service
 from itag_engineering.itag_engineering_management.impact_analysis_service import (
@@ -144,17 +144,67 @@ class TestImpactAnalysisService(FrappeTestCase):
 			any(row["name"] == work_order.name for row in assessment.impact_results["open_work_orders"])
 		)
 
-	def test_engineering_hold_and_deviation_domains_report_not_yet_implemented(self):
-		ecr = create_test_ecr(request_title="CIA-TEST Not Yet Implemented")
+	def test_engineering_hold_and_deviation_domains_are_empty_lists_with_no_real_data(self):
+		"""Build ITAG-0.8.0 backfilled these two domains with real scans -
+		with no Production Engineering Hold or Deviation/Concession record
+		in scope, each now reports an empty list (a real "confirmed none
+		found" result), not the old not_yet_implemented placeholder dict."""
+		ecr = create_test_ecr(request_title="CIA-TEST No Hold Or Deviation")
 		eco = create_eco_from_accepted_ecr_factory(ecr=ecr)
 		assessment = self._make_bare_assessment(eco.name)
 
 		run_impact_analysis(assessment.name)
 		assessment.reload()
 
-		self.assertEqual(assessment.impact_results["engineering_hold_stock"]["status"], "not_yet_implemented")
-		self.assertEqual(
-			assessment.impact_results["deviations_and_concessions"]["status"], "not_yet_implemented"
+		self.assertEqual(assessment.impact_results["engineering_hold_stock"], [])
+		self.assertEqual(assessment.impact_results["deviations_and_concessions"], [])
+
+	def test_engineering_hold_domain_against_real_data(self):
+		from itag_engineering.itag_engineering_management.hold_service import place_hold
+
+		item = create_fresh_stock_item("CIA-TEST-HOLD-ITEM").name
+		ecr = create_test_ecr(request_title="CIA-TEST Hold Domain", affected_item=item)
+		eco = create_eco_from_accepted_ecr_factory(ecr=ecr)
+		assessment = self._make_bare_assessment(eco.name)
+		hold_name = place_hold(
+			hold_scope="Item",
+			reference_doctype="Item",
+			reference_name=item,
+			hold_reason="CIA-TEST hold reason.",
+		)
+
+		run_impact_analysis(assessment.name)
+		assessment.reload()
+
+		self.assertTrue(
+			any(row["name"] == hold_name for row in assessment.impact_results["engineering_hold_stock"])
+		)
+
+	def test_deviation_and_concession_domain_against_real_data(self):
+		ecr = create_test_ecr(request_title="CIA-TEST Deviation Domain")
+		eco = create_eco_from_accepted_ecr_factory(ecr=ecr)
+		assessment = self._make_bare_assessment(eco.name)
+		deviation = frappe.get_doc(
+			{
+				"doctype": "Deviation Request",
+				"title": "CIA-TEST Deviation",
+				"related_eco": eco.name,
+				"quantity_limit": 5,
+				"uom": "Nos",
+				"validity_from": today(),
+				"validity_to": add_days(today(), 30),
+				"technical_justification": "Test technical justification.",
+			}
+		).insert(ignore_permissions=True)
+
+		run_impact_analysis(assessment.name)
+		assessment.reload()
+
+		self.assertTrue(
+			any(
+				row["name"] == deviation.name and row["record_type"] == "Deviation"
+				for row in assessment.impact_results["deviations_and_concessions"]
+			)
 		)
 
 	def test_permission_check_fires_on_bare_enqueue_function(self):

@@ -99,11 +99,16 @@ class TestBuild070ReportsAgainstRealData(FrappeTestCase):
 		)
 		self.assertTrue(any(row["bom"] == bom.name and row["source"] == "Ad-hoc lookup" for row in data))
 
-	def test_unresolved_impact_exceptions_surfaces_not_yet_implemented_domains(self):
+	def test_unresolved_impact_exceptions_no_longer_flags_the_08_0_backfilled_domains(self):
+		"""Build ITAG-0.8.0 backfilled engineering_hold_stock and
+		deviations_and_concessions with real scans - a completed assessment
+		with no real hold/deviation data now records an empty list for each,
+		not the old not_yet_implemented placeholder, so neither should
+		appear in this report anymore."""
 		_eco, assessment_name = self._make_completed_assessment("B7R-TEST Unresolved", None)
 
 		_columns, data = _report_module("Unresolved Impact Exceptions").execute(filters=None)
 		matching = [row for row in data if row["assessment"] == assessment_name]
 		exception_types = {row["exception_type"] for row in matching}
-		self.assertIn("Not Yet Implemented: engineering_hold_stock", exception_types)
-		self.assertIn("Not Yet Implemented: deviations_and_concessions", exception_types)
+		self.assertNotIn("Not Yet Implemented: engineering_hold_stock", exception_types)
+		self.assertNotIn("Not Yet Implemented: deviations_and_concessions", exception_types)

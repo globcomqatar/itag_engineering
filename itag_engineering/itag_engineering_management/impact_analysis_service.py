@@ -48,14 +48,6 @@ IMPACT_ANALYSIS_ROLES = ("Engineering Manager", "ITAG Engineering Administrator"
 
 ANALYSIS_ALGORITHM_VERSION = 1
 
-# Domains with no backing DocType until Build ITAG-0.8.0 (Production
-# Engineering Hold, Deviation/Concession) - a documented, explicit
-# "Not Yet Available" result, never a silently-empty list that could be
-# misread as "confirmed no holds/deviations exist".
-NOT_YET_IMPLEMENTED_RESULT = {
-	"status": "not_yet_implemented",
-}
-
 QUEUED_OR_RUNNING_STATES = ("Queued", "Running")
 
 
@@ -292,7 +284,7 @@ def _build_domain_plan(eco, item_codes):
 		("wip_stock", lambda: scan_wip_stock(production_item_codes)),
 		("completed_subassemblies", lambda: scan_completed_subassemblies(parent_bom_names)),
 		("finished_stock", lambda: scan_finished_stock(production_item_codes)),
-		("engineering_hold_stock", lambda: scan_engineering_hold_stock()),
+		("engineering_hold_stock", lambda: scan_engineering_hold_stock(item_codes)),
 		("open_purchase_orders", lambda: scan_open_purchase_orders(item_codes)),
 		("open_purchase_receipts", lambda: scan_open_purchase_receipts(item_codes)),
 		("supplier_material", lambda: scan_supplier_material(item_codes)),
@@ -302,7 +294,7 @@ def _build_domain_plan(eco, item_codes):
 		("serial_numbers", lambda: scan_serial_numbers(item_codes)),
 		("batches_and_heat_numbers", lambda: scan_batches_and_heat_numbers(item_codes)),
 		("quality_inspections", lambda: scan_quality_inspections(item_codes)),
-		("deviations_and_concessions", lambda: scan_deviations_and_concessions()),
+		("deviations_and_concessions", lambda: scan_deviations_and_concessions(eco.name)),
 		("previously_delivered_units", lambda: scan_previously_delivered_units(eco, item_codes)),
 	]
 
@@ -446,12 +438,23 @@ def scan_finished_stock(item_codes):
 	)
 
 
-def scan_engineering_hold_stock():
-	"""No backing DocType until Build ITAG-0.8.0 (Production Engineering
-	Hold) - an explicit, documented "not yet available" result, never a
-	silently-empty list that could be misread as "confirmed no holds
-	exist"."""
-	return {**NOT_YET_IMPLEMENTED_RESULT, "note": "Engineering Hold is Build ITAG-0.8.0's scope"}
+def scan_engineering_hold_stock(item_codes):
+	"""Build ITAG-0.8.0 backfill: every Active Production Engineering Hold
+	relevant to any of `item_codes`, via hold_service.py's
+	find_active_holds_for_items() - the exact same matching logic (direct
+	Item scope, plus transitive Batch/Serial/Work Order/Product
+	Revision/Engineering Release scopes) the enforcement hooks use, not a
+	second, independently-derived definition of "held" that could drift out
+	of sync with it.
+
+	Scoped to the exact items transacted against (not expanded to ancestor
+	assemblies via resolve_affected_item_codes_with_ancestors()) - the same
+	deliberate scope boundary already documented on that function: this is
+	a material/stock-shaped domain like batches/serials/quality, not a
+	production/WIP domain like open_work_orders."""
+	from itag_engineering.itag_engineering_management.hold_service import find_active_holds_for_items
+
+	return find_active_holds_for_items(item_codes)
 
 
 def scan_open_purchase_orders(item_codes):
@@ -552,10 +555,22 @@ def scan_quality_inspections(item_codes):
 	)
 
 
-def scan_deviations_and_concessions():
-	"""No backing DocType until Build ITAG-0.8.0 - same documented
-	"not yet available" treatment as Engineering Hold."""
-	return {**NOT_YET_IMPLEMENTED_RESULT, "note": "Deviation/Concession is Build ITAG-0.8.0's scope"}
+def scan_deviations_and_concessions(eco_name):
+	"""Build ITAG-0.8.0 backfill: every Deviation Request and Concession
+	Approval tied to this ECO via their own `related_eco` field. Both
+	DocTypes are queried (Build ITAG-0.8.0 Task 3's deliberate decision to
+	keep them as two separate DocTypes, not merged) and unioned under one
+	uniform row shape tagged by `record_type`, matching the
+	deviation_and_concession_register report's own approach."""
+	results = []
+	for doctype, record_type in (("Deviation Request", "Deviation"), ("Concession Approval", "Concession")):
+		for row in frappe.get_all(
+			doctype,
+			filters={"related_eco": eco_name},
+			fields=["name", "title", "status", "quantity_limit", "remaining_quantity", "validity_to"],
+		):
+			results.append({"record_type": record_type, **row})
+	return results
 
 
 def scan_previously_delivered_units(eco, item_codes):

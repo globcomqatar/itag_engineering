@@ -5,12 +5,14 @@ import frappe
 
 
 def execute(filters=None):
-	"""Surfaces every assessment where a domain scan returned the
-	"not_yet_implemented" placeholder (Engineering Hold / Deviation and
-	Concession - no backing DocType until Build ITAG-0.8.0) alongside every
-	Failed assessment's own error. This report is this build's own honesty
-	check about what it could NOT yet fully verify - placeholder domains
-	are never hidden from it."""
+	"""Surfaces every assessment where a domain scan returned a
+	"not_yet_implemented" placeholder (none remain as of Build ITAG-0.8.0,
+	which backfilled Engineering Hold and Deviation/Concession with real
+	scans - this check is kept for any future domain that ships behind the
+	same placeholder convention) alongside every Failed assessment's own
+	error. This report is this build's own honesty check about what it
+	could NOT yet fully verify - placeholder domains are never hidden from
+	it."""
 	columns = [
 		{
 			"label": "Assessment",
