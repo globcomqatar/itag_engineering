@@ -64,10 +64,11 @@
    "label": "Reference"
   },
   {
+   "description": "\"WIP Unit Register\" added by Build ITAG-0.10.0 - the \"Specific Quantity or WIP Unit\" hold_scope had no matching reference_doctype option until that DocType existed.",
    "fieldname": "reference_doctype",
    "fieldtype": "Select",
    "label": "Reference Doctype",
-   "options": "Work Order\nJob Card\nItem\nProduct Revision\nEngineering Release\nBatch\nSerial No\nWarehouse\nPurchase Receipt\nDelivery Note\nProject",
+   "options": "Work Order\nJob Card\nItem\nProduct Revision\nEngineering Release\nBatch\nSerial No\nWarehouse\nPurchase Receipt\nDelivery Note\nProject\nWIP Unit Register",
    "reqd": 1
   },
   {

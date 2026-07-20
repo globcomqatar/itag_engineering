@@ -56,12 +56,13 @@ doc_events = {
 		# Job Card's "start"/"complete" actions are status transitions, not
 		# submit/cancel (confirm against frappe.get_meta("Job Card") on a
 		# live bench before trusting this - not verified in this
-		# environment) - wired to validate() so both fire on the same save
-		# that actually changes status, and both no-op via
+		# environment) - wired to validate() so all three fire on the same
+		# save that actually changes status, and all three no-op via
 		# has_value_changed("status") on any other save.
 		"validate": [
 			"itag_engineering.itag_engineering_management.hold_service.block_job_card_start",
 			"itag_engineering.itag_engineering_management.hold_service.block_job_card_operation_completion",
+			"itag_engineering.itag_engineering_management.wip_service.create_wip_unit_on_job_card_completion",
 		],
 	},
 	"Stock Entry": {
@@ -69,9 +70,13 @@ doc_events = {
 	},
 	"Quality Inspection": {
 		"before_submit": "itag_engineering.itag_engineering_management.hold_service.block_quality_inspection_submission",
+		"on_submit": "itag_engineering.itag_engineering_management.wip_service.refresh_wip_status_for_quality_inspection",
 	},
 	"Delivery Note": {
 		"before_submit": "itag_engineering.itag_engineering_management.hold_service.block_delivery_of_held_serial_or_batch",
+	},
+	"Production Engineering Hold": {
+		"on_update": "itag_engineering.itag_engineering_management.wip_service.refresh_wip_status_for_hold",
 	},
 }
 

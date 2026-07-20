@@ -110,8 +110,36 @@ def execute_disposition_decision(disposition_name, decision_idx):
 		_unblock_production_continuation(disposition)
 
 	_sync_disposition_status(disposition_name)
+	_refresh_matching_wip_units(disposition)
 
 	return stock_entry_name
+
+
+def _refresh_matching_wip_units(disposition):
+	"""Build ITAG-0.10.0: keeps any WIP Unit Register's disposition_status
+	live. Material Disposition carries no direct wip_unit link field
+	(this DocType predates WIP Unit Register), so this is the same
+	best-effort join wip_service._resolve_disposition_status() uses in
+	reverse - a no-op if WIP Unit Register doesn't exist yet (e.g. this
+	item has WIP tracking disabled, or this app predates Build
+	ITAG-0.10.0)."""
+	if not frappe.db.exists("DocType", "WIP Unit Register"):
+		return
+	from itag_engineering.itag_engineering_management.wip_service import refresh_wip_status
+
+	filters_to_try = []
+	if disposition.work_order:
+		filters_to_try.append({"original_work_order": disposition.work_order, "item": disposition.item})
+	if disposition.serial_number:
+		filters_to_try.append({"serial_number": disposition.serial_number})
+	if disposition.batch:
+		filters_to_try.append({"batch": disposition.batch})
+
+	matched_names = set()
+	for filters in filters_to_try:
+		matched_names.update(frappe.get_all("WIP Unit Register", filters=filters, pluck="name"))
+	for wip_unit_name in matched_names:
+		refresh_wip_status(wip_unit_name)
 
 
 def _unblock_production_continuation(disposition):

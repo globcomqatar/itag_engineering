@@ -71,6 +71,7 @@ def create_rework_work_order(instruction_name):
 		{"rework_work_order": rework_wo.name, "status": "In Progress"},
 		update_modified=False,
 	)
+	_refresh_source_wip_unit(instruction)
 	return rework_wo.name
 
 
@@ -111,6 +112,20 @@ def complete_rework(instruction_name):
 		},
 		update_modified=False,
 	)
+	_refresh_source_wip_unit(instruction)
+
+
+def _refresh_source_wip_unit(instruction):
+	"""Build ITAG-0.10.0: keeps the linked WIP Unit's rework_status live
+	(wip_service.refresh_wip_status() re-derives it from this instruction's
+	own status, never hand-edited) - a no-op if this instruction has no
+	source_wip_unit set (e.g. WIP identity tracking is not enabled for
+	this item, per wip_service.should_create_wip_unit())."""
+	if not instruction.source_wip_unit:
+		return
+	from itag_engineering.itag_engineering_management.wip_service import refresh_wip_status
+
+	refresh_wip_status(instruction.source_wip_unit)
 
 
 def _validate_disposition_is_rework(disposition_name):
