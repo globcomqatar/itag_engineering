@@ -570,9 +570,38 @@ def get_work_order_baseline_fields():
 	}
 
 
+def get_work_order_continuation_fields():
+	"""Build ITAG-0.9.0 Task 3 (roadmap Section 19.6 step 10). Confirmed via
+	a grep of this app's own custom_fields.py (the only place this app adds
+	Work Order fields) that neither field existed before this build."""
+	return {
+		"Work Order": [
+			{
+				"fieldname": "itag_original_work_order",
+				"fieldtype": "Link",
+				"label": "Original Work Order",
+				"options": "Work Order",
+				"read_only": 1,
+				"description": "Set on a successor Work Order by continuation_service.create_successor_work_order() - the Work Order this one continues production from under a new Engineering Release.",
+				"insert_after": "itag_inspection_plan_revision",
+			},
+			{
+				"fieldname": "itag_successor_work_order",
+				"fieldtype": "Link",
+				"label": "Successor Work Order",
+				"options": "Work Order",
+				"read_only": 1,
+				"description": "Set on the ORIGINAL Work Order once a Production Change Continuation creates its successor.",
+				"insert_after": "itag_original_work_order",
+			},
+		]
+	}
+
+
 def sync_custom_fields():
 	create_custom_fields(get_custom_fields(), update=True)
 	create_custom_fields(get_bom_fields(), update=True)
 	create_custom_fields(get_routing_fields(), update=True)
 	create_custom_fields(get_bom_operation_fields(), update=True)
 	create_custom_fields(get_work_order_baseline_fields(), update=True)
+	create_custom_fields(get_work_order_continuation_fields(), update=True)

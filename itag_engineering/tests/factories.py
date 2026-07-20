@@ -273,7 +273,7 @@ def create_test_bom_with_operations(item=None, drawing=None, product_revision=No
 	return bom
 
 
-def create_fully_approved_engineering_release(item=None):
+def create_fully_approved_engineering_release(item=None, **release_overrides):
 	"""Build ITAG-0.5.0 baseline factory shared by every later build's tests
 	that need a real "Released for Production" Engineering Release rather
 	than mocking one: creates a release-ready BOM (via
@@ -293,6 +293,12 @@ def create_fully_approved_engineering_release(item=None):
 	simple, always-available baseline; tests that specifically need
 	multiple disciplines or segregation-of-duties scenarios build their own
 	Engineering Approval Matrix rule instead (see test_release_service.py).
+
+	`**release_overrides` merges into the Engineering Release dict before
+	insert - e.g. a caller building Build ITAG-0.9.0's successor-Work-Order
+	scenario passes `superseded_release=<the prior release's name>` so
+	submit_engineering_release() marks that prior release Superseded,
+	keeping resolve_effective_release() unambiguous for the same item.
 	"""
 	from itag_engineering.itag_engineering_management.release_service import (
 		resolve_release_approval_matrix,
@@ -316,17 +322,17 @@ def create_fully_approved_engineering_release(item=None):
 			}
 		).insert(ignore_permissions=True)
 
-	release = frappe.get_doc(
-		{
-			"doctype": "Engineering Release",
-			"company": ensure_test_company(),
-			"item": bom.item,
-			"product_revision": bom.itag_product_revision,
-			"drawing_revision": bom.itag_drawing_revision,
-			"bom": bom.name,
-			"effective_datetime": frappe.utils.now_datetime(),
-		}
-	).insert(ignore_permissions=True)
+	release_fields = {
+		"doctype": "Engineering Release",
+		"company": ensure_test_company(),
+		"item": bom.item,
+		"product_revision": bom.itag_product_revision,
+		"drawing_revision": bom.itag_drawing_revision,
+		"bom": bom.name,
+		"effective_datetime": frappe.utils.now_datetime(),
+	}
+	release_fields.update(release_overrides)
+	release = frappe.get_doc(release_fields).insert(ignore_permissions=True)
 
 	resolve_release_approval_matrix(release.name)
 	release.reload()
