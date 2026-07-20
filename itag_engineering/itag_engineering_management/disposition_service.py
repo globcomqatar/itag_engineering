@@ -28,6 +28,19 @@ EXECUTED_STATE = "Executed"
 ISSUE_DECISION_TYPES = {"Scrap", "Consume Under Approved Deviation"}
 TRANSFER_DECISION_TYPES = {"Rework", "Return to Supplier", "Quarantine", "Use for Another Product"}
 
+# UAT-006: executing a "Continue Under Old Revision" decision grants a
+# narrow, decision-specific unblock of only the production-continuation
+# actions - never the full release_hold() (which would also lift
+# "Deliver Serial or Batch"/"Release Held Stock" and every OTHER
+# Work Order or Item a broader-scoped hold might also cover).
+CONTINUE_OLD_REVISION_UNBLOCKED_ACTIONS = (
+	"Start Job Card",
+	"Complete Operation",
+	"Transfer Material",
+	"Consume Material",
+	"Manufacture Finished Goods",
+)
+
 # decision_type -> warehouse-name keyword to resolve the Transfer target
 # against, per Decision Log #10's warehouse structure (Raw Material/WIP/
 # Finished Goods/Quarantine-Engineering Hold/Rework/Scrap). Resolved
@@ -93,9 +106,52 @@ def execute_disposition_decision(disposition_name, decision_idx):
 	if decision.decision_type == "Consume Under Approved Deviation" and decision.related_deviation:
 		record_consumption("Deviation Request", decision.related_deviation, decision.quantity)
 
+	if decision.decision_type == "Continue Under Old Revision":
+		_unblock_production_continuation(disposition)
+
 	_sync_disposition_status(disposition_name)
 
 	return stock_entry_name
+
+
+def _unblock_production_continuation(disposition):
+	"""UAT-006: flips only CONTINUE_OLD_REVISION_UNBLOCKED_ACTIONS to
+	is_blocked=0 on the Active hold(s) covering this disposition's own
+	Work Order/Item/Revision - the hold itself stays Active, and every
+	other blocked action row on it (e.g. "Deliver Serial or Batch",
+	"Release Held Stock") is left exactly as configured. A direct
+	frappe.db.set_value() against the child table, matching the same
+	dict-filter style hold_service._find_active_hold() already uses to
+	query Hold Blocked Action rows, since there is no Document wrapper
+	around "this one blocked-action row" to call .save() on."""
+	reference_candidates = [("Item", disposition.item)]
+	if disposition.work_order:
+		reference_candidates.append(("Work Order", disposition.work_order))
+	if disposition.revision:
+		reference_candidates.append(("Product Revision", disposition.revision))
+
+	for reference_doctype, reference_name in reference_candidates:
+		hold_names = frappe.get_all(
+			"Production Engineering Hold",
+			filters={
+				"status": "Active",
+				"reference_doctype": reference_doctype,
+				"reference_name": reference_name,
+			},
+			pluck="name",
+		)
+		for hold_name in hold_names:
+			frappe.db.set_value(
+				"Hold Blocked Action",
+				{
+					"parenttype": "Production Engineering Hold",
+					"parent": hold_name,
+					"action": ["in", CONTINUE_OLD_REVISION_UNBLOCKED_ACTIONS],
+				},
+				"is_blocked",
+				0,
+				update_modified=False,
+			)
 
 
 def _create_and_submit_stock_entry(disposition, decision):

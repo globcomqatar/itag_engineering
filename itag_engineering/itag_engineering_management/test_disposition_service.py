@@ -9,7 +9,7 @@ from itag_engineering.itag_engineering_management.disposition_service import exe
 from itag_engineering.tests.factories import (
 	create_eco_from_accepted_ecr_factory,
 	create_fresh_stock_item,
-	ensure_test_company,
+	create_test_material_disposition,
 )
 
 
@@ -23,22 +23,8 @@ class TestDispositionService(FrappeTestCase):
 		frappe.db.delete("Deviation Request", {"title": ["like", "MDSVC-TEST%"]})
 
 	def _make_disposition(self, item, decisions, warehouse=None):
-		company = ensure_test_company()
-		warehouse = warehouse or frappe.db.get_value(
-			"Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name"
-		)
 		eco = create_eco_from_accepted_ecr_factory(request_title="MDSVC-TEST ECR", affected_item=item)
-		return frappe.get_doc(
-			{
-				"doctype": "Material Disposition",
-				"related_eco": eco.name,
-				"item": item,
-				"warehouse": warehouse,
-				"assessed_quantity": sum(d["quantity"] for d in decisions),
-				"uom": "Nos",
-				"decisions": decisions,
-			}
-		).insert(ignore_permissions=True)
+		return create_test_material_disposition(item, decisions, eco=eco, warehouse=warehouse)
 
 	def test_scrap_decision_creates_and_submits_stock_entry(self):
 		item = create_fresh_stock_item("MDSVC-TEST-ITEM").name

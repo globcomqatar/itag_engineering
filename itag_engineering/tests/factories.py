@@ -410,6 +410,54 @@ def create_eco_from_accepted_ecr_factory(ecr=None, **ecr_overrides):
 	return frappe.get_doc("Engineering Change Order", eco_name)
 
 
+def create_test_material_disposition(item, decisions, eco=None, warehouse=None, **overrides):
+	"""Build ITAG-0.8.0 baseline factory for a Material Disposition -
+	creates (if not given) an ECO scoped to `item` via
+	create_eco_from_accepted_ecr_factory(), resolves a real non-group
+	Warehouse for the test Company unless one is given, and computes
+	assessed_quantity as the sum of the given decision rows' own
+	quantities - so the disposition reconciles by construction unless a
+	test deliberately unbalances it."""
+	company = ensure_test_company()
+	warehouse = warehouse or frappe.db.get_value(
+		"Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name"
+	)
+	eco = eco or create_eco_from_accepted_ecr_factory(affected_item=item)
+	fields = {
+		"doctype": "Material Disposition",
+		"related_eco": eco.name,
+		"item": item,
+		"warehouse": warehouse,
+		"assessed_quantity": sum(d["quantity"] for d in decisions),
+		"uom": "Nos",
+		"decisions": decisions,
+	}
+	fields.update(overrides)
+	return frappe.get_doc(fields).insert(ignore_permissions=True)
+
+
+def ensure_test_warehouse_by_keyword(keyword):
+	"""Return a real Warehouse for the test Company whose name contains
+	`keyword` (Decision Log #10's warehouse-naming convention, e.g.
+	"Scrap", "Rework", "Quarantine") - creates one if this site doesn't
+	already have it, since disposition_service.py's
+	TRANSFER_TARGET_WAREHOUSE_KEYWORD resolution requires a real warehouse
+	match to already exist and never invents one on the fly."""
+	company = ensure_test_company()
+	existing = frappe.db.get_value(
+		"Warehouse",
+		{"company": company, "warehouse_name": ["like", f"%{keyword}%"], "disabled": 0},
+		"name",
+	)
+	if existing:
+		return existing
+	return (
+		frappe.get_doc({"doctype": "Warehouse", "warehouse_name": f"{keyword} Warehouse", "company": company})
+		.insert(ignore_permissions=True)
+		.name
+	)
+
+
 def create_multi_level_bom_tree_with_open_work_orders(prefix, depth=3, work_orders_per_level=1):
 	"""Build ITAG-0.7.0 baseline factory for UAT-005 (Multi-Level BOM
 	Revision) and this build's own performance baseline measurement.
