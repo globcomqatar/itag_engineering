@@ -284,6 +284,38 @@ def _notify_assessment_complete(eco_name, assessment_name):
 	)
 
 
+def iter_domain_rows(domain_keys):
+	"""Yields (assessment_name, eco_name, domain_key, row) for every list-
+	shaped row recorded under any of `domain_keys` across every Complete
+	Change Impact Assessment. Shared by every Task 5 report that flattens
+	impact_results into rows rather than re-running the scan itself
+	(re-running would duplicate this module's own logic and risk drifting
+	out of sync with it) - domains whose result is a dict (the
+	not_yet_implemented/skipped placeholders) are silently skipped here,
+	not flattened as rows; see unresolved_impact_exceptions for the report
+	that surfaces those instead.
+
+	frappe.parse_json() defensively handles impact_results arriving as
+	either an already-parsed dict (if frappe.get_all() deserializes JSON
+	fieldtype columns the same way frappe.get_doc() does) or a raw JSON
+	string (if it does not) - this was not verified live against this
+	specific Frappe version.
+	"""
+	assessments = frappe.get_all(
+		"Change Impact Assessment",
+		filters={"analysis_status": "Complete"},
+		fields=["name", "eco", "impact_results"],
+	)
+	for assessment in assessments:
+		raw = assessment.impact_results
+		results = frappe.parse_json(raw) if isinstance(raw, str) else (raw or {})
+		for domain_key in domain_keys:
+			domain_result = results.get(domain_key)
+			if isinstance(domain_result, list):
+				for row in domain_result:
+					yield assessment.name, assessment.eco, domain_key, row
+
+
 # --- Domain scan functions (roadmap Section 16.3) -----------------------
 
 
@@ -407,7 +439,10 @@ def scan_supplier_material(item_codes):
 	if not po_names:
 		return []
 	suppliers = frappe.get_all("Purchase Order", filters={"name": ["in", po_names]}, pluck="supplier")
-	return sorted({supplier for supplier in suppliers if supplier})
+	# A list of dicts, not plain strings, for a uniform row shape with every
+	# other domain - iter_domain_rows() (Task 5's reports) expects each
+	# domain's rows to be dict-like so a report can render columns from them.
+	return [{"supplier": supplier} for supplier in sorted({s for s in suppliers if s})]
 
 
 def scan_sales_orders(item_codes):
@@ -431,7 +466,8 @@ def scan_customer_projects(item_codes):
 	projects = frappe.get_all(
 		"Sales Order", filters={"name": ["in", so_names], "project": ["is", "set"]}, pluck="project"
 	)
-	return sorted({project for project in projects if project})
+	# Same uniform-row-shape reasoning as scan_supplier_material() above.
+	return [{"project": project} for project in sorted({p for p in projects if p})]
 
 
 def scan_delivery_notes(item_codes):
