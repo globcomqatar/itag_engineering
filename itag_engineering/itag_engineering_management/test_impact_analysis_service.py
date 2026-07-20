@@ -117,6 +117,10 @@ class TestImpactAnalysisService(FrappeTestCase):
 
 	def test_open_work_order_domain_against_real_data(self):
 		item = create_fresh_stock_item("CIA-TEST-WO-ITEM").name
+		# Work Order.bom_no is unconditionally reqd=1 in ERPNext core (verified
+		# live: creating one with no bom_no raises frappe.MandatoryError) - a
+		# real BOM is required here, not just a bare Work Order dict.
+		bom = create_test_bom_with_operations(item=item)
 		company = ensure_test_company()
 		warehouse = frappe.db.get_value(
 			"Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name"
@@ -125,6 +129,7 @@ class TestImpactAnalysisService(FrappeTestCase):
 			{
 				"doctype": "Work Order",
 				"production_item": item,
+				"bom_no": bom.name,
 				"qty": 1,
 				"company": company,
 				"wip_warehouse": warehouse,

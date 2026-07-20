@@ -35,14 +35,27 @@ def convert_data_field_to_link(doctype, fieldname, target_doctype):
 	"""Change a Custom Field's fieldtype from Data to Link (options
 	target_doctype) in place, idempotently. Assumes
 	null_out_unconvertible_link_values() has already been called for the
-	same (doctype, fieldname)."""
+	same (doctype, fieldname).
+
+	Custom Field.validate() explicitly blocks in-place fieldtype changes
+	("Fieldtype cannot be changed from {0} to {1}") - frappe/custom/doctype/
+	custom_field/custom_field.py - so doc.save() can never perform this
+	conversion regardless of the target fieldtype. Writing directly via
+	frappe.db.set_value bypasses the controller's validate() entirely (it
+	only runs SQL, no hooks), which is the correct way to change a Custom
+	Field's own fieldtype after the fact."""
 	custom_field_name = f"{doctype}-{fieldname}"
 	if not frappe.db.exists("Custom Field", custom_field_name):
 		return
-	custom_field = frappe.get_doc("Custom Field", custom_field_name)
-	if custom_field.fieldtype == "Link" and custom_field.options == target_doctype:
+	current_fieldtype, current_options = frappe.db.get_value(
+		"Custom Field", custom_field_name, ["fieldtype", "options"]
+	)
+	if current_fieldtype == "Link" and current_options == target_doctype:
 		return
-	custom_field.fieldtype = "Link"
-	custom_field.options = target_doctype
-	custom_field.save(ignore_permissions=True)
+	frappe.db.set_value(
+		"Custom Field",
+		custom_field_name,
+		{"fieldtype": "Link", "options": target_doctype},
+		update_modified=False,
+	)
 	frappe.clear_cache(doctype=doctype)

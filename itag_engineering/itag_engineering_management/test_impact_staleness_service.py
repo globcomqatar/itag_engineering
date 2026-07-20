@@ -5,11 +5,15 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import now_datetime
 
-from itag_engineering.itag_engineering_management.impact_analysis_service import run_impact_analysis
+from itag_engineering.itag_engineering_management.impact_analysis_service import (
+	compute_input_checksum,
+	run_impact_analysis,
+)
 from itag_engineering.itag_engineering_management.impact_staleness_service import check_staleness
 from itag_engineering.tests.factories import (
 	create_eco_from_accepted_ecr_factory,
 	create_fresh_stock_item,
+	create_test_bom_with_operations,
 	create_test_ecr,
 	ensure_test_company,
 )
@@ -33,7 +37,14 @@ class TestImpactStalenessService(FrappeTestCase):
 				"doctype": "Change Impact Assessment",
 				"eco": eco.name,
 				"effective_cutoff": now_datetime(),
-				"input_checksum": "placeholder",
+				# The real checksum for the ECO as it stands right now - not a
+				# placeholder string - since this bypasses enqueue_impact_
+				# analysis() (the normal place this gets computed) to call
+				# run_impact_analysis() directly. Confirmed live: a literal
+				# placeholder here permanently mismatches compute_input_checksum(
+				# eco)'s freshly recomputed value, so check_staleness() reports
+				# Stale immediately even with zero actual input changes.
+				"input_checksum": compute_input_checksum(eco),
 			}
 		).insert(ignore_permissions=True)
 		run_impact_analysis(assessment.name)
@@ -62,6 +73,10 @@ class TestImpactStalenessService(FrappeTestCase):
 		_eco, assessment = self._make_completed_assessment(title="STALE-TEST New WO", affected_item=item)
 		self.assertFalse(check_staleness(assessment.name))
 
+		# Work Order.bom_no is unconditionally reqd=1 in ERPNext core
+		# (verified live) - a real BOM is required here, not just a bare
+		# Work Order dict.
+		bom = create_test_bom_with_operations(item=item)
 		company = ensure_test_company()
 		warehouse = frappe.db.get_value(
 			"Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name"
@@ -70,6 +85,7 @@ class TestImpactStalenessService(FrappeTestCase):
 			{
 				"doctype": "Work Order",
 				"production_item": item,
+				"bom_no": bom.name,
 				"qty": 1,
 				"company": company,
 				"wip_warehouse": warehouse,

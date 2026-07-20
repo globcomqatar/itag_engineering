@@ -197,8 +197,16 @@ def run_impact_analysis(assessment_name):
 				"analysis_status": "Complete",
 				"completed_at": now_datetime(),
 				"progress": 100,
-				"impact_results": impact_results,
-				"summary_counts": summary_counts,
+				# JSON-fieldtype columns are plain DB text columns as far as
+				# frappe.db.set_value's bulk-update path is concerned - it does
+				# not serialize dict/list values itself (confirmed live: passing
+				# the raw dict produced a "Syntax error in query" with the
+				# dict's Python repr embedded verbatim in the SQL). frappe.as_json
+				# is Frappe's own dumper and - unlike plain json.dumps - already
+				# handles the date/datetime/Decimal values that show up inside
+				# these scan results (e.g. Deviation Request.validity_to).
+				"impact_results": frappe.as_json(impact_results),
+				"summary_counts": frappe.as_json(summary_counts),
 				"error_status": "",
 			},
 			update_modified=False,
@@ -206,8 +214,22 @@ def run_impact_analysis(assessment_name):
 		frappe.db.set_value(
 			"Engineering Change Order",
 			assessment.eco,
-			"impact_analysis_status",
-			"Complete",
+			# change_impact_assessment is set here too, not only by
+			# enqueue_impact_analysis() before queueing (Global Constraint
+			# #2's normal path) - confirmed live that leaving this to the
+			# enqueue step alone lets the two go out of sync: sync_eco_
+			# impact_analysis_staleness() (impact_staleness_service.py)
+			# short-circuits on `if not doc.change_impact_assessment`, so any
+			# assessment that completes without that link already set (e.g.
+			# a completed assessment created directly rather than via
+			# enqueue_impact_analysis(), or a future recovery/retry path)
+			# leaves the ECO believing it has no completed analysis at all -
+			# a workflow-state/mirror-field desync of exactly the recurring
+			# class this app has hit before. Stamping it here too, keyed off
+			# THIS assessment (the one that just actually completed), makes
+			# completion self-contained and idempotent regardless of how the
+			# assessment was created.
+			{"change_impact_assessment": assessment_name, "impact_analysis_status": "Complete"},
 			update_modified=False,
 		)
 		_notify_assessment_complete(assessment.eco, assessment_name)

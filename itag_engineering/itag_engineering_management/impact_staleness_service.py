@@ -93,7 +93,15 @@ def _input_changed(assessment, eco):
 def _relevant_transactions_changed(assessment, eco):
 	if not assessment.impact_results:
 		return False
-	recorded_rows = assessment.impact_results.get("open_work_orders") or []
+	# Frappe's "JSON" fieldtype only auto-serializes dict -> str on
+	# Document.save() (base_document.py's get_valid_dict()) - there is no
+	# symmetric str -> dict step on load, so a freshly frappe.get_doc()'d
+	# assessment's impact_results is a raw JSON string here, not a dict.
+	# Same defensive parse impact_analysis_service.iter_domain_rows() already
+	# uses for exactly this reason.
+	raw = assessment.impact_results
+	results = frappe.parse_json(raw) if isinstance(raw, str) else raw
+	recorded_rows = results.get("open_work_orders") or []
 	recorded_names = {row["name"] for row in recorded_rows}
 
 	item_codes = resolve_affected_item_codes(eco)

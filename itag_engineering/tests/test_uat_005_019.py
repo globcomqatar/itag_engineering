@@ -8,6 +8,7 @@ from frappe.tests.utils import FrappeTestCase
 from frappe.utils import now_datetime
 
 from itag_engineering.itag_engineering_management.impact_analysis_service import (
+	compute_input_checksum,
 	resolve_affected_item_codes_with_ancestors,
 	run_impact_analysis,
 )
@@ -102,7 +103,11 @@ class TestUAT019ECOAnalysisStaleness(FrappeTestCase):
 				"doctype": "Change Impact Assessment",
 				"eco": eco.name,
 				"effective_cutoff": now_datetime(),
-				"input_checksum": "placeholder",
+				# The real checksum for the ECO as it stands right now, not a
+				# placeholder - this test's whole point is proving that
+				# EDITING controlled_changes (not just any hardcoded mismatch)
+				# is what flips staleness_status to Stale.
+				"input_checksum": compute_input_checksum(eco),
 			}
 		).insert(ignore_permissions=True)
 

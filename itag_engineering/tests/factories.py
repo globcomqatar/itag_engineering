@@ -641,6 +641,10 @@ def create_multi_level_bom_tree_with_open_work_orders(prefix, depth=3, work_orde
 				{
 					"doctype": "Work Order",
 					"production_item": item,
+					# Work Order.bom_no is unconditionally reqd=1 in ERPNext
+					# core (verified live) - this level's own real BOM, not
+					# a bare Work Order dict.
+					"bom_no": bom.name,
 					"qty": 1,
 					"company": company,
 					"wip_warehouse": warehouse,
