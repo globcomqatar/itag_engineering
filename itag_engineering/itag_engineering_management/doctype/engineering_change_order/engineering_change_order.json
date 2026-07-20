@@ -1,0 +1,292 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "source_ecr",
+  "current_release",
+  "column_break_header",
+  "workflow_state",
+  "implementation_status",
+  "classification_section",
+  "change_classification",
+  "risk_level",
+  "safety_and_compliance_impact",
+  "column_break_classification",
+  "customer_approval_requirement",
+  "customer_approval_reference",
+  "costing_review_requirement",
+  "applicability_section",
+  "production_applicability",
+  "stock_and_wip_applicability",
+  "column_break_applicability",
+  "procurement_applicability",
+  "service_or_delivered_unit_applicability",
+  "effective_section",
+  "effective_method",
+  "effective_date",
+  "changes_section",
+  "controlled_changes",
+  "impact_section",
+  "change_impact_assessment",
+  "impact_analysis_status",
+  "approval_section",
+  "approval_matrix",
+  "requires_cost_review",
+  "column_break_approval",
+  "requires_customer_review",
+  "approval_steps"
+ ],
+ "fields": [
+  {
+   "default": "ECO-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "ECO-.YYYY.-"
+  },
+  {
+   "fieldname": "source_ecr",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Source ECR",
+   "options": "Engineering Change Request",
+   "reqd": 1
+  },
+  {
+   "description": "The baseline being changed, if any - not every ECO necessarily targets an already-released baseline.",
+   "fieldname": "current_release",
+   "fieldtype": "Link",
+   "label": "Current Release",
+   "options": "Engineering Release"
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "workflow_state",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Workflow State",
+   "options": "Draft\nEngineering Definition\nImpact Analysis Required\nDiscipline Review\nQuality Review\nProduction Review\nCost Review\nCustomer Approval\nApproved\nReleased for Implementation\nImplemented\nVerified\nClosed",
+   "read_only": 1
+  },
+  {
+   "default": "Not Started",
+   "fieldname": "implementation_status",
+   "fieldtype": "Select",
+   "label": "Implementation Status",
+   "options": "Not Started\nIn Progress\nImplemented\nVerified"
+  },
+  {
+   "fieldname": "classification_section",
+   "fieldtype": "Section Break",
+   "label": "Classification"
+  },
+  {
+   "fieldname": "change_classification",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Change Classification",
+   "options": "\nRoutine\nSafety-Impacting\nCost-Impacting\nCustomer-Specific"
+  },
+  {
+   "fieldname": "risk_level",
+   "fieldtype": "Select",
+   "label": "Risk Level",
+   "options": "\nLow\nMedium\nHigh"
+  },
+  {
+   "fieldname": "safety_and_compliance_impact",
+   "fieldtype": "Small Text",
+   "label": "Safety and Compliance Impact"
+  },
+  {
+   "fieldname": "column_break_classification",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "customer_approval_requirement",
+   "fieldtype": "Check",
+   "label": "Customer Approval Requirement"
+  },
+  {
+   "description": "Decision Log #14: a recorded external customer-approval reference, not a blocking third-party login flow. Set by eco_service.record_customer_approval_reference().",
+   "fieldname": "customer_approval_reference",
+   "fieldtype": "Data",
+   "label": "Customer Approval Reference"
+  },
+  {
+   "default": "0",
+   "fieldname": "costing_review_requirement",
+   "fieldtype": "Check",
+   "label": "Costing Review Requirement"
+  },
+  {
+   "fieldname": "applicability_section",
+   "fieldtype": "Section Break",
+   "label": "Applicability"
+  },
+  {
+   "default": "0",
+   "fieldname": "production_applicability",
+   "fieldtype": "Check",
+   "label": "Production Applicability"
+  },
+  {
+   "default": "0",
+   "fieldname": "stock_and_wip_applicability",
+   "fieldtype": "Check",
+   "label": "Stock and WIP Applicability"
+  },
+  {
+   "fieldname": "column_break_applicability",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "procurement_applicability",
+   "fieldtype": "Check",
+   "label": "Procurement Applicability"
+  },
+  {
+   "default": "0",
+   "fieldname": "service_or_delivered_unit_applicability",
+   "fieldtype": "Check",
+   "label": "Service or Delivered Unit Applicability"
+  },
+  {
+   "fieldname": "effective_section",
+   "fieldtype": "Section Break",
+   "label": "Effectivity"
+  },
+  {
+   "fieldname": "effective_method",
+   "fieldtype": "Select",
+   "label": "Effective Method",
+   "options": "\nImmediate\nNext Work Order\nSpecific Effective Date\nSerial-Number Effective"
+  },
+  {
+   "fieldname": "effective_date",
+   "fieldtype": "Date",
+   "label": "Effective Date"
+  },
+  {
+   "fieldname": "changes_section",
+   "fieldtype": "Section Break",
+   "label": "Controlled Changes"
+  },
+  {
+   "fieldname": "controlled_changes",
+   "fieldtype": "Table",
+   "label": "Controlled Changes",
+   "options": "Controlled Change",
+   "reqd": 1
+  },
+  {
+   "fieldname": "impact_section",
+   "fieldtype": "Section Break",
+   "label": "Impact Analysis"
+  },
+  {
+   "description": "Forward-reference placeholder - Build ITAG-0.7.0 (Change Impact Analysis) does not exist yet.",
+   "fieldname": "change_impact_assessment",
+   "fieldtype": "Data",
+   "label": "Change Impact Assessment"
+  },
+  {
+   "default": "Not Started",
+   "fieldname": "impact_analysis_status",
+   "fieldtype": "Select",
+   "label": "Impact Analysis Status",
+   "options": "Not Started\nIn Progress\nComplete\nStale"
+  },
+  {
+   "fieldname": "approval_section",
+   "fieldtype": "Section Break",
+   "label": "Approval"
+  },
+  {
+   "description": "Set by eco_service.resolve_eco_approval_disciplines() - not editable directly.",
+   "fieldname": "approval_matrix",
+   "fieldtype": "Link",
+   "label": "Approval Matrix",
+   "options": "Engineering Approval Matrix",
+   "read_only": 1
+  },
+  {
+   "fieldname": "requires_cost_review",
+   "fieldtype": "Check",
+   "label": "Requires Cost Review",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_approval",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "requires_customer_review",
+   "fieldtype": "Check",
+   "label": "Requires Customer Review",
+   "read_only": 1
+  },
+  {
+   "description": "Reused from Build ITAG-0.5.0 - not a second, near-identical child doctype.",
+   "fieldname": "approval_steps",
+   "fieldtype": "Table",
+   "label": "Approval Steps",
+   "options": "Approval Step",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Engineering Change Order",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Quality Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Approver",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

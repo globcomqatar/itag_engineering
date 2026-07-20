@@ -168,5 +168,47 @@
    {"state": "Accepted for ECO", "action": "Close", "next_state": "Closed", "allowed": "Engineering Manager", "allow_self_approval": 1},
    {"state": "Rejected", "action": "Close", "next_state": "Closed", "allowed": "Engineering Manager", "allow_self_approval": 1}
   ]
+ },
+ {
+  "doctype": "Workflow",
+  "name": "Engineering Change Order Workflow",
+  "workflow_name": "Engineering Change Order Workflow",
+  "document_type": "Engineering Change Order",
+  "workflow_state_field": "workflow_state",
+  "is_active": 1,
+  "override_status": 1,
+  "send_email_alert": 0,
+  "states": [
+   {"state": "Draft", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Engineering Definition", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Impact Analysis Required", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Discipline Review", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Quality Review", "doc_status": "0", "allow_edit": "Quality Manager"},
+   {"state": "Production Review", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Cost Review", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Customer Approval", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Approved", "doc_status": "0", "allow_edit": "Engineering Approver"},
+   {"state": "Released for Implementation", "doc_status": "0", "allow_edit": "Engineering Approver"},
+   {"state": "Implemented", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Verified", "doc_status": "0", "allow_edit": "Quality Manager"},
+   {"state": "Closed", "doc_status": "0", "allow_edit": "ITAG Engineering Administrator"}
+  ],
+  "transitions": [
+   {"state": "Draft", "action": "Begin Engineering Definition", "next_state": "Engineering Definition", "allowed": "Engineering Manager", "allow_self_approval": 1},
+   {"state": "Engineering Definition", "action": "Submit for Impact Analysis", "next_state": "Impact Analysis Required", "allowed": "Engineering Manager", "allow_self_approval": 1},
+   {"state": "Impact Analysis Required", "action": "Submit for Discipline Review", "next_state": "Discipline Review", "allowed": "Engineering Manager", "allow_self_approval": 1},
+   {"state": "Discipline Review", "action": "Submit for Quality Review", "next_state": "Quality Review", "allowed": "Engineering Manager", "allow_self_approval": 1},
+   {"state": "Quality Review", "action": "Submit for Production Review", "next_state": "Production Review", "allowed": "Quality Manager", "allow_self_approval": 1},
+   {"state": "Production Review", "action": "Submit for Cost Review", "next_state": "Cost Review", "allowed": "Engineering Manager", "allow_self_approval": 1, "condition": "doc.requires_cost_review == 1"},
+   {"state": "Production Review", "action": "Submit for Customer Approval", "next_state": "Customer Approval", "allowed": "Engineering Manager", "allow_self_approval": 1, "condition": "doc.requires_cost_review == 0 and doc.requires_customer_review == 1"},
+   {"state": "Production Review", "action": "Approve", "next_state": "Approved", "allowed": "Engineering Manager", "allow_self_approval": 1, "condition": "doc.requires_cost_review == 0 and doc.requires_customer_review == 0"},
+   {"state": "Cost Review", "action": "Submit for Customer Approval", "next_state": "Customer Approval", "allowed": "Engineering Manager", "allow_self_approval": 1, "condition": "doc.requires_customer_review == 1"},
+   {"state": "Cost Review", "action": "Approve", "next_state": "Approved", "allowed": "Engineering Manager", "allow_self_approval": 1, "condition": "doc.requires_customer_review == 0"},
+   {"state": "Customer Approval", "action": "Approve", "next_state": "Approved", "allowed": "Engineering Manager", "allow_self_approval": 1},
+   {"state": "Approved", "action": "Release for Implementation", "next_state": "Released for Implementation", "allowed": "Engineering Approver", "allow_self_approval": 1},
+   {"state": "Released for Implementation", "action": "Mark Implemented", "next_state": "Implemented", "allowed": "Engineering Manager", "allow_self_approval": 1},
+   {"state": "Implemented", "action": "Verify", "next_state": "Verified", "allowed": "Quality Manager", "allow_self_approval": 1},
+   {"state": "Verified", "action": "Close", "next_state": "Closed", "allowed": "Engineering Manager", "allow_self_approval": 1}
+  ]
  }
 ]
