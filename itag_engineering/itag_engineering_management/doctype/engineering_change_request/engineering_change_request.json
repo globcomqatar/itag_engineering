@@ -102,14 +102,12 @@
   {
    "fieldname": "problem_statement",
    "fieldtype": "Text",
-   "label": "Problem Statement",
-   "reqd": 1
+   "label": "Problem Statement"
   },
   {
    "fieldname": "requested_change",
    "fieldtype": "Text",
-   "label": "Requested Change",
-   "reqd": 1
+   "label": "Requested Change"
   },
   {
    "fieldname": "reason_and_evidence",
