@@ -4,7 +4,10 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
-from itag_engineering.tests.factories import create_fresh_stock_item, create_fully_approved_engineering_release
+from itag_engineering.tests.factories import (
+	create_fresh_stock_item,
+	create_fully_approved_engineering_release,
+)
 
 REPORTS = (
 	"Engineering Release Register",

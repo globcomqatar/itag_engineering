@@ -44,9 +44,7 @@ def _null_out_unconvertible_values(doctype):
 	)
 	for row in rows:
 		if not frappe.db.exists("Engineering Release", row.itag_engineering_release):
-			frappe.db.set_value(
-				doctype, row.name, "itag_engineering_release", None, update_modified=False
-			)
+			frappe.db.set_value(doctype, row.name, "itag_engineering_release", None, update_modified=False)
 
 
 def _convert_field_to_link(doctype):

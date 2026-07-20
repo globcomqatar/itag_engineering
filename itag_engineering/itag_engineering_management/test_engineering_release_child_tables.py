@@ -8,7 +8,15 @@ from frappe.tests.utils import FrappeTestCase
 class TestEngineeringReleaseChildTables(FrappeTestCase):
 	def test_approval_step_fields_exist(self):
 		meta = frappe.get_meta("Approval Step")
-		for fieldname in ("sequence", "discipline", "required_role", "approver", "status", "approved_on", "comments"):
+		for fieldname in (
+			"sequence",
+			"discipline",
+			"required_role",
+			"approver",
+			"status",
+			"approved_on",
+			"comments",
+		):
 			self.assertTrue(meta.has_field(fieldname), f"Approval Step missing {fieldname}")
 
 	def test_release_checklist_fields_exist(self):

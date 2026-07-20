@@ -81,7 +81,7 @@ class TestReleaseService(FrappeTestCase):
 	def _approve_all_steps(self, release_name, approvers):
 		resolve_release_approval_matrix(release_name)
 		release = frappe.get_doc("Engineering Release", release_name)
-		for step, approver in zip(release.approval_steps, approvers):
+		for step, approver in zip(release.approval_steps, approvers, strict=True):
 			step.approver = approver
 			step.status = "Approved"
 		release.save()

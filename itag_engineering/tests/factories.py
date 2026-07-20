@@ -20,6 +20,35 @@ def ensure_test_company():
 	return company
 
 
+def ensure_test_customer(name="ITAG Test Customer"):
+	"""Return the name of a Customer, creating one only if none exists at
+	all - unlike ensure_test_company() this does create, because (unlike
+	Company under Decision Log #2) no single named Customer is guaranteed to
+	exist on a fresh site. Falls back to whatever Customer Group/Territory
+	already exists (or ERPNext's own always-present "All Customer Groups"/
+	"All Territories" defaults) rather than hardcoding a specific one this
+	site may not have."""
+	if frappe.db.exists("Customer", name):
+		return name
+	existing_customer = frappe.db.get_value("Customer", {}, "name")
+	if existing_customer:
+		return existing_customer
+	customer_group = frappe.db.get_value("Customer Group", {}, "name") or "All Customer Groups"
+	territory = frappe.db.get_value("Territory", {}, "name") or "All Territories"
+	return (
+		frappe.get_doc(
+			{
+				"doctype": "Customer",
+				"customer_name": name,
+				"customer_group": customer_group,
+				"territory": territory,
+			}
+		)
+		.insert(ignore_permissions=True)
+		.name
+	)
+
+
 def configure_test_engineering_settings():
 	"""Configure Engineering Settings with a known-good, Ready baseline and
 	return the document. Uses db_set (not save()) so it never trips the

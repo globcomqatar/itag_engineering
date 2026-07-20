@@ -26,7 +26,9 @@ class TestWorkOrderBaseline(FrappeTestCase):
 	def test_submission_blocked_without_engineering_release(self):
 		item = create_fresh_stock_item("WOB-TEST-ITEM-NOREL").name
 		company = ensure_test_company()
-		warehouse = frappe.db.get_value("Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name")
+		warehouse = frappe.db.get_value(
+			"Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name"
+		)
 		work_order = frappe.get_doc(
 			{
 				"doctype": "Work Order",
@@ -89,15 +91,19 @@ class TestWorkOrderBaseline(FrappeTestCase):
 			# transitive-lookup logic is still exercised via a manually
 			# created Job Card, since that's what confirms it works
 			# correctly regardless of how the Job Card came to exist.
-			job_card_name = frappe.get_doc(
-				{
-					"doctype": "Job Card",
-					"work_order": work_order.name,
-					"bom_no": work_order.bom_no,
-					"for_quantity": work_order.qty,
-					"company": work_order.company,
-				}
-			).insert(ignore_permissions=True).name
+			job_card_name = (
+				frappe.get_doc(
+					{
+						"doctype": "Job Card",
+						"work_order": work_order.name,
+						"bom_no": work_order.bom_no,
+						"for_quantity": work_order.qty,
+						"company": work_order.company,
+					}
+				)
+				.insert(ignore_permissions=True)
+				.name
+			)
 
 		baseline = get_job_card_baseline(job_card_name)
 		for work_order_field, baseline_key in BASELINE_FIELD_MAP.items():

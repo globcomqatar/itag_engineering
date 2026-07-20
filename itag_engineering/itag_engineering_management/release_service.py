@@ -133,7 +133,8 @@ def resolve_release_approval_matrix(release_name):
 		"company": release.company,
 		"product_family": frappe.db.get_value("Item", release.item, "itag_product_family"),
 		"item_category": frappe.db.get_value("Item", release.item, "itag_engineering_classification"),
-		"is_customer_specific": bool(release.customer) or release.release_classification == "Customer-Specific",
+		"is_customer_specific": bool(release.customer)
+		or release.release_classification == "Customer-Specific",
 		"cost_impact": frappe.db.get_value("BOM", release.bom, "total_cost"),
 		"transaction_date": getdate(release.effective_datetime) if release.effective_datetime else None,
 	}
@@ -306,7 +307,9 @@ def _send_release_notifications(release):
 			message={"engineering_release": release.name, "item": release.item},
 			user=row.recipient,
 		)
-		frappe.db.set_value("Release Distribution", row.name, "sent_on", now_datetime(), update_modified=False)
+		frappe.db.set_value(
+			"Release Distribution", row.name, "sent_on", now_datetime(), update_modified=False
+		)
 
 
 def resolve_effective_release(item, company, customer=None, project=None, transaction_date=None):

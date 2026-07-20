@@ -96,7 +96,11 @@ def resolve_approval_disciplines(context):
 	matrix = winners[0]
 	requires_cost_review = bool(matrix.requires_cost_review)
 	cost_impact = context.get("cost_impact")
-	if matrix.cost_impact_threshold and cost_impact is not None and cost_impact > matrix.cost_impact_threshold:
+	if (
+		matrix.cost_impact_threshold
+		and cost_impact is not None
+		and cost_impact > matrix.cost_impact_threshold
+	):
 		requires_cost_review = True
 
 	matrix_doc = frappe.get_doc("Engineering Approval Matrix", matrix.name)
