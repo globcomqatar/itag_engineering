@@ -1,0 +1,195 @@
+{
+ "actions": [],
+ "autoname": "field:rule_name",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "rule_name",
+  "is_active",
+  "column_break_1",
+  "priority",
+  "scope_section",
+  "company",
+  "product_family",
+  "item_category",
+  "column_break_2",
+  "safety_classification",
+  "change_risk",
+  "is_customer_specific",
+  "is_regulatory",
+  "validity_section",
+  "effective_from",
+  "effective_to",
+  "column_break_3",
+  "cost_impact_threshold",
+  "outputs_section",
+  "requires_cost_review",
+  "requires_customer_review",
+  "disciplines_section",
+  "required_disciplines"
+ ],
+ "fields": [
+  {
+   "fieldname": "rule_name",
+   "fieldtype": "Data",
+   "label": "Rule Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "50",
+   "description": "Lower priority number resolves first. Two active rules matching the same context with the same priority is ambiguous and is rejected by the resolver.",
+   "fieldname": "priority",
+   "fieldtype": "Int",
+   "label": "Priority"
+  },
+  {
+   "fieldname": "scope_section",
+   "fieldtype": "Section Break",
+   "label": "Scope Conditions"
+  },
+  {
+   "description": "Leave blank to match any Company.",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "description": "Matches Item.itag_product_family. Leave blank to match any.",
+   "fieldname": "product_family",
+   "fieldtype": "Data",
+   "label": "Product Family"
+  },
+  {
+   "fieldname": "item_category",
+   "fieldtype": "Data",
+   "label": "Item Category"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "safety_classification",
+   "fieldtype": "Select",
+   "label": "Safety Classification",
+   "options": "\nStandard\nSafety-Critical"
+  },
+  {
+   "fieldname": "change_risk",
+   "fieldtype": "Select",
+   "label": "Change Risk",
+   "options": "\nLow\nMedium\nHigh"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_customer_specific",
+   "fieldtype": "Check",
+   "label": "Is Customer Specific"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_regulatory",
+   "fieldtype": "Check",
+   "label": "Is Regulatory"
+  },
+  {
+   "fieldname": "validity_section",
+   "fieldtype": "Section Break",
+   "label": "Validity Window"
+  },
+  {
+   "description": "Leave blank for an always-valid rule.",
+   "fieldname": "effective_from",
+   "fieldtype": "Date",
+   "label": "Effective From"
+  },
+  {
+   "fieldname": "effective_to",
+   "fieldtype": "Date",
+   "label": "Effective To"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "If the resolving context's cost impact exceeds this threshold, Requires Cost Review resolves true for this rule even if the flag below is unchecked.",
+   "fieldname": "cost_impact_threshold",
+   "fieldtype": "Currency",
+   "label": "Cost Impact Threshold"
+  },
+  {
+   "fieldname": "outputs_section",
+   "fieldtype": "Section Break",
+   "label": "Resolution Outputs"
+  },
+  {
+   "default": "0",
+   "fieldname": "requires_cost_review",
+   "fieldtype": "Check",
+   "label": "Requires Cost Review"
+  },
+  {
+   "default": "0",
+   "fieldname": "requires_customer_review",
+   "fieldtype": "Check",
+   "label": "Requires Customer Review"
+  },
+  {
+   "fieldname": "disciplines_section",
+   "fieldtype": "Section Break",
+   "label": "Required Disciplines"
+  },
+  {
+   "fieldname": "required_disciplines",
+   "fieldtype": "Table",
+   "label": "Required Disciplines",
+   "options": "Approval Matrix Discipline",
+   "reqd": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Engineering Approval Matrix",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Manager"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
