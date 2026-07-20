@@ -410,6 +410,38 @@ def create_eco_from_accepted_ecr_factory(ecr=None, **ecr_overrides):
 	return frappe.get_doc("Engineering Change Order", eco_name)
 
 
+def create_test_work_order_and_job_card(item, qty=1):
+	"""A bare (unsubmitted) Work Order plus a Job Card against it - the
+	minimal fixture Build ITAG-0.8.0's hold enforcement tests and Build
+	ITAG-0.9.0's compatibility-service tests both need, extracted here
+	rather than left duplicated inline in each build's own test file.
+	Neither document is submitted - callers that need the Build ITAG-0.5.0
+	baseline-freeze behavior should submit the Work Order themselves via
+	create_test_work_order()/create_fully_approved_engineering_release()
+	instead, which this bare fixture deliberately does not require."""
+	company = ensure_test_company()
+	warehouse = frappe.db.get_value("Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name")
+	work_order = frappe.get_doc(
+		{
+			"doctype": "Work Order",
+			"production_item": item,
+			"qty": qty,
+			"company": company,
+			"wip_warehouse": warehouse,
+			"fg_warehouse": warehouse,
+		}
+	).insert(ignore_permissions=True)
+	job_card = frappe.get_doc(
+		{
+			"doctype": "Job Card",
+			"work_order": work_order.name,
+			"for_quantity": work_order.qty,
+			"company": company,
+		}
+	).insert(ignore_permissions=True)
+	return work_order, job_card
+
+
 def create_test_material_disposition(item, decisions, eco=None, warehouse=None, **overrides):
 	"""Build ITAG-0.8.0 baseline factory for a Material Disposition -
 	creates (if not given) an ECO scoped to `item` via

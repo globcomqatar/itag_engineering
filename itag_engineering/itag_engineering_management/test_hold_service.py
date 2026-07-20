@@ -9,7 +9,7 @@ from itag_engineering.itag_engineering_management.hold_service import (
 	place_hold,
 	release_hold,
 )
-from itag_engineering.tests.factories import create_fresh_stock_item, ensure_test_company
+from itag_engineering.tests.factories import create_fresh_stock_item, create_test_work_order_and_job_card
 
 
 class TestHoldService(FrappeTestCase):
@@ -23,29 +23,7 @@ class TestHoldService(FrappeTestCase):
 		frappe.set_user("Administrator")
 
 	def _make_work_order_and_job_card(self, item):
-		company = ensure_test_company()
-		warehouse = frappe.db.get_value(
-			"Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name"
-		)
-		work_order = frappe.get_doc(
-			{
-				"doctype": "Work Order",
-				"production_item": item,
-				"qty": 1,
-				"company": company,
-				"wip_warehouse": warehouse,
-				"fg_warehouse": warehouse,
-			}
-		).insert(ignore_permissions=True)
-		job_card = frappe.get_doc(
-			{
-				"doctype": "Job Card",
-				"work_order": work_order.name,
-				"for_quantity": work_order.qty,
-				"company": company,
-			}
-		).insert(ignore_permissions=True)
-		return work_order, job_card
+		return create_test_work_order_and_job_card(item)
 
 	def test_hold_on_work_order_blocks_starting_its_job_cards(self):
 		item = create_fresh_stock_item("HOLDSVC-TEST-ITEM").name
