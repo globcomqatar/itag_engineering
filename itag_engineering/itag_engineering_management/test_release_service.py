@@ -26,14 +26,25 @@ SECOND_APPROVER_EMAIL = "rs-test-approver-two@example.com"
 
 class TestReleaseService(FrappeTestCase):
 	def setUp(self):
-		frappe.db.delete("Engineering Approval Matrix", {"rule_name": ["like", "RS-TEST-%"]})
-		frappe.db.delete("Engineering Release", {"item": ["like", "RS-TEST-ITEM%"]})
+		self._delete_test_fixtures()
 		self._make_matrix()
 
 	def tearDown(self):
+		self._delete_test_fixtures()
+		frappe.set_user("Administrator")
+
+	def _delete_test_fixtures(self):
+		# frappe.db.delete() is a raw parent-table DELETE - it does not
+		# cascade to child tables. "Engineering Approval Matrix" reuses the
+		# same rule_name ("RS-TEST-Default") across every test in this
+		# class, and FrappeTestCase only rolls back the DB once per class
+		# (not per test) - so without also deleting the child rows here,
+		# each test's setUp() leaves the previous test's
+		# "Approval Matrix Discipline" rows orphaned under the same parent
+		# name, and they silently accumulate onto the next test's rule.
+		frappe.db.delete("Approval Matrix Discipline", {"parent": ["like", "RS-TEST-%"]})
 		frappe.db.delete("Engineering Approval Matrix", {"rule_name": ["like", "RS-TEST-%"]})
 		frappe.db.delete("Engineering Release", {"item": ["like", "RS-TEST-ITEM%"]})
-		frappe.set_user("Administrator")
 
 	def _make_matrix(self, rule_name="RS-TEST-Default"):
 		if frappe.db.exists("Engineering Approval Matrix", rule_name):

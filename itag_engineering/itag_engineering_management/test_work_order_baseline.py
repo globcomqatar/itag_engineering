@@ -11,6 +11,7 @@ from itag_engineering.itag_engineering_management.work_order_baseline import (
 from itag_engineering.tests.factories import (
 	create_fresh_stock_item,
 	create_fully_approved_engineering_release,
+	create_test_bom_with_operations,
 	create_test_work_order,
 	ensure_test_company,
 )
@@ -24,7 +25,15 @@ class TestWorkOrderBaseline(FrappeTestCase):
 		frappe.db.delete("Work Order", {"production_item": ["like", "WOB-TEST-ITEM%"]})
 
 	def test_submission_blocked_without_engineering_release(self):
+		# Work Order.bom_no is reqd=1 unconditionally on ERPNext's own core
+		# doctype (verified live) - a Work Order cannot even be inserted
+		# without one, so this scenario needs a real BOM built via
+		# create_test_bom_with_operations() rather than an omitted bom_no.
+		# That BOM's Item deliberately has no Engineering Release submitted
+		# for it, so resolve_effective_release() still resolves nothing and
+		# freeze_baseline_before_submit() still blocks the submit.
 		item = create_fresh_stock_item("WOB-TEST-ITEM-NOREL").name
+		bom = create_test_bom_with_operations(item=item)
 		company = ensure_test_company()
 		warehouse = frappe.db.get_value(
 			"Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name"
@@ -33,6 +42,7 @@ class TestWorkOrderBaseline(FrappeTestCase):
 			{
 				"doctype": "Work Order",
 				"production_item": item,
+				"bom_no": bom.name,
 				"qty": 1,
 				"company": company,
 				"wip_warehouse": warehouse,
@@ -99,6 +109,14 @@ class TestWorkOrderBaseline(FrappeTestCase):
 						"bom_no": work_order.bom_no,
 						"for_quantity": work_order.qty,
 						"company": work_order.company,
+						# operation/workstation/wip_warehouse are all reqd=1
+						# on ERPNext's own Job Card doctype (verified live)
+						# - "_Test Operation 1"/"_Test Workstation 1" match
+						# the single operation row create_test_bom_with_operations()
+						# put on this Work Order's own BOM.
+						"operation": "_Test Operation 1",
+						"workstation": "_Test Workstation 1",
+						"wip_warehouse": work_order.wip_warehouse,
 					}
 				)
 				.insert(ignore_permissions=True)

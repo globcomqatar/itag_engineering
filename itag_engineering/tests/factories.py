@@ -322,6 +322,19 @@ def create_fully_approved_engineering_release(item=None, **release_overrides):
 			}
 		).insert(ignore_permissions=True)
 
+	# release_service._generate_distribution_list() (roadmap Section 13.6
+	# step 6) populates one Release Distribution row per real User holding
+	# the resolved matrix's required_role - via a literal "Has Role" child
+	# row, not Administrator's usual (dynamic, no-Has-Role-row-required)
+	# implicit all-roles behaviour. Without a real "Engineering Manager"
+	# Has Role row on some User, distribution_list resolves empty even
+	# though Administrator is the one approving the step below - verified
+	# live rather than assumed. Idempotent: only granted once.
+	if not frappe.db.exists("Has Role", {"parent": "Administrator", "role": "Engineering Manager"}):
+		admin_user = frappe.get_doc("User", "Administrator")
+		admin_user.append("roles", {"role": "Engineering Manager"})
+		admin_user.save(ignore_permissions=True)
+
 	release_fields = {
 		"doctype": "Engineering Release",
 		"company": ensure_test_company(),
