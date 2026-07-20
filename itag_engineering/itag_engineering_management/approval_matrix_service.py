@@ -8,7 +8,7 @@ than each re-implementing matrix resolution.
 
 import frappe
 from frappe import _
-from frappe.utils import getdate, nowdate
+from frappe.utils import date_diff, getdate, now_datetime, nowdate
 
 # Condition fields that gate whether a rule matches a context at all. A
 # blank (falsy) value on the rule means "matches any" for that field; a
@@ -140,6 +140,48 @@ def validate_approval_steps_segregation_of_duties(approval_steps):
 				).format(step.approver, previous_discipline, step.discipline)
 			)
 		discipline_by_approver[step.approver] = step.discipline
+
+
+def list_pending_approval_step_aging(parenttype, status_field, non_terminal_states):
+	"""Generic pending-Approval-Step aging query, shared between Build
+	ITAG-0.5.0's "Release Approval Aging" report (parenttype="Engineering
+	Release") and Build ITAG-0.6.0's "ECO Approval Aging" report
+	(parenttype="Engineering Change Order") - both reuse the Approval Step
+	child doctype, so this logic only needs writing once.
+
+	`status_field` is the parent doctype's own workflow-state fieldname
+	(release_status / workflow_state - they differ by doctype). Only Pending
+	steps whose parent is still in one of `non_terminal_states` are
+	returned - a Pending step left over on an already-terminal parent
+	(Released for Production, Closed, etc.) is stale bookkeeping, not
+	something actually awaiting approval.
+
+	Returns a list of {"parent", "sequence", "discipline", "required_role",
+	"days_pending"} dicts.
+	"""
+	status_by_parent = {
+		row.name: row.get(status_field) for row in frappe.get_all(parenttype, fields=["name", status_field])
+	}
+
+	now = now_datetime()
+	rows = []
+	for step in frappe.get_all(
+		"Approval Step",
+		filters={"status": "Pending", "parenttype": parenttype},
+		fields=["parent", "sequence", "discipline", "required_role", "creation"],
+	):
+		if status_by_parent.get(step.parent) not in non_terminal_states:
+			continue
+		rows.append(
+			{
+				"parent": step.parent,
+				"sequence": step.sequence,
+				"discipline": step.discipline,
+				"required_role": step.required_role,
+				"days_pending": date_diff(now, step.creation),
+			}
+		)
+	return rows
 
 
 def _rule_matches(rule, context, transaction_date):

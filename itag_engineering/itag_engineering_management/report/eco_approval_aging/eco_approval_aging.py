@@ -5,30 +5,29 @@ from itag_engineering.itag_engineering_management.approval_matrix_service import
 	list_pending_approval_step_aging,
 )
 
-# release_status values that are still "in flight" - a Pending Approval Step
-# on a release already at or past "Released for Production" (or Suspended/
-# Withdrawn/Obsolete) is stale bookkeeping, not something actually awaiting
-# approval, and is excluded.
-NON_TERMINAL_RELEASE_STATES = (
+# workflow_state values that are still "in flight" - a Pending Approval Step
+# on an ECO already Closed (or otherwise past Approved) is stale
+# bookkeeping, not something actually awaiting approval.
+NON_TERMINAL_ECO_STATES = (
 	"Draft",
-	"Engineering Review",
-	"Engineering Checked",
+	"Engineering Definition",
+	"Impact Analysis Required",
+	"Discipline Review",
 	"Quality Review",
-	"Manufacturing Review",
+	"Production Review",
 	"Cost Review",
-	"Customer Review",
-	"Engineering Approved",
+	"Customer Approval",
 )
 
 
 def execute(filters=None):
 	columns = [
 		{
-			"label": "Engineering Release",
+			"label": "Engineering Change Order",
 			"fieldname": "parent",
 			"fieldtype": "Link",
-			"options": "Engineering Release",
-			"width": 160,
+			"options": "Engineering Change Order",
+			"width": 170,
 		},
 		{"label": "Sequence", "fieldname": "sequence", "fieldtype": "Int", "width": 90},
 		{"label": "Discipline", "fieldname": "discipline", "fieldtype": "Data", "width": 130},
@@ -43,7 +42,7 @@ def execute(filters=None):
 	]
 
 	data = list_pending_approval_step_aging(
-		"Engineering Release", "release_status", NON_TERMINAL_RELEASE_STATES
+		"Engineering Change Order", "workflow_state", NON_TERMINAL_ECO_STATES
 	)
 
 	return columns, data
