@@ -8,14 +8,10 @@ from itag_engineering.itag_engineering_management.traceability_service import (
 	backward_traceability,
 	forward_traceability,
 )
-from itag_engineering.itag_engineering_management.wip_service import (
-	create_wip_unit_from_job_card,
-	link_component_to_assembly,
-)
+from itag_engineering.itag_engineering_management.wip_service import link_component_to_assembly
 from itag_engineering.tests.factories import (
-	create_fresh_stock_item,
-	create_fully_approved_engineering_release,
-	create_test_work_order,
+	create_test_wip_unit,
+	create_test_work_order_with_wip_tracking,
 	ensure_test_company,
 	ensure_test_customer,
 )
@@ -29,35 +25,14 @@ class TestTraceabilityService(FrappeTestCase):
 		frappe.db.delete("Item", {"item_code": ["like", "TRACESVC-TEST%"]})
 		frappe.set_user("Administrator")
 
-	def _make_submitted_work_order(self, prefix):
-		item = create_fresh_stock_item(prefix).name
-		frappe.db.set_value("Item", item, "itag_wip_unit_tracking_required", 1)
-		release = create_fully_approved_engineering_release(item=item)
-		work_order = create_test_work_order(release=release, qty=5)
-		work_order.submit()
-		work_order.reload()
-		return work_order
-
-	def _make_wip_unit(self, work_order):
-		job_card = frappe.get_doc(
-			{
-				"doctype": "Job Card",
-				"work_order": work_order.name,
-				"for_quantity": work_order.qty,
-				"company": work_order.company,
-				"operation": "Final Inspection",
-			}
-		).insert(ignore_permissions=True)
-		return create_wip_unit_from_job_card(job_card.name)
-
 	def _build_three_level_chain_with_delivery(self):
-		component_wo = self._make_submitted_work_order("TRACESVC-TEST-COMP")
-		sub_assembly_wo = self._make_submitted_work_order("TRACESVC-TEST-SUB")
-		finished_wo = self._make_submitted_work_order("TRACESVC-TEST-FINISHED")
+		component_wo = create_test_work_order_with_wip_tracking("TRACESVC-TEST-COMP")
+		sub_assembly_wo = create_test_work_order_with_wip_tracking("TRACESVC-TEST-SUB")
+		finished_wo = create_test_work_order_with_wip_tracking("TRACESVC-TEST-FINISHED")
 
-		component_unit = self._make_wip_unit(component_wo)
-		sub_assembly_unit = self._make_wip_unit(sub_assembly_wo)
-		finished_unit = self._make_wip_unit(finished_wo)
+		component_unit = create_test_wip_unit(component_wo)
+		sub_assembly_unit = create_test_wip_unit(sub_assembly_wo)
+		finished_unit = create_test_wip_unit(finished_wo)
 
 		link_component_to_assembly(sub_assembly_unit, component_unit, quantity_consumed=2)
 		link_component_to_assembly(finished_unit, sub_assembly_unit, quantity_consumed=1)
@@ -125,10 +100,10 @@ class TestTraceabilityService(FrappeTestCase):
 		self.assertEqual(finished_result["customer"], chain["customer"])
 
 	def test_genealogy_cycle_in_bad_data_does_not_hang_backward_traceability(self):
-		unit_a_wo = self._make_submitted_work_order("TRACESVC-TEST-CYCLE-A")
-		unit_b_wo = self._make_submitted_work_order("TRACESVC-TEST-CYCLE-B")
-		unit_a = self._make_wip_unit(unit_a_wo)
-		unit_b = self._make_wip_unit(unit_b_wo)
+		unit_a_wo = create_test_work_order_with_wip_tracking("TRACESVC-TEST-CYCLE-A")
+		unit_b_wo = create_test_work_order_with_wip_tracking("TRACESVC-TEST-CYCLE-B")
+		unit_a = create_test_wip_unit(unit_a_wo)
+		unit_b = create_test_wip_unit(unit_b_wo)
 
 		# link_component_to_assembly() itself would refuse this - this
 		# simulates bad data reaching the database some other way (a

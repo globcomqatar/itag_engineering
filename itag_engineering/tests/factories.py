@@ -545,6 +545,44 @@ def create_test_rework_instruction(item, work_order, decision_type="Rework", qua
 	return frappe.get_doc(fields).insert(ignore_permissions=True)
 
 
+def create_test_work_order_with_wip_tracking(prefix, qty=5, wip_tracking_required=1):
+	"""Build ITAG-0.10.0 baseline factory: a fresh stock Item with
+	itag_wip_unit_tracking_required set (Build ITAG-0.2.0's own policy
+	flag - wip_service.should_create_wip_unit() reads this; pass
+	wip_tracking_required=0 to build the "tracking disabled" scenario),
+	released and submitted against a real Engineering Release baseline.
+	Returns the submitted (and reloaded) Work Order document."""
+	item = create_fresh_stock_item(prefix).name
+	frappe.db.set_value("Item", item, "itag_wip_unit_tracking_required", wip_tracking_required)
+	release = create_fully_approved_engineering_release(item=item)
+	work_order = create_test_work_order(release=release, qty=qty)
+	work_order.submit()
+	work_order.reload()
+	return work_order
+
+
+def create_test_wip_unit(work_order, operation="Final Inspection"):
+	"""Build ITAG-0.10.0 baseline factory - creates a Job Card against
+	`work_order` and drives it through the real
+	wip_service.create_wip_unit_from_job_card() (not a db_set shortcut),
+	so the returned WIP Unit Register name genuinely reflects that
+	service's own creation logic. `work_order`'s production_item must
+	already have itag_wip_unit_tracking_required=1 (see
+	create_test_work_order_with_wip_tracking()) or this returns None."""
+	from itag_engineering.itag_engineering_management.wip_service import create_wip_unit_from_job_card
+
+	job_card = frappe.get_doc(
+		{
+			"doctype": "Job Card",
+			"work_order": work_order.name,
+			"for_quantity": work_order.qty,
+			"company": work_order.company,
+			"operation": operation,
+		}
+	).insert(ignore_permissions=True)
+	return create_wip_unit_from_job_card(job_card.name)
+
+
 def create_multi_level_bom_tree_with_open_work_orders(prefix, depth=3, work_orders_per_level=1):
 	"""Build ITAG-0.7.0 baseline factory for UAT-005 (Multi-Level BOM
 	Revision) and this build's own performance baseline measurement.

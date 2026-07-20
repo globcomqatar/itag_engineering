@@ -6,14 +6,11 @@ from frappe.tests.utils import FrappeTestCase
 from frappe.utils import today
 
 from itag_engineering.itag_engineering_management.hold_service import place_hold
-from itag_engineering.itag_engineering_management.wip_service import (
-	create_wip_unit_from_job_card,
-	link_component_to_assembly,
-)
+from itag_engineering.itag_engineering_management.wip_service import link_component_to_assembly
 from itag_engineering.tests.factories import (
 	create_fresh_stock_item,
-	create_fully_approved_engineering_release,
-	create_test_work_order,
+	create_test_wip_unit,
+	create_test_work_order_with_wip_tracking,
 )
 
 REPORTS = (
@@ -55,30 +52,9 @@ class TestBuild0100ReportsAgainstRealData(FrappeTestCase):
 		frappe.db.delete("Item", {"item_code": ["like", "B10R-TEST%"]})
 		frappe.db.delete("Production Engineering Hold", {"hold_reason": ["like", "B10R-TEST%"]})
 
-	def _make_submitted_work_order(self, prefix):
-		item = create_fresh_stock_item(prefix).name
-		frappe.db.set_value("Item", item, "itag_wip_unit_tracking_required", 1)
-		release = create_fully_approved_engineering_release(item=item)
-		work_order = create_test_work_order(release=release, qty=5)
-		work_order.submit()
-		work_order.reload()
-		return work_order
-
-	def _make_wip_unit(self, work_order, operation="Final Inspection"):
-		job_card = frappe.get_doc(
-			{
-				"doctype": "Job Card",
-				"work_order": work_order.name,
-				"for_quantity": work_order.qty,
-				"company": work_order.company,
-				"operation": operation,
-			}
-		).insert(ignore_permissions=True)
-		return create_wip_unit_from_job_card(job_card.name)
-
 	def test_wip_unit_status_and_aging_and_work_order_reports_surface_real_data(self):
-		work_order = self._make_submitted_work_order("B10R-TEST-ITEM")
-		wip_unit_name = self._make_wip_unit(work_order)
+		work_order = create_test_work_order_with_wip_tracking("B10R-TEST-ITEM")
+		wip_unit_name = create_test_wip_unit(work_order)
 
 		_columns, status_data = _report_module("WIP Unit Status").execute(filters=None)
 		self.assertTrue(any(row["name"] == wip_unit_name for row in status_data))
@@ -93,8 +69,8 @@ class TestBuild0100ReportsAgainstRealData(FrappeTestCase):
 		self.assertTrue(any(row["drawing_revision"] == work_order.itag_drawing_revision for row in jc_data))
 
 	def test_inspection_compliance_report_counts_a_real_passed_inspection(self):
-		work_order = self._make_submitted_work_order("B10R-TEST-ITEM")
-		wip_unit_name = self._make_wip_unit(work_order)
+		work_order = create_test_work_order_with_wip_tracking("B10R-TEST-ITEM")
+		wip_unit_name = create_test_wip_unit(work_order)
 		inspection = frappe.get_doc(
 			{
 				"doctype": "Quality Inspection",
@@ -132,10 +108,10 @@ class TestBuild0100ReportsAgainstRealData(FrappeTestCase):
 		)
 
 	def test_traceability_reports_reconcile_a_real_chain(self):
-		component_wo = self._make_submitted_work_order("B10R-TEST-COMP")
-		finished_wo = self._make_submitted_work_order("B10R-TEST-FINISHED")
-		component_unit = self._make_wip_unit(component_wo)
-		finished_unit = self._make_wip_unit(finished_wo)
+		component_wo = create_test_work_order_with_wip_tracking("B10R-TEST-COMP")
+		finished_wo = create_test_work_order_with_wip_tracking("B10R-TEST-FINISHED")
+		component_unit = create_test_wip_unit(component_wo)
+		finished_unit = create_test_wip_unit(finished_wo)
 		link_component_to_assembly(finished_unit, component_unit, quantity_consumed=1)
 
 		serial = frappe.get_doc({"doctype": "Serial No", "item_code": finished_wo.production_item}).insert(
@@ -161,8 +137,8 @@ class TestBuild0100ReportsAgainstRealData(FrappeTestCase):
 		self.assertTrue(any(row["wip_unit"] == finished_unit for row in forward_data))
 
 	def test_components_under_engineering_hold_surfaces_a_real_held_unit(self):
-		work_order = self._make_submitted_work_order("B10R-TEST-ITEM")
-		wip_unit_name = self._make_wip_unit(work_order)
+		work_order = create_test_work_order_with_wip_tracking("B10R-TEST-ITEM")
+		wip_unit_name = create_test_wip_unit(work_order)
 		place_hold(
 			hold_scope="Specific Quantity or WIP Unit",
 			reference_doctype="WIP Unit Register",

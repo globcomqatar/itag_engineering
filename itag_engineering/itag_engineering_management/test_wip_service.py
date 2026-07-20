@@ -21,8 +21,8 @@ from itag_engineering.itag_engineering_management.wip_service import (
 )
 from itag_engineering.tests.factories import (
 	create_fresh_stock_item,
-	create_fully_approved_engineering_release,
-	create_test_work_order,
+	create_test_wip_unit,
+	create_test_work_order_with_wip_tracking,
 )
 
 
@@ -34,13 +34,7 @@ class TestWIPService(FrappeTestCase):
 		frappe.db.delete("Item", {"item_code": ["like", "WIPSVC-TEST%"]})
 
 	def _make_submitted_work_order(self, prefix, wip_tracking_required):
-		item = create_fresh_stock_item(prefix).name
-		frappe.db.set_value("Item", item, "itag_wip_unit_tracking_required", wip_tracking_required)
-		release = create_fully_approved_engineering_release(item=item)
-		work_order = create_test_work_order(release=release, qty=5)
-		work_order.submit()
-		work_order.reload()
-		return work_order
+		return create_test_work_order_with_wip_tracking(prefix, wip_tracking_required=wip_tracking_required)
 
 	def _make_job_card(self, work_order, operation="Final Inspection"):
 		return frappe.get_doc(
@@ -141,10 +135,10 @@ class TestWIPService(FrappeTestCase):
 		self.assertEqual(frappe.db.get_value("WIP Unit Register", wip_unit_name, "quality_status"), "Passed")
 
 	def test_linking_a_component_that_would_create_a_cycle_is_rejected(self):
-		parent_wo = self._make_submitted_work_order("WIPSVC-TEST-ITEM-PARENT", wip_tracking_required=1)
-		child_wo = self._make_submitted_work_order("WIPSVC-TEST-ITEM-CHILD", wip_tracking_required=1)
-		parent_unit = create_wip_unit_from_job_card(self._make_job_card(parent_wo).name)
-		child_unit = create_wip_unit_from_job_card(self._make_job_card(child_wo).name)
+		parent_wo = create_test_work_order_with_wip_tracking("WIPSVC-TEST-ITEM-PARENT")
+		child_wo = create_test_work_order_with_wip_tracking("WIPSVC-TEST-ITEM-CHILD")
+		parent_unit = create_test_wip_unit(parent_wo)
+		child_unit = create_test_wip_unit(child_wo)
 
 		link_component_to_assembly(parent_unit, child_unit, quantity_consumed=1)
 
@@ -154,8 +148,8 @@ class TestWIPService(FrappeTestCase):
 			link_component_to_assembly(child_unit, parent_unit, quantity_consumed=1)
 
 	def test_linking_a_wip_unit_as_its_own_component_is_rejected(self):
-		work_order = self._make_submitted_work_order("WIPSVC-TEST-ITEM-SELF", wip_tracking_required=1)
-		wip_unit_name = create_wip_unit_from_job_card(self._make_job_card(work_order).name)
+		work_order = create_test_work_order_with_wip_tracking("WIPSVC-TEST-ITEM-SELF")
+		wip_unit_name = create_test_wip_unit(work_order)
 
 		with self.assertRaises(frappe.ValidationError):
 			link_component_to_assembly(wip_unit_name, wip_unit_name, quantity_consumed=1)
