@@ -130,5 +130,43 @@
    {"state": "Released for Production", "action": "Supersede", "next_state": "Superseded", "allowed": "ITAG Engineering Administrator", "allow_self_approval": 1},
    {"state": "Released for Production", "action": "Obsolete", "next_state": "Obsolete", "allowed": "ITAG Engineering Administrator", "allow_self_approval": 1}
   ]
+ },
+ {
+  "doctype": "Workflow",
+  "name": "Engineering Change Request Workflow",
+  "workflow_name": "Engineering Change Request Workflow",
+  "document_type": "Engineering Change Request",
+  "workflow_state_field": "workflow_state",
+  "is_active": 1,
+  "override_status": 1,
+  "send_email_alert": 0,
+  "states": [
+   {"state": "Draft", "doc_status": "0", "allow_edit": "Engineering Requestor"},
+   {"state": "Submitted for Review", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Engineering Review", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "More Information Required", "doc_status": "0", "allow_edit": "Engineering Requestor"},
+   {"state": "Accepted for ECO", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Rejected", "doc_status": "0", "allow_edit": "Engineering Manager"},
+   {"state": "Closed", "doc_status": "0", "allow_edit": "ITAG Engineering Administrator"}
+  ],
+  "transitions": [
+   {"state": "Draft", "action": "Submit for Review", "next_state": "Submitted for Review", "allowed": "Engineering Requestor", "allow_self_approval": 1},
+   {"state": "Draft", "action": "Submit for Review", "next_state": "Submitted for Review", "allowed": "Production Planner", "allow_self_approval": 1},
+   {"state": "Draft", "action": "Submit for Review", "next_state": "Submitted for Review", "allowed": "Production Supervisor", "allow_self_approval": 1},
+   {"state": "Draft", "action": "Submit for Review", "next_state": "Submitted for Review", "allowed": "Quality Engineer", "allow_self_approval": 1},
+   {"state": "Draft", "action": "Submit for Review", "next_state": "Submitted for Review", "allowed": "Sales User", "allow_self_approval": 1},
+   {"state": "Draft", "action": "Submit for Review", "next_state": "Submitted for Review", "allowed": "Procurement User", "allow_self_approval": 1},
+   {"state": "Draft", "action": "Submit for Review", "next_state": "Submitted for Review", "allowed": "Stores User", "allow_self_approval": 1},
+   {"state": "Draft", "action": "Submit for Review", "next_state": "Submitted for Review", "allowed": "Workshop Technician", "allow_self_approval": 1},
+   {"state": "Draft", "action": "Submit for Review", "next_state": "Submitted for Review", "allowed": "Engineering Manager", "allow_self_approval": 1},
+   {"state": "Draft", "action": "Submit for Review", "next_state": "Submitted for Review", "allowed": "ITAG Engineering Administrator", "allow_self_approval": 1},
+   {"state": "Submitted for Review", "action": "Begin Engineering Review", "next_state": "Engineering Review", "allowed": "Engineering Manager", "allow_self_approval": 1},
+   {"state": "Engineering Review", "action": "Request More Information", "next_state": "More Information Required", "allowed": "Engineering Manager", "allow_self_approval": 1},
+   {"state": "Engineering Review", "action": "Accept for ECO", "next_state": "Accepted for ECO", "allowed": "Engineering Manager", "allow_self_approval": 1},
+   {"state": "Engineering Review", "action": "Reject", "next_state": "Rejected", "allowed": "Engineering Manager", "allow_self_approval": 1},
+   {"state": "More Information Required", "action": "Resubmit for Review", "next_state": "Submitted for Review", "allowed": "Engineering Requestor", "allow_self_approval": 1},
+   {"state": "Accepted for ECO", "action": "Close", "next_state": "Closed", "allowed": "Engineering Manager", "allow_self_approval": 1},
+   {"state": "Rejected", "action": "Close", "next_state": "Closed", "allowed": "Engineering Manager", "allow_self_approval": 1}
+  ]
  }
 ]

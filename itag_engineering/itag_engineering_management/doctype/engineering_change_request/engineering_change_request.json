@@ -1,0 +1,306 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "request_title",
+  "requesting_department",
+  "requestor",
+  "column_break_header",
+  "workflow_state",
+  "originating_eco",
+  "rejection_reason",
+  "problem_section",
+  "problem_statement",
+  "requested_change",
+  "reason_and_evidence",
+  "affected_section",
+  "affected_item",
+  "affected_drawing",
+  "column_break_affected",
+  "affected_bom",
+  "affected_routing",
+  "affected_objects",
+  "impact_section",
+  "urgency",
+  "safety_impact",
+  "customer_impact",
+  "column_break_impact",
+  "cost_impact",
+  "production_impact",
+  "quality_impact",
+  "compliance_impact",
+  "timing_section",
+  "requested_effective_timing"
+ ],
+ "fields": [
+  {
+   "default": "ECR-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "ECR-.YYYY.-"
+  },
+  {
+   "fieldname": "request_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Request Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "requesting_department",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Requesting Department",
+   "options": "Engineering\nProduction\nQuality\nSales\nCustomer Service\nProcurement\nStores\nWorkshop\nSupplier\nManagement",
+   "reqd": 1
+  },
+  {
+   "default": "__user",
+   "fieldname": "requestor",
+   "fieldtype": "Link",
+   "label": "Requestor",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "workflow_state",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Workflow State",
+   "options": "Draft\nSubmitted for Review\nEngineering Review\nMore Information Required\nAccepted for ECO\nRejected\nClosed",
+   "read_only": 1
+  },
+  {
+   "description": "Set by eco_service.create_eco_from_accepted_ecr() - not editable directly.",
+   "fieldname": "originating_eco",
+   "fieldtype": "Link",
+   "label": "Originating ECO",
+   "options": "Engineering Change Order",
+   "read_only": 1
+  },
+  {
+   "description": "Required disposition before a Rejected ECR can be Closed (ecr_service.close_ecr).",
+   "fieldname": "rejection_reason",
+   "fieldtype": "Small Text",
+   "label": "Rejection Reason",
+   "read_only": 1
+  },
+  {
+   "fieldname": "problem_section",
+   "fieldtype": "Section Break",
+   "label": "Problem and Requested Change"
+  },
+  {
+   "fieldname": "problem_statement",
+   "fieldtype": "Text",
+   "label": "Problem Statement",
+   "reqd": 1
+  },
+  {
+   "fieldname": "requested_change",
+   "fieldtype": "Text",
+   "label": "Requested Change",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reason_and_evidence",
+   "fieldtype": "Text",
+   "label": "Reason and Evidence"
+  },
+  {
+   "fieldname": "affected_section",
+   "fieldtype": "Section Break",
+   "label": "Affected Objects"
+  },
+  {
+   "fieldname": "affected_item",
+   "fieldtype": "Link",
+   "label": "Affected Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "affected_drawing",
+   "fieldtype": "Link",
+   "label": "Affected Drawing",
+   "options": "Engineering Drawing"
+  },
+  {
+   "fieldname": "column_break_affected",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "affected_bom",
+   "fieldtype": "Link",
+   "label": "Affected BOM",
+   "options": "BOM"
+  },
+  {
+   "fieldname": "affected_routing",
+   "fieldtype": "Link",
+   "label": "Affected Routing",
+   "options": "Routing"
+  },
+  {
+   "fieldname": "affected_objects",
+   "fieldtype": "Table",
+   "label": "Other Affected Objects",
+   "options": "ECR Affected Object"
+  },
+  {
+   "fieldname": "impact_section",
+   "fieldtype": "Section Break",
+   "label": "Impact Assessment"
+  },
+  {
+   "default": "Low",
+   "fieldname": "urgency",
+   "fieldtype": "Select",
+   "label": "Urgency",
+   "options": "Low\nMedium\nHigh\nEmergency"
+  },
+  {
+   "default": "None",
+   "fieldname": "safety_impact",
+   "fieldtype": "Select",
+   "label": "Safety Impact",
+   "options": "None\nLow\nMedium\nHigh"
+  },
+  {
+   "default": "None",
+   "fieldname": "customer_impact",
+   "fieldtype": "Select",
+   "label": "Customer Impact",
+   "options": "None\nLow\nMedium\nHigh"
+  },
+  {
+   "fieldname": "column_break_impact",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cost_impact",
+   "fieldtype": "Currency",
+   "label": "Cost Impact"
+  },
+  {
+   "default": "None",
+   "fieldname": "production_impact",
+   "fieldtype": "Select",
+   "label": "Production Impact",
+   "options": "None\nLow\nMedium\nHigh"
+  },
+  {
+   "default": "None",
+   "fieldname": "quality_impact",
+   "fieldtype": "Select",
+   "label": "Quality Impact",
+   "options": "None\nLow\nMedium\nHigh"
+  },
+  {
+   "default": "None",
+   "fieldname": "compliance_impact",
+   "fieldtype": "Select",
+   "label": "Compliance Impact",
+   "options": "None\nLow\nMedium\nHigh"
+  },
+  {
+   "fieldname": "timing_section",
+   "fieldtype": "Section Break",
+   "label": "Timing"
+  },
+  {
+   "fieldname": "requested_effective_timing",
+   "fieldtype": "Date",
+   "label": "Requested Effective Timing"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Engineering Change Request",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Requestor",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Production Planner",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Production Supervisor",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Quality Engineer",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Sales User",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Procurement User",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Stores User",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Workshop Technician",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
