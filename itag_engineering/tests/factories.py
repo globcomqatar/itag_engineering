@@ -368,3 +368,43 @@ def create_test_work_order(release=None, item=None, qty=1):
 			"fg_warehouse": warehouse,
 		}
 	).insert(ignore_permissions=True)
+
+
+def create_test_ecr(**overrides):
+	"""Build ITAG-0.6.0 baseline factory for an Engineering Change Request.
+	Creates a fresh stock Item for `affected_item` unless the caller
+	overrides it (or explicitly passes affected_item=None, e.g. to test the
+	"no affected objects" rejection path)."""
+	fields = {
+		"doctype": "Engineering Change Request",
+		"request_title": "Factory Test ECR",
+		"requesting_department": "Engineering",
+		"problem_statement": "Factory test problem statement.",
+		"requested_change": "Factory test requested change.",
+	}
+	fields.update(overrides)
+	if "affected_item" not in fields:
+		fields["affected_item"] = create_fresh_stock_item("ECR-FACTORY-ITEM").name
+	return frappe.get_doc(fields).insert(ignore_permissions=True)
+
+
+def create_eco_from_accepted_ecr_factory(ecr=None, **ecr_overrides):
+	"""Creates (if not given) an Engineering Change Request and runs it
+	through the real eco_service.create_eco_from_accepted_ecr() - not a
+	db_set shortcut - so the returned Engineering Change Order genuinely has
+	controlled_changes seeded from the request's affected objects and the
+	request's own originating_eco/workflow_state are really set.
+
+	create_eco_from_accepted_ecr() requires the ECR to already be in
+	"Engineering Review" (the state the real "Accept for ECO" workflow
+	transition originates from) - db_set forces that state directly rather
+	than driving the real Workflow engine through every intermediate state,
+	since the state-forcing itself is not what this factory is testing.
+	Returns the Engineering Change Order document."""
+	from itag_engineering.itag_engineering_management.eco_service import create_eco_from_accepted_ecr
+
+	ecr = ecr or create_test_ecr(**ecr_overrides)
+	if ecr.workflow_state != "Engineering Review":
+		ecr.db_set("workflow_state", "Engineering Review")
+	eco_name = create_eco_from_accepted_ecr(ecr.name)
+	return frappe.get_doc("Engineering Change Order", eco_name)

@@ -54,7 +54,14 @@ class TestECOService(FrappeTestCase):
 			"affected_item": item,
 		}
 		fields.update(overrides)
-		return frappe.get_doc(fields).insert()
+		ecr = frappe.get_doc(fields).insert()
+		# create_eco_from_accepted_ecr() requires the ECR to already be in
+		# "Engineering Review" - force it directly since driving the real
+		# Workflow engine through every intermediate state is
+		# ecr_service.py's own test suite's concern, not this one's.
+		ecr.db_set("workflow_state", "Engineering Review")
+		ecr.reload()
+		return ecr
 
 	def test_create_eco_from_accepted_ecr(self):
 		ecr = self._make_ecr()

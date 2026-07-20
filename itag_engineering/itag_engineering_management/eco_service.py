@@ -53,6 +53,14 @@ def create_eco_from_accepted_ecr(ecr_name):
 	if ecr.originating_eco:
 		return ecr.originating_eco
 
+	if ecr.workflow_state != "Engineering Review":
+		frappe.throw(
+			_(
+				'Cannot create an Engineering Change Order: this request must be in "Engineering '
+				'Review" (about to be Accepted for ECO), not "{0}".'
+			).format(ecr.workflow_state)
+		)
+
 	controlled_changes = _seed_controlled_changes_from_ecr(ecr)
 	if not controlled_changes:
 		frappe.throw(

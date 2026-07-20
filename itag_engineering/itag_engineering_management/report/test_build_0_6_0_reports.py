@@ -82,6 +82,8 @@ class TestBuild060ReportsAgainstRealData(FrappeTestCase):
 
 	def test_eco_portfolio_includes_a_real_eco(self):
 		ecr = self._make_ecr("B6R-TEST ECO Portfolio")
+		ecr.db_set("workflow_state", "Engineering Review")
+		ecr.reload()
 		eco_name = create_eco_from_accepted_ecr(ecr.name)
 
 		_columns, data = _report_module("ECO Portfolio").execute(filters=None)
@@ -89,6 +91,8 @@ class TestBuild060ReportsAgainstRealData(FrappeTestCase):
 
 	def test_eco_customer_approval_status_flags_unrecorded_approval(self):
 		ecr = self._make_ecr("B6R-TEST ECO Customer Approval", customer_impact="High")
+		ecr.db_set("workflow_state", "Engineering Review")
+		ecr.reload()
 		eco_name = create_eco_from_accepted_ecr(ecr.name)
 
 		_columns, data = _report_module("ECO Customer Approval Status").execute(filters=None)
