@@ -1,0 +1,114 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "event_type",
+  "reference_doctype",
+  "reference_name",
+  "column_break_header",
+  "user",
+  "event_datetime",
+  "details_section",
+  "details"
+ ],
+ "fields": [
+  {
+   "fieldname": "event_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Event Type",
+   "options": "Item Code Reservation\nItem Code Creation\nDrawing Revision Creation\nDrawing Revision Release\nProduct Revision Change\nBOM Readiness Evaluation\nBOM Release\nEngineering Release Approval\nEngineering Release Issue\nECR Transition\nECO Transition\nImpact Analysis Execution\nImpact Analysis Staleness\nHold Placement\nHold Release\nDisposition Approval\nDisposition Execution\nDeviation Usage\nSuccessor Work Order Creation\nRework Execution\nTraceability Access\nPermission Failure\nIntegration Failure",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "description": "The literal DocType name, not a Select-constrained Dynamic Link target list - this log spans nearly every doctype in the app and a hardcoded enum would need updating every build.",
+   "fieldname": "reference_doctype",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Reference Doctype",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "label": "Reference Name",
+   "options": "reference_doctype",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "__user",
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "default": "now",
+   "fieldname": "event_datetime",
+   "fieldtype": "Datetime",
+   "label": "Event Datetime",
+   "read_only": 1
+  },
+  {
+   "fieldname": "details_section",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "description": "Free-form event-specific payload.",
+   "fieldname": "details",
+   "fieldtype": "JSON",
+   "label": "Details",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Engineering Audit Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator"
+  },
+  {
+   "read": 1,
+   "role": "Internal Auditor"
+  },
+  {
+   "read": 1,
+   "role": "Engineering Manager"
+  },
+  {
+   "read": 1,
+   "role": "Quality Manager"
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}
