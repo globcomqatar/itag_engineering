@@ -49,17 +49,26 @@ class TestUAT011HoldPointInspectionCompletion(FrappeTestCase):
 			hold_reason="UAT011-TEST hold reason.",
 		)
 
+		job_card = frappe.db.get_value("WIP Unit Register", wip_unit_name, "job_card")
 		inspection = frappe.get_doc(
 			{
 				"doctype": "Quality Inspection",
 				"item_code": work_order.production_item,
 				"inspection_type": "In Process",
-				"reference_type": "Work Order",
-				"reference_name": work_order.name,
+				# Quality Inspection.reference_type's real Select options
+				# do not include "Work Order" (verified live) - "Job Card"
+				# is correct here.
+				"reference_type": "Job Card",
+				"reference_name": job_card,
 				"sample_size": 1,
 				"report_date": today(),
 				"status": "Accepted",
 				"itag_wip_unit": wip_unit_name,
+				# inspected_by's own docfield default is the literal
+				# string "user" (not the "__user" magic keyword Frappe
+				# recognizes), so it is never auto-resolved - set
+				# explicitly, verified live.
+				"inspected_by": frappe.session.user,
 			}
 		).insert(ignore_permissions=True)
 
@@ -101,9 +110,15 @@ class TestUAT015FullFinishedValveTraceability(FrappeTestCase):
 		link_component_to_assembly(sub_assembly_unit, raw_material_unit, quantity_consumed=3)
 		link_component_to_assembly(finished_unit, sub_assembly_unit, quantity_consumed=1)
 
-		serial = frappe.get_doc({"doctype": "Serial No", "item_code": finished_wo.production_item}).insert(
-			ignore_permissions=True
-		)
+		# Serial No autonames via "field:serial_no" (verified live) - a
+		# serial_no value must be supplied explicitly.
+		serial = frappe.get_doc(
+			{
+				"doctype": "Serial No",
+				"serial_no": f"UAT015-TEST-SERIAL-{frappe.generate_hash(length=8)}",
+				"item_code": finished_wo.production_item,
+			}
+		).insert(ignore_permissions=True)
 		frappe.db.set_value(
 			"WIP Unit Register", finished_unit, "serial_number", serial.name, update_modified=False
 		)
@@ -121,7 +136,14 @@ class TestUAT015FullFinishedValveTraceability(FrappeTestCase):
 				"items": [{"item_code": finished_wo.production_item, "qty": 1, "warehouse": warehouse}],
 			}
 		).insert(ignore_permissions=True)
+		# frappe.db.set_value on the parent Delivery Note does NOT cascade
+		# to its own child "Delivery Note Item" rows (verified live) - set
+		# both, since traceability_service filters Delivery Note Item on
+		# docstatus=1 directly.
 		frappe.db.set_value("Delivery Note", delivery_note.name, "docstatus", 1, update_modified=False)
+		frappe.db.set_value(
+			"Delivery Note Item", {"parent": delivery_note.name}, "docstatus", 1, update_modified=False
+		)
 
 		result = backward_traceability(serial.name)
 
@@ -168,7 +190,14 @@ class TestUAT016ForwardHeatTraceability(FrappeTestCase):
 				"items": [{"item_code": finished_wo.production_item, "qty": 1, "warehouse": warehouse}],
 			}
 		).insert(ignore_permissions=True)
+		# frappe.db.set_value on the parent Delivery Note does NOT cascade
+		# to its own child "Delivery Note Item" rows (verified live) - set
+		# both, since traceability_service filters Delivery Note Item on
+		# docstatus=1 directly.
 		frappe.db.set_value("Delivery Note", delivery_note.name, "docstatus", 1, update_modified=False)
+		frappe.db.set_value(
+			"Delivery Note Item", {"parent": delivery_note.name}, "docstatus", 1, update_modified=False
+		)
 
 		result = forward_traceability(heat_number)
 

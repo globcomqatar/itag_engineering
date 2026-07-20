@@ -37,9 +37,16 @@ class TestTraceabilityService(FrappeTestCase):
 		link_component_to_assembly(sub_assembly_unit, component_unit, quantity_consumed=2)
 		link_component_to_assembly(finished_unit, sub_assembly_unit, quantity_consumed=1)
 
-		serial = frappe.get_doc({"doctype": "Serial No", "item_code": finished_wo.production_item}).insert(
-			ignore_permissions=True
-		)
+		# Serial No autonames via "field:serial_no" (verified live) - a
+		# serial_no value must be supplied explicitly, it is not
+		# auto-generated.
+		serial = frappe.get_doc(
+			{
+				"doctype": "Serial No",
+				"serial_no": f"TRACESVC-TEST-SERIAL-{frappe.generate_hash(length=8)}",
+				"item_code": finished_wo.production_item,
+			}
+		).insert(ignore_permissions=True)
 		frappe.db.set_value(
 			"WIP Unit Register", finished_unit, "serial_number", serial.name, update_modified=False
 		)
@@ -57,7 +64,16 @@ class TestTraceabilityService(FrappeTestCase):
 				"items": [{"item_code": finished_wo.production_item, "qty": 1, "warehouse": warehouse}],
 			}
 		).insert(ignore_permissions=True)
+		# frappe.db.set_value on the parent Delivery Note does NOT cascade
+		# to its own child "Delivery Note Item" rows (verified live - the
+		# same "db writes don't cascade to child tables" bug class as
+		# frappe.db.delete()) - traceability_service._describe_terminal_unit()
+		# filters Delivery Note Item on docstatus=1 directly, so the child
+		# rows' own docstatus must be set too, not just the parent's.
 		frappe.db.set_value("Delivery Note", delivery_note.name, "docstatus", 1, update_modified=False)
+		frappe.db.set_value(
+			"Delivery Note Item", {"parent": delivery_note.name}, "docstatus", 1, update_modified=False
+		)
 
 		return {
 			"component_unit": component_unit,

@@ -20,6 +20,7 @@ from itag_engineering.itag_engineering_management.wip_service import (
 	should_create_wip_unit,
 )
 from itag_engineering.tests.factories import (
+	_ensure_test_operation,
 	create_fresh_stock_item,
 	create_test_wip_unit,
 	create_test_work_order_with_wip_tracking,
@@ -37,13 +38,19 @@ class TestWIPService(FrappeTestCase):
 		return create_test_work_order_with_wip_tracking(prefix, wip_tracking_required=wip_tracking_required)
 
 	def _make_job_card(self, work_order, operation="Final Inspection"):
+		# Job Card.wip_warehouse/operation/workstation are mandatory
+		# (verified live) - operation is a Link to Operation, so it must
+		# be get-or-created as a real record, not passed as free text.
+		_ensure_test_operation(operation)
 		return frappe.get_doc(
 			{
 				"doctype": "Job Card",
 				"work_order": work_order.name,
 				"for_quantity": work_order.qty,
 				"company": work_order.company,
+				"wip_warehouse": work_order.wip_warehouse,
 				"operation": operation,
+				"workstation": "_Test Workstation 1",
 			}
 		).insert(ignore_permissions=True)
 
@@ -121,12 +128,22 @@ class TestWIPService(FrappeTestCase):
 				"doctype": "Quality Inspection",
 				"item_code": work_order.production_item,
 				"inspection_type": "In Process",
-				"reference_type": "Work Order",
-				"reference_name": work_order.name,
+				# Quality Inspection.reference_type is a Select whose real
+				# options do not include "Work Order" (verified live) -
+				# "Job Card" is the correct option for an in-process
+				# inspection against this fixture's Job Card.
+				"reference_type": "Job Card",
+				"reference_name": job_card.name,
 				"sample_size": 1,
 				"report_date": today(),
 				"status": "Accepted",
 				"itag_wip_unit": wip_unit_name,
+				# Quality Inspection.inspected_by's own docfield default is
+				# the literal string "user" (not the "__user" magic
+				# keyword ERPNext core recognizes), so Frappe's static
+				# default resolution returns it verbatim - a real user
+				# must be set explicitly here, verified live.
+				"inspected_by": frappe.session.user,
 			}
 		).insert(ignore_permissions=True)
 		frappe.db.set_value("Quality Inspection", inspection.name, "docstatus", 1)

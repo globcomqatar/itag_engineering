@@ -14,12 +14,14 @@ scoping philosophy: an unconditional full delivery-history scan on every
 call would be an expensive query with no proportionate benefit, so it only
 runs when the traced chain is actually customer/safety relevant.
 
-Serial No's purchase_document_type/purchase_document_no fields are used to
-resolve the originating Purchase Receipt/Purchase Invoice - carried over
-from established ERPNext convention, not confirmed against
-frappe.get_meta("Serial No") on a live bench in this session. Batch has no
-equivalent direct field in core ERPNext, so batch-to-purchase-receipt
-tracing is not attempted here - documented as a real gap, not an oversight.
+Serial No has only a `purchase_document_no` field (confirmed live via
+frappe.get_meta("Serial No") on this bench - there is no accompanying
+purchase_document_type field on this Frappe/ERPNext version, unlike the
+original plan's assumption) - a generic voucher reference resolved by
+checking Purchase Receipt/Purchase Invoice/Stock Entry for existence.
+Batch has no equivalent direct field in core ERPNext, so batch-to-
+purchase-receipt tracing is not attempted here - documented as a real
+gap, not an oversight.
 
 Permission gating (Global Constraint #2, roadmap Section 21.7 "Permission
 filters protect controlled customer and engineering information"):
@@ -79,7 +81,16 @@ def _resolve_wip_unit_and_serial(serial_or_wip_unit):
 		serial_number = frappe.db.get_value("WIP Unit Register", serial_or_wip_unit, "serial_number")
 		return serial_or_wip_unit, serial_number
 	if frappe.db.exists("Serial No", serial_or_wip_unit):
-		wip_unit_name = frappe.db.get_value("Serial No", serial_or_wip_unit, "itag_wip_unit")
+		# Serial No.itag_wip_unit is a convenience back-reference, but
+		# nothing in this app currently guarantees it gets populated
+		# whenever a WIP Unit Register's own serial_number field is set
+		# (there is no dedicated "attach a serial to a WIP unit" service
+		# function in this build) - so this falls back to the
+		# authoritative WIP Unit Register.serial_number field directly
+		# rather than trusting the Serial No side to always be in sync.
+		wip_unit_name = frappe.db.get_value(
+			"Serial No", serial_or_wip_unit, "itag_wip_unit"
+		) or frappe.db.get_value("WIP Unit Register", {"serial_number": serial_or_wip_unit}, "name")
 		return wip_unit_name, serial_or_wip_unit
 	return None, None
 
@@ -160,22 +171,30 @@ def _find_dispositions_for_wip_unit(wip_unit):
 
 
 def _resolve_purchase_receipt(serial_no):
-	"""Serial No's own purchase_document_type/purchase_document_no fields -
-	not confirmed against a live bench in this session. Batch has no
-	equivalent direct field in core ERPNext, so this is Serial No only."""
-	row = frappe.db.get_value(
-		"Serial No", serial_no, ["purchase_document_type", "purchase_document_no"], as_dict=True
-	)
-	if not row or not row.purchase_document_no:
+	"""Serial No has only a `purchase_document_no` field (verified live via
+	frappe.get_meta("Serial No") on this bench) - a generic Data field
+	holding whatever voucher created the serial, with NO accompanying
+	purchase_document_type field (that assumption from the original plan
+	does not hold on this Frappe/ERPNext version). The voucher is
+	typically a Purchase Receipt but could be a Purchase Invoice or Stock
+	Entry depending on how the item entered stock, so each plausible
+	doctype is checked for existence rather than assuming Purchase
+	Receipt. Batch has no equivalent direct field in core ERPNext, so
+	this is Serial No only."""
+	voucher_no = frappe.db.get_value("Serial No", serial_no, "purchase_document_no")
+	if not voucher_no:
 		return None
-	supplier = None
-	if row.purchase_document_type == "Purchase Receipt":
-		supplier = frappe.db.get_value("Purchase Receipt", row.purchase_document_no, "supplier")
-	return {
-		"purchase_document_type": row.purchase_document_type,
-		"purchase_document_no": row.purchase_document_no,
-		"supplier": supplier,
-	}
+	for doctype in ("Purchase Receipt", "Purchase Invoice", "Stock Entry"):
+		if frappe.db.exists(doctype, voucher_no):
+			supplier = (
+				frappe.db.get_value(doctype, voucher_no, "supplier") if doctype != "Stock Entry" else None
+			)
+			return {
+				"purchase_document_type": doctype,
+				"purchase_document_no": voucher_no,
+				"supplier": supplier,
+			}
+	return {"purchase_document_type": None, "purchase_document_no": voucher_no, "supplier": None}
 
 
 def forward_traceability(identity, include_recall_population_check=False):

@@ -619,6 +619,15 @@ def create_test_work_order_with_wip_tracking(prefix, qty=5, wip_tracking_require
 	return work_order
 
 
+def _ensure_test_operation(operation_name):
+	"""Job Card.operation is a mandatory Link to Operation (verified live)
+	- get-or-create `operation_name` as a real Operation record rather
+	than assuming it pre-exists, following the same get-or-create pattern
+	as this file's other _ensure_*/if-not-exists factories."""
+	if not frappe.db.exists("Operation", operation_name):
+		frappe.get_doc({"doctype": "Operation", "name": operation_name}).insert(ignore_permissions=True)
+
+
 def create_test_wip_unit(work_order, operation="Final Inspection"):
 	"""Build ITAG-0.10.0 baseline factory - creates a Job Card against
 	`work_order` and drives it through the real
@@ -626,16 +635,26 @@ def create_test_wip_unit(work_order, operation="Final Inspection"):
 	so the returned WIP Unit Register name genuinely reflects that
 	service's own creation logic. `work_order`'s production_item must
 	already have itag_wip_unit_tracking_required=1 (see
-	create_test_work_order_with_wip_tracking()) or this returns None."""
+	create_test_work_order_with_wip_tracking()) or this returns None.
+
+	Job Card.wip_warehouse/workstation are also mandatory (verified live,
+	same bug class as create_test_work_order_and_job_card()) -
+	wip_warehouse reuses the Work Order's own wip_warehouse and workstation
+	reuses the established "_Test Workstation 1" fixture; `operation` is
+	get-or-created as a real Operation record via _ensure_test_operation()
+	since it is a mandatory Link, not free text."""
 	from itag_engineering.itag_engineering_management.wip_service import create_wip_unit_from_job_card
 
+	_ensure_test_operation(operation)
 	job_card = frappe.get_doc(
 		{
 			"doctype": "Job Card",
 			"work_order": work_order.name,
 			"for_quantity": work_order.qty,
 			"company": work_order.company,
+			"wip_warehouse": work_order.wip_warehouse,
 			"operation": operation,
+			"workstation": "_Test Workstation 1",
 		}
 	).insert(ignore_permissions=True)
 	return create_wip_unit_from_job_card(job_card.name)

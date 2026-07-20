@@ -71,17 +71,26 @@ class TestBuild0100ReportsAgainstRealData(FrappeTestCase):
 	def test_inspection_compliance_report_counts_a_real_passed_inspection(self):
 		work_order = create_test_work_order_with_wip_tracking("B10R-TEST-ITEM")
 		wip_unit_name = create_test_wip_unit(work_order)
+		job_card = frappe.db.get_value("WIP Unit Register", wip_unit_name, "job_card")
 		inspection = frappe.get_doc(
 			{
 				"doctype": "Quality Inspection",
 				"item_code": work_order.production_item,
 				"inspection_type": "In Process",
-				"reference_type": "Work Order",
-				"reference_name": work_order.name,
+				# Quality Inspection.reference_type's real Select options
+				# do not include "Work Order" (verified live) - "Job Card"
+				# is correct for an in-process inspection here.
+				"reference_type": "Job Card",
+				"reference_name": job_card,
 				"sample_size": 1,
 				"report_date": today(),
 				"status": "Accepted",
 				"itag_wip_unit": wip_unit_name,
+				# inspected_by's own docfield default is the literal
+				# string "user" (not the "__user" magic keyword Frappe
+				# recognizes), so it is never auto-resolved - set
+				# explicitly, verified live.
+				"inspected_by": frappe.session.user,
 			}
 		).insert(ignore_permissions=True)
 		frappe.db.set_value("Quality Inspection", inspection.name, "docstatus", 1)
@@ -94,9 +103,16 @@ class TestBuild0100ReportsAgainstRealData(FrappeTestCase):
 
 	def test_heat_traceability_report_surfaces_a_real_batch(self):
 		item = create_fresh_stock_item("B10R-TEST-BATCH-ITEM").name
+		# Batch.item_has_batch_enabled() rejects a Batch against an Item
+		# that doesn't have has_batch_no set (verified live) -
+		# create_fresh_stock_item() doesn't set this by default.
+		frappe.db.set_value("Item", item, "has_batch_no", 1)
+		# Batch autonames via "field:batch_id" (verified live) - a
+		# batch_id value must be supplied explicitly.
 		batch = frappe.get_doc(
 			{
 				"doctype": "Batch",
+				"batch_id": f"B10R-TEST-BATCH-{frappe.generate_hash(length=8)}",
 				"item": item,
 				"itag_heat_number": "B10R-TEST-HEAT-001",
 			}
@@ -114,9 +130,15 @@ class TestBuild0100ReportsAgainstRealData(FrappeTestCase):
 		finished_unit = create_test_wip_unit(finished_wo)
 		link_component_to_assembly(finished_unit, component_unit, quantity_consumed=1)
 
-		serial = frappe.get_doc({"doctype": "Serial No", "item_code": finished_wo.production_item}).insert(
-			ignore_permissions=True
-		)
+		# Serial No autonames via "field:serial_no" (verified live) - a
+		# serial_no value must be supplied explicitly.
+		serial = frappe.get_doc(
+			{
+				"doctype": "Serial No",
+				"serial_no": f"B10R-TEST-SERIAL-{frappe.generate_hash(length=8)}",
+				"item_code": finished_wo.production_item,
+			}
+		).insert(ignore_permissions=True)
 		frappe.db.set_value(
 			"WIP Unit Register", finished_unit, "serial_number", serial.name, update_modified=False
 		)
