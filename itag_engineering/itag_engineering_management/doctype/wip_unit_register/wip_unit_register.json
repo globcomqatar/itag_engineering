@@ -1,0 +1,309 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "item",
+  "quantity",
+  "column_break_header",
+  "original_work_order",
+  "job_card",
+  "identity_section",
+  "serial_number",
+  "batch",
+  "column_break_identity",
+  "heat_number",
+  "material_certificate",
+  "operation_section",
+  "last_completed_operation",
+  "current_operation",
+  "column_break_operation",
+  "workstation",
+  "current_warehouse",
+  "baseline_section",
+  "drawing_revision",
+  "bom_revision",
+  "column_break_baseline",
+  "product_revision",
+  "engineering_release",
+  "eco",
+  "status_section",
+  "quality_status",
+  "hold_status",
+  "column_break_status",
+  "rework_status",
+  "disposition_status",
+  "genealogy_section",
+  "parent_assembly",
+  "child_components",
+  "customer_or_project"
+ ],
+ "fields": [
+  {
+   "default": "WIP-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "WIP-.YYYY.-"
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "quantity",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Quantity",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "original_work_order",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Original Work Order",
+   "options": "Work Order",
+   "reqd": 1
+  },
+  {
+   "fieldname": "job_card",
+   "fieldtype": "Link",
+   "label": "Job Card",
+   "options": "Job Card"
+  },
+  {
+   "fieldname": "identity_section",
+   "fieldtype": "Section Break",
+   "label": "Identity"
+  },
+  {
+   "fieldname": "serial_number",
+   "fieldtype": "Link",
+   "label": "Serial Number",
+   "options": "Serial No"
+  },
+  {
+   "fieldname": "batch",
+   "fieldtype": "Link",
+   "label": "Batch",
+   "options": "Batch"
+  },
+  {
+   "fieldname": "column_break_identity",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Denormalized copy of the linked Batch/Serial's own itag_heat_number for quick display - kept in sync by wip_service.py, never hand-edited.",
+   "fieldname": "heat_number",
+   "fieldtype": "Data",
+   "label": "Heat Number",
+   "read_only": 1
+  },
+  {
+   "fieldname": "material_certificate",
+   "fieldtype": "Attach",
+   "label": "Material Certificate"
+  },
+  {
+   "fieldname": "operation_section",
+   "fieldtype": "Section Break",
+   "label": "Operation"
+  },
+  {
+   "fieldname": "last_completed_operation",
+   "fieldtype": "Data",
+   "label": "Last Completed Operation"
+  },
+  {
+   "fieldname": "current_operation",
+   "fieldtype": "Data",
+   "label": "Current Operation"
+  },
+  {
+   "fieldname": "column_break_operation",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "workstation",
+   "fieldtype": "Link",
+   "label": "Workstation",
+   "options": "Workstation"
+  },
+  {
+   "fieldname": "current_warehouse",
+   "fieldtype": "Link",
+   "label": "Current Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "baseline_section",
+   "fieldtype": "Section Break",
+   "label": "Engineering Baseline"
+  },
+  {
+   "description": "Copied from original_work_order's Build ITAG-0.5.0-frozen baseline at creation.",
+   "fieldname": "drawing_revision",
+   "fieldtype": "Link",
+   "label": "Drawing Revision",
+   "options": "Engineering Drawing",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bom_revision",
+   "fieldtype": "Link",
+   "label": "BOM Revision",
+   "options": "BOM",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_baseline",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "product_revision",
+   "fieldtype": "Link",
+   "label": "Product Revision",
+   "options": "Product Revision",
+   "read_only": 1
+  },
+  {
+   "fieldname": "engineering_release",
+   "fieldtype": "Link",
+   "label": "Engineering Release",
+   "options": "Engineering Release",
+   "read_only": 1
+  },
+  {
+   "fieldname": "eco",
+   "fieldtype": "Link",
+   "label": "Engineering Change Order",
+   "options": "Engineering Change Order"
+  },
+  {
+   "fieldname": "status_section",
+   "fieldtype": "Section Break",
+   "label": "Status"
+  },
+  {
+   "default": "Not Inspected",
+   "description": "Kept LIVE by wip_service.refresh_wip_status() from the latest linked Quality Inspection - never hand-edited.",
+   "fieldname": "quality_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Quality Status",
+   "options": "Not Inspected\nPassed\nFailed\nPending",
+   "read_only": 1
+  },
+  {
+   "default": "Not Held",
+   "description": "Kept LIVE by wip_service.refresh_wip_status() querying hold_service.is_reference_held() - never a hand-maintained independent flag.",
+   "fieldname": "hold_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Hold Status",
+   "options": "Not Held\nHeld",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Not Applicable",
+   "fieldname": "rework_status",
+   "fieldtype": "Select",
+   "label": "Rework Status",
+   "options": "Not Applicable\nRework Pending\nRework Complete",
+   "read_only": 1
+  },
+  {
+   "default": "Not Applicable",
+   "fieldname": "disposition_status",
+   "fieldtype": "Select",
+   "label": "Disposition Status",
+   "options": "Not Applicable\nPending\nDispositioned",
+   "read_only": 1
+  },
+  {
+   "fieldname": "genealogy_section",
+   "fieldtype": "Section Break",
+   "label": "Genealogy"
+  },
+  {
+   "fieldname": "parent_assembly",
+   "fieldtype": "Link",
+   "label": "Parent Assembly",
+   "options": "WIP Unit Register"
+  },
+  {
+   "fieldname": "child_components",
+   "fieldtype": "Table",
+   "label": "Child Components",
+   "options": "WIP Component Link"
+  },
+  {
+   "fieldname": "customer_or_project",
+   "fieldtype": "Data",
+   "label": "Customer or Project"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "WIP Unit Register",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Production Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Production Supervisor"
+  },
+  {
+   "read": 1,
+   "role": "Quality Manager"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
