@@ -5,6 +5,10 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+from itag_engineering.itag_engineering_management.impact_staleness_service import (
+	sync_eco_impact_analysis_staleness,
+)
+
 CLOSED_STATE = "Closed"
 # Light "protect from accidental edits" guard, not the full "immutable once
 # Released" pattern - ECR/ECO have no released-baseline immutability
@@ -15,6 +19,7 @@ CLOSED_ALLOWED_FIELDS = {"workflow_state", "modified", "modified_by"}
 class EngineeringChangeOrder(Document):
 	def validate(self):
 		self.validate_closed_is_protected()
+		sync_eco_impact_analysis_staleness(self)
 
 	def validate_closed_is_protected(self):
 		if self.is_new():

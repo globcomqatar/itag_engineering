@@ -53,3 +53,20 @@ doc_events = {
 		"before_submit": "itag_engineering.itag_engineering_management.work_order_baseline.freeze_baseline_before_submit",
 	},
 }
+
+# Scheduled Tasks
+# ---------------
+
+# Hourly sweep closing the staleness-detection gap
+# impact_staleness_service.sync_eco_impact_analysis_staleness() cannot on
+# its own: a Work Order created or completed elsewhere never saves the
+# Engineering Change Order itself, so nothing re-checks that ECO's
+# assessment until either this sweep runs or the ECO is saved for an
+# unrelated reason. Hourly is appropriate given Decision Log #13's small
+# expected transaction volume (~15-25 Work Orders/month) - confirm this
+# cadence is still reasonable if that volume assumption ever changes.
+scheduler_events = {
+	"hourly": [
+		"itag_engineering.itag_engineering_management.impact_staleness_service.sweep_stale_assessments",
+	],
+}
