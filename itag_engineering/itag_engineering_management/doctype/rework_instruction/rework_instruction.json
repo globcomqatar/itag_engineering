@@ -136,10 +136,10 @@
    "label": "Source Heat Number"
   },
   {
-   "description": "Forward-reference placeholder - the WIP Unit Register DocType doesn't exist until Build ITAG-0.10.0, which is responsible for converting this to a real Link once it does.",
    "fieldname": "source_wip_unit",
-   "fieldtype": "Data",
-   "label": "Source WIP Unit"
+   "fieldtype": "Link",
+   "label": "Source WIP Unit",
+   "options": "WIP Unit Register"
   },
   {
    "fieldname": "revision_section",

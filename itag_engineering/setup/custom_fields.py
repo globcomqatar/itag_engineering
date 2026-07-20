@@ -598,6 +598,133 @@ def get_work_order_continuation_fields():
 	}
 
 
+def get_wip_traceability_fields():
+	"""Build ITAG-0.10.0 Task 1 (roadmap Section 21.3).
+
+	Only Serial No, Batch, and Quality Inspection get new custom fields.
+	Stock Entry, Purchase Order, Purchase Receipt, Sales Order, and
+	Delivery Note deliberately do NOT - each of those already carries its
+	own item_code/serial_no/batch_no fields, and traceability_service.py
+	(Build ITAG-0.10.0 Task 4) reaches them by joining on THOSE existing
+	fields against Serial No/Batch's new itag_* fields below, exactly the
+	same join-not-duplicate-field approach Build ITAG-0.7.0's
+	impact_analysis_service.py already established for Purchase Order
+	Item/Sales Order Item/Delivery Note Item. Adding a redundant
+	itag_wip_unit/itag_eco field to all 5 of those doctypes would be pure
+	duplication with no new traceability path it unlocks.
+
+	insert_after is intentionally omitted for the same reason Build
+	ITAG-0.5.0's work_order_baseline_fields omits it: no live bench in this
+	session to confirm Serial No/Batch/Quality Inspection's own last
+	standard fieldname against frappe.get_meta(...). Confirm real anchors
+	before/at first migrate on the live bench.
+	"""
+	return {
+		"Serial No": [
+			{
+				"fieldname": "itag_engineering_baseline_tab",
+				"fieldtype": "Tab Break",
+				"label": "Engineering Baseline",
+			},
+			{
+				"fieldname": "itag_engineering_release",
+				"fieldtype": "Link",
+				"label": "Engineering Release",
+				"options": "Engineering Release",
+				"description": "This serial's OWN baseline reference, independent of whatever Work Order produced it - a serial's identity can outlive the Work Order record's own convenience.",
+				"insert_after": "itag_engineering_baseline_tab",
+			},
+			{
+				"fieldname": "itag_product_revision",
+				"fieldtype": "Link",
+				"label": "Product Revision",
+				"options": "Product Revision",
+				"insert_after": "itag_engineering_release",
+			},
+			{
+				"fieldname": "itag_drawing_revision",
+				"fieldtype": "Link",
+				"label": "Drawing Revision",
+				"options": "Engineering Drawing",
+				"insert_after": "itag_product_revision",
+			},
+			{
+				"fieldname": "itag_column_break_serial_1",
+				"fieldtype": "Column Break",
+				"insert_after": "itag_drawing_revision",
+			},
+			{
+				"fieldname": "itag_bom_revision",
+				"fieldtype": "Link",
+				"label": "BOM Revision",
+				"options": "BOM",
+				"insert_after": "itag_column_break_serial_1",
+			},
+			{
+				"fieldname": "itag_wip_unit",
+				"fieldtype": "Link",
+				"label": "WIP Unit",
+				"options": "WIP Unit Register",
+				"insert_after": "itag_bom_revision",
+			},
+		],
+		"Batch": [
+			{
+				"fieldname": "itag_engineering_baseline_tab",
+				"fieldtype": "Tab Break",
+				"label": "Engineering Baseline",
+			},
+			{
+				"fieldname": "itag_heat_number",
+				"fieldtype": "Data",
+				"label": "Heat Number",
+				"description": "Heat-number tracking modeled as a Batch/Serial No extension field (Decision Log #6), not a separate DocType.",
+				"insert_after": "itag_engineering_baseline_tab",
+			},
+			{
+				"fieldname": "itag_material_certificate",
+				"fieldtype": "Attach",
+				"label": "Material Certificate",
+				"insert_after": "itag_heat_number",
+			},
+			{
+				"fieldname": "itag_column_break_batch_1",
+				"fieldtype": "Column Break",
+				"insert_after": "itag_material_certificate",
+			},
+			{
+				"fieldname": "itag_drawing_revision",
+				"fieldtype": "Link",
+				"label": "Drawing Revision",
+				"options": "Engineering Drawing",
+				"insert_after": "itag_column_break_batch_1",
+			},
+			{
+				"fieldname": "itag_bom_revision",
+				"fieldtype": "Link",
+				"label": "BOM Revision",
+				"options": "BOM",
+				"insert_after": "itag_drawing_revision",
+			},
+		],
+		"Quality Inspection": [
+			{
+				"fieldname": "itag_wip_unit",
+				"fieldtype": "Link",
+				"label": "WIP Unit",
+				"options": "WIP Unit Register",
+			},
+			{
+				"fieldname": "itag_eco",
+				"fieldtype": "Link",
+				"label": "Engineering Change Order",
+				"options": "Engineering Change Order",
+				"insert_after": "itag_wip_unit",
+			},
+		],
+	}
+
+
 def sync_custom_fields():
 	create_custom_fields(get_custom_fields(), update=True)
 	create_custom_fields(get_bom_fields(), update=True)
@@ -605,3 +732,4 @@ def sync_custom_fields():
 	create_custom_fields(get_bom_operation_fields(), update=True)
 	create_custom_fields(get_work_order_baseline_fields(), update=True)
 	create_custom_fields(get_work_order_continuation_fields(), update=True)
+	create_custom_fields(get_wip_traceability_fields(), update=True)

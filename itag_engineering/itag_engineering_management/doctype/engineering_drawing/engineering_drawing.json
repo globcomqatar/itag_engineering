@@ -118,10 +118,10 @@
    "options": "\nInternal\nConfidential\nCustomer Controlled"
   },
   {
-   "description": "Placeholder - real ECO linkage is Build ITAG-0.6.0's scope.",
    "fieldname": "applicable_eco",
-   "fieldtype": "Data",
-   "label": "Applicable ECO"
+   "fieldtype": "Link",
+   "label": "Applicable ECO",
+   "options": "Engineering Change Order"
   },
   {
    "fieldname": "reference_section",
@@ -139,10 +139,10 @@
    "label": "Native File Reference"
   },
   {
-   "description": "Placeholder - real BOM linkage is Build ITAG-0.4.0's scope.",
    "fieldname": "related_bom",
-   "fieldtype": "Data",
-   "label": "Related BOM"
+   "fieldtype": "Link",
+   "label": "Related BOM",
+   "options": "BOM"
   },
   {
    "fieldname": "file_section",

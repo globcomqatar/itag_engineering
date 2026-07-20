@@ -144,3 +144,75 @@ class TestCustomFields(FrappeTestCase):
 		# BOM Operation is the shared child doctype for both BOM.operations and
 		# Routing.operations (confirmed via source: both fields' `options` = "BOM Operation").
 		# A single field-set addition here is sufficient - no separate Routing Operation doctype exists.
+
+	def test_work_order_continuation_fields_exist(self):
+		# Build ITAG-0.9.0 Task 3.
+		meta = frappe.get_meta("Work Order")
+		for fieldname in ("itag_original_work_order", "itag_successor_work_order"):
+			df = meta.get_field(fieldname)
+			self.assertIsNotNone(df, f"Work Order missing {fieldname}")
+			self.assertEqual(df.fieldtype, "Link")
+			self.assertEqual(df.options, "Work Order")
+
+	def test_wip_traceability_fields_exist(self):
+		# Build ITAG-0.10.0 Task 1 (roadmap Section 21.3).
+		serial_no_meta = frappe.get_meta("Serial No")
+		for fieldname, options in (
+			("itag_engineering_release", "Engineering Release"),
+			("itag_product_revision", "Product Revision"),
+			("itag_drawing_revision", "Engineering Drawing"),
+			("itag_bom_revision", "BOM"),
+			("itag_wip_unit", "WIP Unit Register"),
+		):
+			df = serial_no_meta.get_field(fieldname)
+			self.assertIsNotNone(df, f"Serial No missing {fieldname}")
+			self.assertEqual(df.fieldtype, "Link")
+			self.assertEqual(df.options, options)
+
+		batch_meta = frappe.get_meta("Batch")
+		self.assertEqual(batch_meta.get_field("itag_heat_number").fieldtype, "Data")
+		self.assertEqual(batch_meta.get_field("itag_material_certificate").fieldtype, "Attach")
+		for fieldname, options in (
+			("itag_drawing_revision", "Engineering Drawing"),
+			("itag_bom_revision", "BOM"),
+		):
+			df = batch_meta.get_field(fieldname)
+			self.assertIsNotNone(df, f"Batch missing {fieldname}")
+			self.assertEqual(df.fieldtype, "Link")
+			self.assertEqual(df.options, options)
+
+		qi_meta = frappe.get_meta("Quality Inspection")
+		self.assertEqual(qi_meta.get_field("itag_wip_unit").options, "WIP Unit Register")
+		self.assertEqual(qi_meta.get_field("itag_eco").options, "Engineering Change Order")
+
+	def test_source_wip_unit_is_now_a_link(self):
+		# Build ITAG-0.10.0 Task 1 - the app's LAST forward-reference
+		# placeholder (itag_engineering.patches.v0_10.
+		# convert_remaining_forward_reference_placeholders).
+		df = frappe.get_meta("Rework Instruction").get_field("source_wip_unit")
+		self.assertEqual(df.fieldtype, "Link")
+		self.assertEqual(df.options, "WIP Unit Register")
+
+	def test_engineering_drawing_and_product_revision_placeholders_are_now_links(self):
+		# Build ITAG-0.10.0's own "confirm zero forward-reference
+		# placeholders remain" grep surfaced these 6 fields left behind by
+		# Builds ITAG-0.4.0/0.6.0 - resolved as part of this build's Task 1.
+		drawing_meta = frappe.get_meta("Engineering Drawing")
+		for fieldname, options in (
+			("applicable_eco", "Engineering Change Order"),
+			("related_bom", "BOM"),
+		):
+			df = drawing_meta.get_field(fieldname)
+			self.assertEqual(df.fieldtype, "Link")
+			self.assertEqual(df.options, options)
+
+		revision_meta = frappe.get_meta("Product Revision")
+		for fieldname, options in (
+			("bom_revision_reference", "BOM"),
+			("routing_revision_reference", "Routing"),
+			("inspection_plan_revision_reference", "Engineering Inspection Plan"),
+			("applicable_eco", "Engineering Change Order"),
+		):
+			df = revision_meta.get_field(fieldname)
+			self.assertEqual(df.fieldtype, "Link")
+			self.assertEqual(df.options, options)
