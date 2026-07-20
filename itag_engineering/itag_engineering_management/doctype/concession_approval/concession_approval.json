@@ -1,0 +1,230 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "title",
+  "related_eco",
+  "related_deviation",
+  "quality_action",
+  "column_break_header",
+  "status",
+  "scope_section",
+  "quantity_limit",
+  "uom",
+  "column_break_scope",
+  "use_count",
+  "remaining_quantity",
+  "serial_or_batch_scope",
+  "customer_or_project",
+  "validity_section",
+  "validity_from",
+  "validity_to",
+  "justification_section",
+  "technical_justification",
+  "risk_assessment",
+  "column_break_justification",
+  "required_inspection",
+  "customer_approval_reference",
+  "approvers_section",
+  "approvers"
+ ],
+ "fields": [
+  {
+   "default": "CON-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "CON-.YYYY.-"
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "related_eco",
+   "fieldtype": "Link",
+   "label": "Related ECO",
+   "options": "Engineering Change Order"
+  },
+  {
+   "description": "A Concession is formal acceptance of nonconforming or changed material - broader in scope than a Deviation's temporary/limited pre-execution exception (roadmap Section 18.7) - so it may reference an earlier Deviation this concession now formalizes, but does not have to.",
+   "fieldname": "related_deviation",
+   "fieldtype": "Link",
+   "label": "Related Deviation",
+   "options": "Deviation Request"
+  },
+  {
+   "description": "Decision Log #11: links to ERPNext's existing Quality Action module rather than duplicating an NCR workflow.",
+   "fieldname": "quality_action",
+   "fieldtype": "Link",
+   "label": "Quality Action",
+   "options": "Quality Action"
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Draft\nApproved\nActive\nExpired\nExhausted\nRejected",
+   "read_only": 1
+  },
+  {
+   "fieldname": "scope_section",
+   "fieldtype": "Section Break",
+   "label": "Scope"
+  },
+  {
+   "fieldname": "quantity_limit",
+   "fieldtype": "Float",
+   "label": "Quantity Limit",
+   "reqd": 1
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Data",
+   "label": "UOM"
+  },
+  {
+   "fieldname": "column_break_scope",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Discrete counter - incremented once per consuming Material Disposition Decision (see remaining_quantity for the actual quantity ledger).",
+   "fieldname": "use_count",
+   "fieldtype": "Int",
+   "label": "Use Count",
+   "read_only": 1
+  },
+  {
+   "description": "Set to quantity_limit on creation, decremented by deviation_concession_service.py as consumption is recorded - not computed from any child table on this doctype.",
+   "fieldname": "remaining_quantity",
+   "fieldtype": "Float",
+   "label": "Remaining Quantity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "serial_or_batch_scope",
+   "fieldtype": "Small Text",
+   "label": "Serial or Batch Scope"
+  },
+  {
+   "description": "Free text, not a Customer Link - scope may be \"any\" or a project code rather than a single definite Customer record.",
+   "fieldname": "customer_or_project",
+   "fieldtype": "Data",
+   "label": "Customer or Project"
+  },
+  {
+   "fieldname": "validity_section",
+   "fieldtype": "Section Break",
+   "label": "Validity"
+  },
+  {
+   "fieldname": "validity_from",
+   "fieldtype": "Date",
+   "label": "Validity From",
+   "reqd": 1
+  },
+  {
+   "fieldname": "validity_to",
+   "fieldtype": "Date",
+   "label": "Validity To",
+   "reqd": 1
+  },
+  {
+   "fieldname": "justification_section",
+   "fieldtype": "Section Break",
+   "label": "Justification"
+  },
+  {
+   "fieldname": "technical_justification",
+   "fieldtype": "Text",
+   "label": "Technical Justification",
+   "reqd": 1
+  },
+  {
+   "fieldname": "risk_assessment",
+   "fieldtype": "Text",
+   "label": "Risk Assessment"
+  },
+  {
+   "fieldname": "column_break_justification",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "required_inspection",
+   "fieldtype": "Check",
+   "label": "Requires Inspection"
+  },
+  {
+   "description": "Decision Log #14: a recorded external customer-approval reference, not a blocking third-party login flow.",
+   "fieldname": "customer_approval_reference",
+   "fieldtype": "Data",
+   "label": "Customer Approval Reference"
+  },
+  {
+   "fieldname": "approvers_section",
+   "fieldtype": "Section Break",
+   "label": "Approvers"
+  },
+  {
+   "fieldname": "approvers",
+   "fieldtype": "Table",
+   "label": "Approvers",
+   "options": "Approval Signoff"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Concession Approval",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Quality Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
