@@ -196,7 +196,7 @@
   "transitions": [
    {"state": "Draft", "action": "Begin Engineering Definition", "next_state": "Engineering Definition", "allowed": "Engineering Manager", "allow_self_approval": 1},
    {"state": "Engineering Definition", "action": "Submit for Impact Analysis", "next_state": "Impact Analysis Required", "allowed": "Engineering Manager", "allow_self_approval": 1},
-   {"state": "Impact Analysis Required", "action": "Submit for Discipline Review", "next_state": "Discipline Review", "allowed": "Engineering Manager", "allow_self_approval": 1},
+   {"state": "Impact Analysis Required", "action": "Submit for Discipline Review", "next_state": "Discipline Review", "allowed": "Engineering Manager", "allow_self_approval": 1, "condition": "doc.impact_analysis_status == 'Complete'"},
    {"state": "Discipline Review", "action": "Submit for Quality Review", "next_state": "Quality Review", "allowed": "Engineering Manager", "allow_self_approval": 1},
    {"state": "Quality Review", "action": "Submit for Production Review", "next_state": "Production Review", "allowed": "Quality Manager", "allow_self_approval": 1},
    {"state": "Production Review", "action": "Submit for Cost Review", "next_state": "Cost Review", "allowed": "Engineering Manager", "allow_self_approval": 1, "condition": "doc.requires_cost_review == 1"},

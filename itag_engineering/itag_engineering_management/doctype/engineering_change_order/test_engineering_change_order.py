@@ -85,3 +85,45 @@ class TestEngineeringChangeOrder(FrappeTestCase):
 			eco.db_set("workflow_state", state)
 			eco.reload()
 			self.assertEqual(eco.workflow_state, state)
+
+	def test_change_impact_assessment_field_is_now_a_link(self):
+		# Build ITAG-0.7.0 Task 1: the Data forward-reference placeholder
+		# from Build 0.6.0 is converted to a real Link now that Change
+		# Impact Assessment exists.
+		df = frappe.get_meta("Engineering Change Order").get_field("change_impact_assessment")
+		self.assertEqual(df.fieldtype, "Link")
+		self.assertEqual(df.options, "Change Impact Assessment")
+
+	def test_workflow_condition_blocks_transition_when_impact_analysis_not_complete(self):
+		# Build ITAG-0.7.0 Task 1: makes the ECO workflow's own explicit
+		# deferral (Build 0.6.0) real - "Impact Analysis Required" ->
+		# "Discipline Review" is now genuinely gated on
+		# impact_analysis_status == "Complete", enforced by the real
+		# Workflow engine (frappe.model.workflow.apply_workflow), not just
+		# present as inert fixture JSON.
+		#
+		# The exact exception class Frappe's workflow engine raises for "no
+		# transition matches this action for the current doc state" was not
+		# verified against a live bench in this environment - broadened to
+		# Exception here rather than guessing a specific class name; narrow
+		# this to the real class once confirmed live.
+		from frappe.model.workflow import apply_workflow
+
+		eco = self._make_eco()
+		eco.db_set("workflow_state", "Impact Analysis Required")
+		eco.reload()
+		self.assertNotEqual(eco.impact_analysis_status, "Complete")
+
+		with self.assertRaises(Exception):
+			apply_workflow(eco, "Submit for Discipline Review")
+
+	def test_workflow_condition_allows_transition_when_impact_analysis_complete(self):
+		from frappe.model.workflow import apply_workflow
+
+		eco = self._make_eco()
+		eco.db_set({"workflow_state": "Impact Analysis Required", "impact_analysis_status": "Complete"})
+		eco.reload()
+
+		apply_workflow(eco, "Submit for Discipline Review")
+		eco.reload()
+		self.assertEqual(eco.workflow_state, "Discipline Review")

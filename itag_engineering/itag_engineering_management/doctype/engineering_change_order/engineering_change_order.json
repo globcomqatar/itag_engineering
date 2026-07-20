@@ -195,10 +195,10 @@
    "label": "Impact Analysis"
   },
   {
-   "description": "Forward-reference placeholder - Build ITAG-0.7.0 (Change Impact Analysis) does not exist yet.",
    "fieldname": "change_impact_assessment",
-   "fieldtype": "Data",
-   "label": "Change Impact Assessment"
+   "fieldtype": "Link",
+   "label": "Change Impact Assessment",
+   "options": "Change Impact Assessment"
   },
   {
    "default": "Not Started",
