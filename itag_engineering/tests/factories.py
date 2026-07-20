@@ -496,6 +496,55 @@ def ensure_test_warehouse_by_keyword(keyword):
 	)
 
 
+def create_test_production_change_continuation(work_order, eco, new_release, **overrides):
+	"""Build ITAG-0.9.0 baseline factory for a Production Change
+	Continuation. `work_order` must already be a submitted (and reloaded)
+	Work Order document, so its own frozen itag_engineering_release
+	baseline is available to copy - this factory does not submit it for
+	the caller. Defaults completed_acceptable_quantity/
+	existing_accepted_component_quantity to 0 and approval_status to
+	"Approved" (the state continuation_service.create_successor_work_order()
+	requires), so a caller only needs to override what its scenario
+	actually cares about."""
+	fields = {
+		"doctype": "Production Change Continuation",
+		"eco": eco.name,
+		"original_work_order": work_order.name,
+		"original_engineering_release": work_order.itag_engineering_release,
+		"original_planned_quantity": work_order.qty,
+		"completed_acceptable_quantity": 0,
+		"existing_accepted_component_quantity": 0,
+		"new_engineering_release": new_release.name,
+		"approval_status": "Approved",
+	}
+	fields.update(overrides)
+	return frappe.get_doc(fields).insert(ignore_permissions=True)
+
+
+def create_test_rework_instruction(item, work_order, decision_type="Rework", quantity=4, **overrides):
+	"""Build ITAG-0.9.0 baseline factory for a Rework Instruction - creates
+	a real Material Disposition with one decision row of `decision_type`
+	(default "Rework") and links it, along with a minimal one-row
+	required_operations/inspection_steps pair (both `reqd` on the
+	DocType) sufficient to insert."""
+	disposition = create_test_material_disposition(
+		item, [{"decision_type": decision_type, "quantity": quantity, "required_approval": 0}]
+	)
+	fields = {
+		"doctype": "Rework Instruction",
+		"disposition": disposition.name,
+		"source_work_order": work_order.name,
+		"source_item": item,
+		"source_quantity": quantity,
+		"target_revision": "B",
+		"required_operations": [{"sequence": 1, "description": "Re-machine sealing face"}],
+		"inspection_steps": [{"step_number": 1, "description": "Dimensional check"}],
+		"acceptance_criteria": "Sealing face flatness within tolerance.",
+	}
+	fields.update(overrides)
+	return frappe.get_doc(fields).insert(ignore_permissions=True)
+
+
 def create_multi_level_bom_tree_with_open_work_orders(prefix, depth=3, work_orders_per_level=1):
 	"""Build ITAG-0.7.0 baseline factory for UAT-005 (Multi-Level BOM
 	Revision) and this build's own performance baseline measurement.

@@ -11,7 +11,7 @@ from itag_engineering.itag_engineering_management.rework_service import (
 from itag_engineering.tests.factories import (
 	create_fresh_stock_item,
 	create_fully_approved_engineering_release,
-	create_test_material_disposition,
+	create_test_rework_instruction,
 	create_test_work_order,
 )
 
@@ -24,22 +24,7 @@ class TestReworkService(FrappeTestCase):
 		frappe.db.delete("Item", {"item_code": ["like", "RWSVC-TEST%"]})
 
 	def _make_instruction(self, item, work_order, decision_type="Rework", **overrides):
-		disposition = create_test_material_disposition(
-			item, [{"decision_type": decision_type, "quantity": 4, "required_approval": 0}]
-		)
-		fields = {
-			"doctype": "Rework Instruction",
-			"disposition": disposition.name,
-			"source_work_order": work_order.name,
-			"source_item": item,
-			"source_quantity": 4,
-			"target_revision": "B",
-			"required_operations": [{"sequence": 1, "description": "Re-machine sealing face"}],
-			"inspection_steps": [{"step_number": 1, "description": "Dimensional check"}],
-			"acceptance_criteria": "Sealing face flatness within tolerance.",
-		}
-		fields.update(overrides)
-		return frappe.get_doc(fields).insert(ignore_permissions=True)
+		return create_test_rework_instruction(item, work_order, decision_type=decision_type, **overrides)
 
 	def _make_submitted_work_order(self, item):
 		release = create_fully_approved_engineering_release(item=item)
