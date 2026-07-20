@@ -153,3 +153,18 @@ class TestWIPService(FrappeTestCase):
 
 		with self.assertRaises(frappe.ValidationError):
 			link_component_to_assembly(wip_unit_name, wip_unit_name, quantity_consumed=1)
+
+	def test_non_privileged_user_cannot_link_a_component(self):
+		"""Build ITAG-0.11.0 Task 1's whitelist-permission sweep found
+		link_component_to_assembly() had no internal permission check."""
+		parent_wo = create_test_work_order_with_wip_tracking("WIPSVC-TEST-ITEM-PERM-PARENT")
+		child_wo = create_test_work_order_with_wip_tracking("WIPSVC-TEST-ITEM-PERM-CHILD")
+		parent_unit = create_test_wip_unit(parent_wo)
+		child_unit = create_test_wip_unit(child_wo)
+
+		frappe.set_user("Guest")
+		try:
+			with self.assertRaises(frappe.PermissionError):
+				link_component_to_assembly(parent_unit, child_unit, quantity_consumed=1)
+		finally:
+			frappe.set_user("Administrator")

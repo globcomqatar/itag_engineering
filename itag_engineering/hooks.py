@@ -15,7 +15,10 @@ after_install = "itag_engineering.install.after_install"
 # Migration
 # ---------
 
-after_migrate = "itag_engineering.setup.custom_fields.sync_custom_fields"
+after_migrate = [
+	"itag_engineering.install.create_roles",
+	"itag_engineering.setup.custom_fields.sync_custom_fields",
+]
 
 # Testing
 # -------
@@ -44,6 +47,20 @@ fixtures = [
 		],
 	},
 ]
+
+# Permission Query Conditions
+# ---------------------------
+
+# Company-scoped row filtering (roadmap Section 22.2) for every DocType this
+# app owns that carries its own `company` field - a documented no-op for
+# now under Decision Log #2's single-company scope, but structurally
+# correct for a future multi-company revisit. See permission_service.py.
+permission_query_conditions = {
+	"Engineering Release": "itag_engineering.itag_engineering_management.permission_service.get_engineering_release_permission_query_conditions",
+	"Change Impact Assessment": "itag_engineering.itag_engineering_management.permission_service.get_change_impact_assessment_permission_query_conditions",
+	"Engineering Approval Matrix": "itag_engineering.itag_engineering_management.permission_service.get_engineering_approval_matrix_permission_query_conditions",
+	"Item Code Rule": "itag_engineering.itag_engineering_management.permission_service.get_item_code_rule_permission_query_conditions",
+}
 
 # Doc Events
 # ----------

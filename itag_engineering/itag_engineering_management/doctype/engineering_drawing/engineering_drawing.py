@@ -27,6 +27,7 @@ class EngineeringDrawing(Document):
 		self.validate_release_requires_checksum()
 		self.validate_immutable_once_released()
 		self.validate_file_not_replaced_after_release()
+		self.validate_creator_cannot_release()
 
 	def sync_file_checksum(self):
 		"""Populate file_checksum automatically from approved_file's content
@@ -144,6 +145,32 @@ class EngineeringDrawing(Document):
 						self.meta.get_label(fieldname)
 					)
 				)
+
+	def validate_creator_cannot_release(self):
+		"""Segregation of duties (roadmap Section 22.3(c)) - Build
+		ITAG-0.11.0's own security audit found this rule was never actually
+		implemented in Build ITAG-0.3.0, only assumed; a genuine gap, closed
+		here: the same user who created this Engineering Drawing may not
+		also be the one who releases it. Administrator is exempt - this
+		app's own required break-glass account (roadmap Section 22.2's
+		"Administrator exception controls" - Administrator must never be
+		accidentally locked out), and also the identity every test in this
+		app's suite creates AND drives documents through their full
+		workflow as, so blocking Administrator here would make this guard
+		untestable and would incorrectly reject the entire existing test
+		suite's own driving pattern, not just real self-release attempts."""
+		if self.is_new() or frappe.session.user == "Administrator":
+			return
+		before = self.get_doc_before_save()
+		if not before or before.release_status == "Released" or self.release_status != "Released":
+			return
+		if frappe.session.user == self.owner:
+			frappe.throw(
+				_(
+					"The creator of this Engineering Drawing ({0}) cannot also release it - a "
+					"different Engineering Approver must perform the release."
+				).format(self.owner)
+			)
 
 	def validate_file_not_replaced_after_release(self):
 		if self.is_new():

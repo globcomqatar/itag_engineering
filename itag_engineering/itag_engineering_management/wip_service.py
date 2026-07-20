@@ -28,6 +28,13 @@ guard, mirroring hold_service.py's own Job Card hooks.
 import frappe
 from frappe import _
 
+WIP_ACTION_ROLES = (
+	"Engineering Manager",
+	"ITAG Engineering Administrator",
+	"Production Manager",
+	"Production Supervisor",
+)
+
 QUALITY_INSPECTION_STATUS_MAP = {"Accepted": "Passed", "Rejected": "Failed"}
 
 REWORK_INSTRUCTION_STATUS_MAP = {
@@ -215,7 +222,13 @@ def link_component_to_assembly(parent_wip_unit, component_wip_unit, quantity_con
 	time. Uses the SAME _visited-set pattern Build ITAG-0.4.0's
 	bom_traversal_service established, walking `component_wip_unit`'s
 	proposed parent's own ancestor chain (via parent_assembly) to confirm
-	`component_wip_unit` is not already an ancestor of `parent_wip_unit`."""
+	`component_wip_unit` is not already an ancestor of `parent_wip_unit`.
+
+	Build ITAG-0.11.0 Task 1's whitelist-permission sweep found this bare
+	function had no internal permission check even though its
+	`@frappe.whitelist()` wrapper implied one (Global Constraint #2's
+	recurring bug class) - _check_wip_permission() closes that gap."""
+	_check_wip_permission()
 	if component_wip_unit == parent_wip_unit:
 		frappe.throw(_("A WIP Unit cannot be its own component."))
 
@@ -252,6 +265,16 @@ def _collect_ancestor_names(wip_unit_name, _visited=None):
 	if parent_assembly:
 		_collect_ancestor_names(parent_assembly, _visited)
 	return _visited
+
+
+def _check_wip_permission():
+	if not set(WIP_ACTION_ROLES).intersection(frappe.get_roles()):
+		frappe.throw(
+			_("Only {0} may link a WIP Unit component to an assembly.").format(
+				_(" or ").join(WIP_ACTION_ROLES)
+			),
+			frappe.PermissionError,
+		)
 
 
 @frappe.whitelist()
