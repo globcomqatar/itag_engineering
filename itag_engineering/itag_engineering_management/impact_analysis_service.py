@@ -228,13 +228,57 @@ def run_impact_analysis(assessment_name):
 		frappe.log_error(title="Change Impact Analysis failed", message=frappe.get_traceback())
 
 
+def resolve_affected_item_codes_with_ancestors(item_codes):
+	"""Every item code plus every item code that IS an ancestor assembly
+	(transitively, at any depth) consuming one of them via BOM Item rows -
+	a change to a leaf component ripples up through every level of
+	assembly that uses it, not just its immediate parent, so a Work Order
+	building a top-level assembly two levels above the changed component is
+	just as "affected" as one building the component directly (UAT-005
+	"identifies every affected Work Order at every level").
+
+	Build ITAG-0.4.0's find_where_used() is deliberately single-level only
+	(see its own module docstring) - this repeatedly applies it in a
+	fixed-point expansion (a visited-BOMs set makes this cycle-safe,
+	matching the exact pattern already established by
+	bom_readiness_service.evaluate_bom_readiness/
+	bom_traversal_service.get_multi_level_bom_tree) rather than assuming a
+	full ancestor-tree traversal already exists somewhere to call instead.
+
+	Only applied to the production/WIP-facing domains (open_work_orders,
+	job_cards, material_transferred_and_consumed, wip_stock,
+	finished_stock) - NOT to procurement/sales/serial/batch/quality
+	domains, which are scoped to the exact item transacted against, a
+	deliberate scope boundary: a Sales Order line references the specific
+	SKU sold, not every assembly that SKU happens to be a component of.
+	"""
+	expanded = set(item_codes)
+	frontier = set(item_codes)
+	visited_boms = set()
+	while frontier:
+		next_frontier = set()
+		for item_code in frontier:
+			for bom_name in find_where_used(item_code):
+				if bom_name in visited_boms:
+					continue
+				visited_boms.add(bom_name)
+				parent_item = frappe.db.get_value("BOM", bom_name, "item")
+				if parent_item and parent_item not in expanded:
+					expanded.add(parent_item)
+					next_frontier.add(parent_item)
+		frontier = next_frontier
+	return sorted(expanded)
+
+
 def _build_domain_plan(eco, item_codes):
 	"""Ordered (domain_name, zero-arg callable) pairs - a plain list, not a
 	dict, so progress reporting can rely on a stable, deterministic order
 	across runs."""
 	where_used = scan_bom_where_used(item_codes)
 	parent_bom_names = sorted({bom for boms in where_used.values() for bom in boms})
-	work_orders = scan_open_work_orders(item_codes)
+
+	production_item_codes = resolve_affected_item_codes_with_ancestors(item_codes)
+	work_orders = scan_open_work_orders(production_item_codes)
 	work_order_names = [row.name for row in work_orders]
 
 	return [
@@ -245,9 +289,9 @@ def _build_domain_plan(eco, item_codes):
 			"material_transferred_and_consumed",
 			lambda: scan_material_transferred_and_consumed(work_order_names),
 		),
-		("wip_stock", lambda: scan_wip_stock(item_codes)),
+		("wip_stock", lambda: scan_wip_stock(production_item_codes)),
 		("completed_subassemblies", lambda: scan_completed_subassemblies(parent_bom_names)),
-		("finished_stock", lambda: scan_finished_stock(item_codes)),
+		("finished_stock", lambda: scan_finished_stock(production_item_codes)),
 		("engineering_hold_stock", lambda: scan_engineering_hold_stock()),
 		("open_purchase_orders", lambda: scan_open_purchase_orders(item_codes)),
 		("open_purchase_receipts", lambda: scan_open_purchase_receipts(item_codes)),

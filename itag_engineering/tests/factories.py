@@ -408,3 +408,59 @@ def create_eco_from_accepted_ecr_factory(ecr=None, **ecr_overrides):
 		ecr.db_set("workflow_state", "Engineering Review")
 	eco_name = create_eco_from_accepted_ecr(ecr.name)
 	return frappe.get_doc("Engineering Change Order", eco_name)
+
+
+def create_multi_level_bom_tree_with_open_work_orders(prefix, depth=3, work_orders_per_level=1):
+	"""Build ITAG-0.7.0 baseline factory for UAT-005 (Multi-Level BOM
+	Revision) and this build's own performance baseline measurement.
+
+	Builds a `depth`-level BOM chain: level 0 is the deepest leaf, each
+	subsequent level's BOM has the previous level's item as its own
+	sub-assembly component (via bom_no), reusing the exact
+	`_link_component_to_sub_assembly`-style live-verified technique Build
+	ITAG-0.4.0's own UAT-003 test established (point the parent BOM's
+	single component row's item_code AND bom_no at the real sub-assembly).
+	Creates `work_orders_per_level` open (unsubmitted, so no Engineering
+	Release baseline is needed) Work Orders directly against EACH level's
+	own item.
+
+	Returns (items, boms, work_orders) - each a list ordered from level 0
+	(leaf) to level `depth - 1` (top assembly); `items[1]`/`boms[1]` is a
+	convenient "mid-tree" reference for a 3+ level tree.
+	"""
+	company = ensure_test_company()
+	warehouse = frappe.db.get_value("Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name")
+	if not warehouse:
+		frappe.throw("No non-group Warehouse exists for the test Company - required for this factory.")
+
+	items = []
+	boms = []
+	work_orders = []
+	previous_bom = None
+
+	for level in range(depth):
+		item = create_fresh_stock_item(f"{prefix}-L{level}").name
+		bom = create_test_bom_with_operations(item=item)
+		if previous_bom:
+			row_name = frappe.db.get_value("BOM Item", {"parent": bom.name}, "name")
+			frappe.db.set_value(
+				"BOM Item", row_name, {"item_code": previous_bom.item, "bom_no": previous_bom.name}
+			)
+		items.append(item)
+		boms.append(bom)
+		previous_bom = bom
+
+		for _ in range(work_orders_per_level):
+			work_order = frappe.get_doc(
+				{
+					"doctype": "Work Order",
+					"production_item": item,
+					"qty": 1,
+					"company": company,
+					"wip_warehouse": warehouse,
+					"fg_warehouse": warehouse,
+				}
+			).insert(ignore_permissions=True)
+			work_orders.append(work_order)
+
+	return items, boms, work_orders
