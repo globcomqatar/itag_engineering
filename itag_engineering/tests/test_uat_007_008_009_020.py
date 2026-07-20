@@ -59,6 +59,9 @@ class TestUAT007StopAndContinue(FrappeTestCase):
 				"work_order": work_order.name,
 				"for_quantity": work_order.qty,
 				"company": work_order.company,
+				"wip_warehouse": work_order.wip_warehouse,
+				"operation": "_Test Operation 1",
+				"workstation": "_Test Workstation 1",
 			}
 		).insert(ignore_permissions=True)
 		frappe.db.set_value("Job Card", job_card.name, "total_completed_qty", 8, update_modified=False)

@@ -65,6 +65,8 @@ def create_rework_work_order(instruction_name):
 			"fg_warehouse": source_wo.fg_warehouse,
 		}
 	).insert(ignore_permissions=True)
+	rework_wo.submit()
+	rework_wo.reload()
 
 	frappe.db.set_value(
 		"Rework Instruction",

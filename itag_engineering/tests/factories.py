@@ -178,14 +178,23 @@ def create_fresh_stock_item(prefix="TEST-ITEM"):
 	).insert(ignore_permissions=True)
 
 
-def create_test_product_revision(item=None, drawing=None):
+def create_test_product_revision(item=None, drawing=None, revision_number=None):
+	"""`revision_number` auto-increments per `item` when not given explicitly,
+	so a second call for the SAME item (e.g. Build ITAG-0.9.0's
+	successor-Work-Order tests, which build an original release and then a
+	new release against the same item to simulate a revision change) gets a
+	genuinely distinct Product Revision instead of colliding on the
+	`{item}-PR-{revision_number}` autoname of an already-inserted "1"."""
 	item = item or (ensure_test_company() and frappe.db.get_value("Item", {}, "name"))
 	drawing = drawing or create_released_test_drawing()
+	if not revision_number:
+		existing_count = frappe.db.count("Product Revision", {"item": item})
+		revision_number = str(existing_count + 1)
 	return frappe.get_doc(
 		{
 			"doctype": "Product Revision",
 			"item": item,
-			"revision_number": "1",
+			"revision_number": revision_number,
 			"drawing_revision": drawing.name,
 		}
 	).insert(ignore_permissions=True)
