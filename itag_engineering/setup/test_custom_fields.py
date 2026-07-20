@@ -62,15 +62,43 @@ class TestCustomFields(FrappeTestCase):
 		):
 			self.assertTrue(meta.has_field(fieldname), f"BOM missing field {fieldname}")
 
-	def test_engineering_release_and_applicable_eco_are_data_fields(self):
+	def test_engineering_release_field_is_now_a_link(self):
+		# Build ITAG-0.5.0 Task 1: the Data forward-reference placeholder from
+		# Build 0.4.0 is converted to a real Link once Engineering Release exists
+		# (itag_engineering.patches.v0_5.convert_engineering_release_placeholder_fields).
 		meta = frappe.get_meta("BOM")
-		for fieldname in ("itag_engineering_release", "itag_applicable_eco"):
+		df = meta.get_field("itag_engineering_release")
+		self.assertEqual(df.fieldtype, "Link")
+		self.assertEqual(df.options, "Engineering Release")
+
+	def test_routing_engineering_release_field_is_now_a_link(self):
+		meta = frappe.get_meta("Routing")
+		df = meta.get_field("itag_engineering_release")
+		self.assertEqual(df.fieldtype, "Link")
+		self.assertEqual(df.options, "Engineering Release")
+
+	def test_applicable_eco_still_a_data_placeholder(self):
+		# Build ITAG-0.6.0 (ECR/ECO) has not happened yet in this build - confirm
+		# this build does NOT prematurely convert itag_applicable_eco.
+		for doctype in ("BOM", "Routing"):
+			df = frappe.get_meta(doctype).get_field("itag_applicable_eco")
+			self.assertEqual(df.fieldtype, "Data")
+
+	def test_work_order_baseline_fields_exist(self):
+		meta = frappe.get_meta("Work Order")
+		for fieldname, options in (
+			("itag_engineering_release", "Engineering Release"),
+			("itag_product_revision", "Product Revision"),
+			("itag_drawing_revision", "Engineering Drawing"),
+			("itag_bom_revision", "BOM"),
+			("itag_routing_revision", "Routing"),
+			("itag_inspection_plan_revision", "Engineering Inspection Plan"),
+		):
 			df = meta.get_field(fieldname)
-			self.assertEqual(
-				df.fieldtype,
-				"Data",
-				f"{fieldname} must be Data (forward reference to a not-yet-built DocType), not Link",
-			)
+			self.assertIsNotNone(df, f"Work Order missing {fieldname}")
+			self.assertEqual(df.fieldtype, "Link")
+			self.assertEqual(df.options, options)
+			self.assertEqual(df.read_only, 1)
 
 	def test_all_routing_fields_exist(self):
 		meta = frappe.get_meta("Routing")

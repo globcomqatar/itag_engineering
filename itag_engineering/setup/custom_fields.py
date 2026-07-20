@@ -495,8 +495,84 @@ def get_bom_operation_fields():
 	}
 
 
+def get_work_order_baseline_fields():
+	return {
+		"Work Order": [
+			{
+				# insert_after intentionally omitted: this environment has no live
+				# bench to confirm Work Order's own last standard fieldname against
+				# (Build 0.5.0's plan explicitly calls for that live check before
+				# writing an anchor). Omitting insert_after is a supported
+				# create_custom_fields() call - the field is appended at the end of
+				# the doctype's field list - and is safe regardless of Work Order's
+				# exact standard field layout. Confirm a real anchor against
+				# `frappe.get_meta("Work Order")` on the live bench and set
+				# insert_after explicitly before/at first migrate.
+				"fieldname": "itag_engineering_baseline_tab",
+				"fieldtype": "Tab Break",
+				"label": "Engineering Baseline",
+			},
+			{
+				"fieldname": "itag_engineering_release",
+				"fieldtype": "Link",
+				"label": "Engineering Release",
+				"options": "Engineering Release",
+				"read_only": 1,
+				"description": "Frozen by Build ITAG-0.5.0 at submission (freeze_baseline_before_submit). Not editable.",
+				"insert_after": "itag_engineering_baseline_tab",
+			},
+			{
+				"fieldname": "itag_product_revision",
+				"fieldtype": "Link",
+				"label": "Product Revision",
+				"options": "Product Revision",
+				"read_only": 1,
+				"insert_after": "itag_engineering_release",
+			},
+			{
+				"fieldname": "itag_drawing_revision",
+				"fieldtype": "Link",
+				"label": "Drawing Revision",
+				"options": "Engineering Drawing",
+				"read_only": 1,
+				"insert_after": "itag_product_revision",
+			},
+			{
+				"fieldname": "itag_column_break_wobaseline_1",
+				"fieldtype": "Column Break",
+				"insert_after": "itag_drawing_revision",
+			},
+			{
+				"fieldname": "itag_bom_revision",
+				"fieldtype": "Link",
+				"label": "BOM Revision",
+				"options": "BOM",
+				"read_only": 1,
+				"insert_after": "itag_column_break_wobaseline_1",
+			},
+			{
+				"fieldname": "itag_routing_revision",
+				"fieldtype": "Link",
+				"label": "Routing Revision",
+				"options": "Routing",
+				"read_only": 1,
+				"insert_after": "itag_bom_revision",
+			},
+			{
+				"fieldname": "itag_inspection_plan_revision",
+				"fieldtype": "Link",
+				"label": "Inspection Plan Revision",
+				"options": "Engineering Inspection Plan",
+				"read_only": 1,
+				"insert_after": "itag_routing_revision",
+			},
+		]
+	}
+
+
 def sync_custom_fields():
 	create_custom_fields(get_custom_fields(), update=True)
 	create_custom_fields(get_bom_fields(), update=True)
 	create_custom_fields(get_routing_fields(), update=True)
 	create_custom_fields(get_bom_operation_fields(), update=True)
+	create_custom_fields(get_work_order_baseline_fields(), update=True)
