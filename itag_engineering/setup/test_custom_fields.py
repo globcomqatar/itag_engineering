@@ -77,12 +77,20 @@ class TestCustomFields(FrappeTestCase):
 		self.assertEqual(df.fieldtype, "Link")
 		self.assertEqual(df.options, "Engineering Release")
 
-	def test_applicable_eco_still_a_data_placeholder(self):
-		# Build ITAG-0.6.0 (ECR/ECO) has not happened yet in this build - confirm
-		# this build does NOT prematurely convert itag_applicable_eco.
+	def test_applicable_eco_is_now_a_link(self):
+		# Build ITAG-0.6.0 Task 1: the Data forward-reference placeholder from
+		# Builds 0.4.0/0.5.0 is converted to a real Link once Engineering
+		# Change Order exists
+		# (itag_engineering.patches.v0_6.convert_applicable_eco_placeholder_fields).
 		for doctype in ("BOM", "Routing"):
 			df = frappe.get_meta(doctype).get_field("itag_applicable_eco")
-			self.assertEqual(df.fieldtype, "Data")
+			self.assertEqual(df.fieldtype, "Link")
+			self.assertEqual(df.options, "Engineering Change Order")
+
+	def test_engineering_release_applicable_eco_is_now_a_link(self):
+		df = frappe.get_meta("Engineering Release").get_field("applicable_eco")
+		self.assertEqual(df.fieldtype, "Link")
+		self.assertEqual(df.options, "Engineering Change Order")
 
 	def test_work_order_baseline_fields_exist(self):
 		meta = frappe.get_meta("Work Order")

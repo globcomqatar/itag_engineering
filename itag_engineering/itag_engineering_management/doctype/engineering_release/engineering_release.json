@@ -191,10 +191,10 @@
    "options": "Engineering Release"
   },
   {
-   "description": "Free-text forward-reference placeholder - Build ITAG-0.6.0 (ECR/ECO) does not exist yet.",
    "fieldname": "applicable_eco",
-   "fieldtype": "Data",
-   "label": "Applicable ECO"
+   "fieldtype": "Link",
+   "label": "Applicable ECO",
+   "options": "Engineering Change Order"
   },
   {
    "fieldname": "checklist_section",
