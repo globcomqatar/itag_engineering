@@ -1,0 +1,257 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "eco",
+  "original_work_order",
+  "original_engineering_release",
+  "column_break_header",
+  "approval_status",
+  "execution_status",
+  "quantity_section",
+  "original_planned_quantity",
+  "completed_acceptable_quantity",
+  "existing_accepted_component_quantity",
+  "column_break_quantity",
+  "required_replacement_quantity",
+  "remaining_production_quantity",
+  "disposition_quantities_section",
+  "rework_quantity",
+  "scrap_quantity",
+  "column_break_disposition",
+  "returned_quantity",
+  "successor_section",
+  "new_engineering_release",
+  "successor_work_order",
+  "column_break_successor",
+  "material_return_status",
+  "material_reuse_status",
+  "reconciliation_status",
+  "idempotency_key"
+ ],
+ "fields": [
+  {
+   "default": "PCC-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "PCC-.YYYY.-"
+  },
+  {
+   "fieldname": "eco",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Engineering Change Order",
+   "options": "Engineering Change Order",
+   "reqd": 1
+  },
+  {
+   "fieldname": "original_work_order",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Original Work Order",
+   "options": "Work Order",
+   "reqd": 1
+  },
+  {
+   "description": "Read from the original Work Order's own frozen itag_engineering_release field (Build ITAG-0.5.0 baseline freeze) at creation time - never picked manually.",
+   "fieldname": "original_engineering_release",
+   "fieldtype": "Link",
+   "label": "Original Engineering Release",
+   "options": "Engineering Release",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "approval_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Approval Status",
+   "options": "Draft\nApproved"
+  },
+  {
+   "default": "Not Started",
+   "fieldname": "execution_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Execution Status",
+   "options": "Not Started\nSuccessor Created\nComplete"
+  },
+  {
+   "fieldname": "quantity_section",
+   "fieldtype": "Section Break",
+   "label": "Quantity"
+  },
+  {
+   "description": "Copied from the original Work Order's own qty at creation time.",
+   "fieldname": "original_planned_quantity",
+   "fieldtype": "Float",
+   "label": "Original Planned Quantity",
+   "read_only": 1
+  },
+  {
+   "description": "Quantity confirmed acceptable via an executed Material Disposition Decision (decision_type in \"Use As Is\"/\"Continue Under Old Revision\") - sourced from the disposition, not hand-entered.",
+   "fieldname": "completed_acceptable_quantity",
+   "fieldtype": "Float",
+   "label": "Completed Acceptable Quantity",
+   "reqd": 1
+  },
+  {
+   "description": "Reusable existing sub-assembly/component quantity, sourced from a DIFFERENT, non-overlapping Material Disposition Decision row than completed_acceptable_quantity (Global Constraint #9 - never double-count the same physical quantity in both figures).",
+   "fieldname": "existing_accepted_component_quantity",
+   "fieldtype": "Float",
+   "label": "Existing Accepted Component Quantity",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_quantity",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Additional quantity needed beyond straight subtraction (roadmap Section 19.5) - a planning input, not derivable from a disposition.",
+   "fieldname": "required_replacement_quantity",
+   "fieldtype": "Float",
+   "label": "Required Replacement Quantity"
+  },
+  {
+   "description": "Computed = original_planned_quantity - completed_acceptable_quantity - existing_accepted_component_quantity + required_replacement_quantity. See validate().",
+   "fieldname": "remaining_production_quantity",
+   "fieldtype": "Float",
+   "label": "Remaining Production Quantity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "disposition_quantities_section",
+   "fieldtype": "Section Break",
+   "label": "Disposition Quantities (Reference)"
+  },
+  {
+   "description": "Summed from the same Material Disposition's decision rows by decision_type - display/reconciliation only, never independently re-entered.",
+   "fieldname": "rework_quantity",
+   "fieldtype": "Float",
+   "label": "Rework Quantity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "scrap_quantity",
+   "fieldtype": "Float",
+   "label": "Scrap Quantity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_disposition",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "returned_quantity",
+   "fieldtype": "Float",
+   "label": "Returned Quantity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "successor_section",
+   "fieldtype": "Section Break",
+   "label": "Successor"
+  },
+  {
+   "fieldname": "new_engineering_release",
+   "fieldtype": "Link",
+   "label": "New Engineering Release",
+   "options": "Engineering Release",
+   "reqd": 1
+  },
+  {
+   "fieldname": "successor_work_order",
+   "fieldtype": "Link",
+   "label": "Successor Work Order",
+   "options": "Work Order",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_successor",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Not Started",
+   "fieldname": "material_return_status",
+   "fieldtype": "Select",
+   "label": "Material Return Status",
+   "options": "Not Started\nIn Progress\nComplete\nNot Applicable"
+  },
+  {
+   "default": "Not Started",
+   "fieldname": "material_reuse_status",
+   "fieldtype": "Select",
+   "label": "Material Reuse Status",
+   "options": "Not Started\nIn Progress\nComplete\nNot Applicable"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "reconciliation_status",
+   "fieldtype": "Select",
+   "label": "Reconciliation Status",
+   "options": "Pending\nReconciled"
+  },
+  {
+   "description": "sha256(original_work_order + eco), set at creation (Global Constraint #8) - the idempotency key continuation_service.create_successor_work_order() checks before creating a successor.",
+   "fieldname": "idempotency_key",
+   "fieldtype": "Data",
+   "label": "Idempotency Key",
+   "read_only": 1,
+   "unique": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Production Change Continuation",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Production Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Production Supervisor"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
