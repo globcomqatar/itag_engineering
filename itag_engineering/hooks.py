@@ -69,4 +69,7 @@ scheduler_events = {
 	"hourly": [
 		"itag_engineering.itag_engineering_management.impact_staleness_service.sweep_stale_assessments",
 	],
+	"daily": [
+		"itag_engineering.itag_engineering_management.deviation_concession_service.expire_overdue_approvals",
+	],
 }
