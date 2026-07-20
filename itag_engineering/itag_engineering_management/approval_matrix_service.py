@@ -117,6 +117,31 @@ def resolve_approval_disciplines(context):
 	}
 
 
+def validate_approval_steps_segregation_of_duties(approval_steps):
+	"""Roadmap Section 13.6 step 2 / Decision Log #9 / roadmap Section 22.3:
+	the same user cannot be recorded as approver for two DIFFERENT required
+	disciplines on the same document. Shared between Build ITAG-0.5.0's
+	Engineering Release (release_service.submit_engineering_release) and
+	Build ITAG-0.6.0's Engineering Change Order (eco_service) - both reuse
+	the Approval Step child doctype, so this check is doctype-agnostic: it
+	takes a plain list/iterable of Approval Step rows (or anything exposing
+	.approver/.discipline), not a specific parent document.
+	"""
+	discipline_by_approver = {}
+	for step in approval_steps:
+		if not step.approver:
+			continue
+		previous_discipline = discipline_by_approver.get(step.approver)
+		if previous_discipline and previous_discipline != step.discipline:
+			frappe.throw(
+				_(
+					"Segregation of duties violation: {0} is recorded as approver for both "
+					"{1} and {2} on this document."
+				).format(step.approver, previous_discipline, step.discipline)
+			)
+		discipline_by_approver[step.approver] = step.discipline
+
+
 def _rule_matches(rule, context, transaction_date):
 	for field in CONDITION_FIELDS:
 		rule_value = rule.get(field)

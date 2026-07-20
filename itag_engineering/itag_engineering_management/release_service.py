@@ -17,7 +17,10 @@ import frappe
 from frappe import _
 from frappe.utils import getdate, now_datetime
 
-from itag_engineering.itag_engineering_management.approval_matrix_service import resolve_approval_disciplines
+from itag_engineering.itag_engineering_management.approval_matrix_service import (
+	resolve_approval_disciplines,
+	validate_approval_steps_segregation_of_duties,
+)
 from itag_engineering.itag_engineering_management.bom_readiness_service import evaluate_bom_readiness
 from itag_engineering.itag_engineering_management.response import success
 
@@ -191,7 +194,7 @@ def submit_engineering_release(release_name):
 		frappe.throw(_("Cannot release: {0}").format("; ".join(exceptions)))
 
 	_validate_all_approval_steps_approved(release)
-	_validate_segregation_of_duties(release)
+	validate_approval_steps_segregation_of_duties(release.approval_steps)
 
 	if not release.effective_datetime:
 		frappe.throw(_("Effective Datetime is required to release."))
@@ -242,25 +245,6 @@ def _validate_all_approval_steps_approved(release):
 			frappe.throw(
 				_("Approval step {0} ({1}) is not yet Approved.").format(step.sequence, step.discipline)
 			)
-
-
-def _validate_segregation_of_duties(release):
-	"""Roadmap Section 13.6 step 2 / Decision Log #9 / roadmap Section 22.3:
-	the same user cannot be recorded as approver for two DIFFERENT required
-	disciplines on the same release."""
-	discipline_by_approver = {}
-	for step in release.approval_steps:
-		if not step.approver:
-			continue
-		previous_discipline = discipline_by_approver.get(step.approver)
-		if previous_discipline and previous_discipline != step.discipline:
-			frappe.throw(
-				_(
-					"Segregation of duties violation: {0} is recorded as approver for both "
-					"{1} and {2} on this release."
-				).format(step.approver, previous_discipline, step.discipline)
-			)
-		discipline_by_approver[step.approver] = step.discipline
 
 
 def _compute_release_checksum(release):
