@@ -4,6 +4,7 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
+from itag_engineering.itag_engineering_management.eco_service import create_eco_from_accepted_ecr
 from itag_engineering.itag_engineering_management.ecr_service import (
 	close_ecr,
 	reject_ecr,
@@ -72,13 +73,22 @@ class TestECRService(FrappeTestCase):
 	def test_accepted_for_eco_succeeds_when_originating_eco_already_set(self):
 		ecr = self._make_ecr()
 		ecr.db_set("workflow_state", "Engineering Review")
-		# Pre-set the real side-effect field via db_set (bypasses validate(),
-		# same as eco_service.create_eco_from_accepted_ecr() writing it via
-		# frappe.db.set_value) - workflow_state stays "Engineering Review" in
-		# the DB row so the guard genuinely gets exercised by the transition
-		# below, not skipped because nothing changed.
-		ecr.db_set("originating_eco", "TEST-ECO-0001", update_modified=False)
 		ecr.reload()
+
+		# Pre-set the real side-effect field to a genuine Engineering Change
+		# Order (Frappe's own Link validation on save() rejects a
+		# non-existent reference regardless of what this guard itself
+		# checks, so a placeholder string like "TEST-ECO-0001" is not a
+		# valid fixture here) via the real service, same as
+		# eco_service.create_eco_from_accepted_ecr() would do in
+		# production. Then reset workflow_state (not originating_eco) back
+		# to "Engineering Review" via db_set (bypasses validate()) so the
+		# guard below is genuinely exercised by ecr.save(), not skipped
+		# because nothing changed.
+		eco_name = create_eco_from_accepted_ecr(ecr.name)
+		ecr.db_set("workflow_state", "Engineering Review", update_modified=False)
+		ecr.reload()
+		self.assertEqual(ecr.originating_eco, eco_name)
 
 		ecr.workflow_state = "Accepted for ECO"
 		ecr.save()
