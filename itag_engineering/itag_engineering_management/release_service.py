@@ -15,7 +15,7 @@ import hashlib
 
 import frappe
 from frappe import _
-from frappe.utils import getdate, now_datetime
+from frappe.utils import get_datetime, getdate, now_datetime
 
 from itag_engineering.itag_engineering_management.approval_matrix_service import (
 	resolve_approval_disciplines,
@@ -227,6 +227,28 @@ def submit_engineering_release(release_name):
 		# validate() - specifically guard_released_for_production_requires_checksum()
 		# and validate_immutable_once_released() - is exercised on this and
 		# every future save, matching this build's explicit design decision.
+		#
+		# This relies on the Engineering Release Workflow fixture (see
+		# workflow.json) having a direct "Release for Production" transition
+		# edge from every non-terminal review state (not just "Engineering
+		# Approved") straight to "Released for Production" - verified live:
+		# Frappe's generic Workflow-engine transition validator
+		# (frappe.model.workflow.validate_workflow(), invoked from every
+		# .save() on a workflow-enabled doctype) rejects any state change
+		# that isn't along an explicitly configured transition edge, with no
+		# supported flag to bypass it. By this function's own design,
+		# submit_engineering_release() must succeed regardless of which
+		# review state the release happens to be in when called (the
+		# workflow chain is "a review/UI tracking aid, not an independent
+		# gate this function re-derives") - so every state needs its own
+		# edge to this same target rather than this function driving the
+		# state machine through each intermediate state itself (which would
+		# also re-trip validate_immutable_once_released() the moment
+		# release_status first lands on a RELEASED_STATES value, since that
+		# guard freezes every field except release_status/modified/
+		# modified_by from that point on - release_checksum and
+		# distribution_list must both land in the SAME .save() as the final
+		# state transition, not a later one).
 		release.save()
 
 		_send_release_notifications(release)
@@ -315,7 +337,12 @@ def resolve_effective_release(item, company, customer=None, project=None, transa
 	resolver). Raises frappe.ValidationError on an ambiguous tie (two
 	equally-specific candidates) rather than silently picking one.
 	"""
-	transaction_date = getdate(transaction_date or now_datetime())
+	# NOTE: effective_datetime is a Datetime field (date + time), not a Date
+	# field - must compare with get_datetime(), not getdate(), or getdate()
+	# truncates the time-of-day to midnight and the "<=" filter below wrongly
+	# excludes every release effective later than 00:00:00 on the same day
+	# (i.e. almost always in practice).
+	transaction_date = get_datetime(transaction_date or now_datetime())
 
 	candidates = frappe.get_all(
 		"Engineering Release",
