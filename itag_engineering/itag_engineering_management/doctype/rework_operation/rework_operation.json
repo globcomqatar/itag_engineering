@@ -10,7 +10,8 @@
   "description",
   "column_break_1",
   "workstation",
-  "time_in_mins"
+  "time_in_mins",
+  "completed"
  ],
  "fields": [
   {
@@ -47,6 +48,12 @@
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Time (mins)"
+  },
+  {
+   "fieldname": "completed",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Completed"
   }
  ],
  "istable": 1,

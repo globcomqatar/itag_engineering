@@ -1,0 +1,274 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "eco",
+  "disposition",
+  "status",
+  "column_break_header",
+  "source_work_order",
+  "cost_approval",
+  "cost_approved_by",
+  "source_section",
+  "source_item",
+  "source_quantity",
+  "source_serial_number",
+  "column_break_source",
+  "source_batch",
+  "source_heat_number",
+  "source_wip_unit",
+  "revision_section",
+  "existing_revision",
+  "column_break_revision",
+  "target_revision",
+  "scrap_allowance",
+  "work_section",
+  "required_operations",
+  "additional_materials",
+  "inspection_steps",
+  "acceptance_criteria",
+  "result_section",
+  "resulting_item",
+  "resulting_revision",
+  "column_break_result",
+  "rework_work_order"
+ ],
+ "fields": [
+  {
+   "default": "RWI-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "RWI-.YYYY.-"
+  },
+  {
+   "fieldname": "eco",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Engineering Change Order",
+   "options": "Engineering Change Order"
+  },
+  {
+   "description": "The \"Rework\" Material Disposition Decision this instruction executes.",
+   "fieldname": "disposition",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Material Disposition",
+   "options": "Material Disposition",
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Draft\nApproved\nIn Progress\nComplete",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "source_work_order",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Source Work Order",
+   "options": "Work Order",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cost_approval",
+   "fieldtype": "Check",
+   "label": "Cost Approval"
+  },
+  {
+   "depends_on": "cost_approval",
+   "fieldname": "cost_approved_by",
+   "fieldtype": "Link",
+   "label": "Cost Approved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_section",
+   "fieldtype": "Section Break",
+   "label": "Source"
+  },
+  {
+   "fieldname": "source_item",
+   "fieldtype": "Link",
+   "label": "Source Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_quantity",
+   "fieldtype": "Float",
+   "label": "Source Quantity",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_serial_number",
+   "fieldtype": "Link",
+   "label": "Source Serial Number",
+   "options": "Serial No"
+  },
+  {
+   "fieldname": "column_break_source",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "source_batch",
+   "fieldtype": "Link",
+   "label": "Source Batch",
+   "options": "Batch"
+  },
+  {
+   "description": "No dedicated Heat Number doctype exists yet - same free-text convention as Build ITAG-0.8.0's Material Disposition.",
+   "fieldname": "source_heat_number",
+   "fieldtype": "Data",
+   "label": "Source Heat Number"
+  },
+  {
+   "description": "Forward-reference placeholder - the WIP Unit Register DocType doesn't exist until Build ITAG-0.10.0, which is responsible for converting this to a real Link once it does.",
+   "fieldname": "source_wip_unit",
+   "fieldtype": "Data",
+   "label": "Source WIP Unit"
+  },
+  {
+   "fieldname": "revision_section",
+   "fieldtype": "Section Break",
+   "label": "Revision"
+  },
+  {
+   "fieldname": "existing_revision",
+   "fieldtype": "Data",
+   "label": "Existing Revision"
+  },
+  {
+   "fieldname": "column_break_revision",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "target_revision",
+   "fieldtype": "Data",
+   "label": "Target Revision",
+   "reqd": 1
+  },
+  {
+   "fieldname": "scrap_allowance",
+   "fieldtype": "Percent",
+   "label": "Scrap Allowance"
+  },
+  {
+   "fieldname": "work_section",
+   "fieldtype": "Section Break",
+   "label": "Work"
+  },
+  {
+   "fieldname": "required_operations",
+   "fieldtype": "Table",
+   "label": "Required Operations",
+   "options": "Rework Operation",
+   "reqd": 1
+  },
+  {
+   "fieldname": "additional_materials",
+   "fieldtype": "Table",
+   "label": "Additional Materials",
+   "options": "Rework Material"
+  },
+  {
+   "description": "Reused from Build ITAG-0.4.0 - not a new child doctype. Build ITAG-0.9.0 added Inspection Step's own \"completed\" field for this instruction's completion gating.",
+   "fieldname": "inspection_steps",
+   "fieldtype": "Table",
+   "label": "Inspection Steps",
+   "options": "Inspection Step",
+   "reqd": 1
+  },
+  {
+   "fieldname": "acceptance_criteria",
+   "fieldtype": "Small Text",
+   "label": "Acceptance Criteria",
+   "reqd": 1
+  },
+  {
+   "fieldname": "result_section",
+   "fieldtype": "Section Break",
+   "label": "Result"
+  },
+  {
+   "description": "Per Decision Log #4, only different from source_item when the rework crosses the new-Item-Code threshold; equal to source_item for a same-Item-Code revision-only rework.",
+   "fieldname": "resulting_item",
+   "fieldtype": "Link",
+   "label": "Resulting Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "resulting_revision",
+   "fieldtype": "Data",
+   "label": "Resulting Revision"
+  },
+  {
+   "fieldname": "column_break_result",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rework_work_order",
+   "fieldtype": "Link",
+   "label": "Rework Work Order",
+   "options": "Work Order",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Rework Instruction",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Production Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Production Supervisor"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

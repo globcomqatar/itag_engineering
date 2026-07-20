@@ -11,7 +11,8 @@
   "hold_point",
   "witness_point",
   "acceptance_criteria",
-  "required_equipment"
+  "required_equipment",
+  "completed"
  ],
  "fields": [
   {"fieldname": "step_number", "fieldtype": "Int", "label": "Step Number", "in_list_view": 1},
@@ -20,7 +21,8 @@
   {"fieldname": "hold_point", "fieldtype": "Check", "label": "Hold Point", "in_list_view": 1},
   {"fieldname": "witness_point", "fieldtype": "Check", "label": "Witness Point", "in_list_view": 1},
   {"fieldname": "acceptance_criteria", "fieldtype": "Small Text", "label": "Acceptance Criteria"},
-  {"fieldname": "required_equipment", "fieldtype": "Data", "label": "Required Equipment"}
+  {"fieldname": "required_equipment", "fieldtype": "Data", "label": "Required Equipment"},
+  {"fieldname": "completed", "fieldtype": "Check", "label": "Completed", "in_list_view": 1, "description": "Added by Build ITAG-0.9.0 for Rework Instruction's reuse of this child table (rework_service.complete_rework() requires every row Completed before a Rework Instruction can close) - Build ITAG-0.4.0's Engineering Inspection Plan usage leaves this unset/unused."}
  ],
  "istable": 1,
  "links": [],
