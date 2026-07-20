@@ -15,6 +15,8 @@ import frappe
 from frappe import _
 from frappe.utils import flt, getdate
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
+
 USABLE_STATUSES = ("Approved", "Active")
 
 
@@ -84,6 +86,9 @@ def record_consumption(doctype, name, quantity):
 	if new_remaining <= 0:
 		updates["status"] = "Exhausted"
 	frappe.db.set_value(doctype, name, updates, update_modified=False)
+	log_audit_event(
+		"Deviation Usage", doctype, name, {"quantity": quantity, "remaining_quantity": new_remaining}
+	)
 
 
 def expire_overdue_approvals():

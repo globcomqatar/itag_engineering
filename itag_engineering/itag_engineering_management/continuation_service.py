@@ -22,6 +22,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.compatibility import handle_partial_operation_completion
 from itag_engineering.itag_engineering_management.release_service import (
 	resolve_effective_release,
@@ -135,6 +136,13 @@ def create_successor_work_order(continuation_name):
 		update_modified=False,
 	)
 	continuation.reload()
+
+	log_audit_event(
+		"Successor Work Order Creation",
+		"Production Change Continuation",
+		continuation.name,
+		{"original_work_order": original_wo.name, "successor_work_order": successor.name},
+	)
 
 	result = _build_result(continuation, successor.name)
 	result["job_card_completion"] = job_card_completion

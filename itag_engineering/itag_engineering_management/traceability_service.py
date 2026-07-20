@@ -34,6 +34,7 @@ narrowed further only where a specific field genuinely needs it).
 import frappe
 from frappe import _
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.release_service import retrieve_released_baseline
 
 TRACEABILITY_ROLES = (
@@ -58,6 +59,7 @@ def backward_traceability(serial_or_wip_unit):
 	Instruction references found anywhere along the chain. Returns one
 	structured dict (a tree, via nested "components"), not a flat list."""
 	_check_traceability_permission()
+	log_audit_event("Traceability Access", "WIP Unit Register", serial_or_wip_unit, {"direction": "backward"})
 	wip_unit_name, serial_number = _resolve_wip_unit_and_serial(serial_or_wip_unit)
 
 	if not wip_unit_name:
@@ -195,6 +197,7 @@ def forward_traceability(identity, include_recall_population_check=False):
 	affected, not only the ones this specific identity's genealogy
 	happened to reach."""
 	_check_traceability_permission()
+	log_audit_event("Traceability Access", "WIP Unit Register", identity, {"direction": "forward"})
 	matched_wip_units = _find_wip_units_matching_identity(identity)
 
 	terminal_units = {}

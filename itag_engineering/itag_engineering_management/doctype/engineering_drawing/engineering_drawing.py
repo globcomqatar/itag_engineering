@@ -5,6 +5,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.checksum_service import sync_drawing_checksum
 
 RELEASED_STATES = ("Released", "Superseded", "Obsolete")
@@ -28,6 +29,7 @@ class EngineeringDrawing(Document):
 		self.validate_immutable_once_released()
 		self.validate_file_not_replaced_after_release()
 		self.validate_creator_cannot_release()
+		self.log_release_audit_event()
 
 	def sync_file_checksum(self):
 		"""Populate file_checksum automatically from approved_file's content
@@ -171,6 +173,22 @@ class EngineeringDrawing(Document):
 					"different Engineering Approver must perform the release."
 				).format(self.owner)
 			)
+
+	def log_release_audit_event(self):
+		"""Roadmap Section 22.4 "Drawing Revision Release" - logged as the
+		LAST statement in validate(), after every other guard above has
+		already passed, so a save that is about to genuinely succeed is
+		what gets logged (never a save later guards would still reject).
+		Fires only on the transition INTO "Released" specifically, not on
+		every subsequent save of an already-released drawing."""
+		if self.is_new():
+			return
+		before = self.get_doc_before_save()
+		if not before or before.release_status == "Released" or self.release_status != "Released":
+			return
+		log_audit_event(
+			"Drawing Revision Release", "Engineering Drawing", self.name, {"revision": self.drawing_revision}
+		)
 
 	def validate_file_not_replaced_after_release(self):
 		if self.is_new():

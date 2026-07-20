@@ -5,6 +5,8 @@ import frappe
 from frappe import _
 from frappe.utils import today
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
+
 BOOKKEEPING_FIELDS = {
 	"name",
 	"owner",
@@ -55,6 +57,13 @@ def supersede_revision(old_revision_name, new_revision_name):
 	)
 	if not frappe.db.get_value("Product Revision", new_revision_name, "previous_revision"):
 		frappe.db.set_value("Product Revision", new_revision_name, "previous_revision", old_revision_name)
+
+	log_audit_event(
+		"Product Revision Change",
+		"Product Revision",
+		new_revision_name,
+		{"superseded_revision": old_revision_name},
+	)
 
 
 def compare_product_revisions(item, revision_number_a, revision_number_b):

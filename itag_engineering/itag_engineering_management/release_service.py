@@ -21,6 +21,7 @@ from itag_engineering.itag_engineering_management.approval_matrix_service import
 	resolve_approval_disciplines,
 	validate_approval_steps_segregation_of_duties,
 )
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.bom_readiness_service import evaluate_bom_readiness
 from itag_engineering.itag_engineering_management.response import success
 
@@ -195,6 +196,7 @@ def submit_engineering_release(release_name):
 
 	_validate_all_approval_steps_approved(release)
 	validate_approval_steps_segregation_of_duties(release.approval_steps)
+	log_audit_event("Engineering Release Approval", "Engineering Release", release.name)
 
 	if not release.effective_datetime:
 		frappe.throw(_("Effective Datetime is required to release."))
@@ -231,6 +233,9 @@ def submit_engineering_release(release_name):
 	except Exception:
 		frappe.db.rollback(save_point=save_point)
 		raise
+
+	log_audit_event("Engineering Release Issue", "Engineering Release", release.name)
+	log_audit_event("BOM Release", "BOM", release.bom, {"engineering_release": release.name})
 
 	return retrieve_released_baseline(release_name)
 

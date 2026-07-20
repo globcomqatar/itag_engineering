@@ -5,6 +5,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.impact_staleness_service import (
 	sync_eco_impact_analysis_staleness,
 )
@@ -20,6 +21,30 @@ class EngineeringChangeOrder(Document):
 	def validate(self):
 		self.validate_closed_is_protected()
 		sync_eco_impact_analysis_staleness(self)
+		self.log_transition_audit_event()
+
+	def log_transition_audit_event(self):
+		"""Roadmap Section 22.4 "ECO Transition" - logged generically here
+		(any workflow_state change), rather than as individual explicit
+		calls scattered across eco_service.py, because almost every one of
+		this DocType's 13 workflow states is reached directly through
+		Frappe's raw Workflow engine (frappe.model.workflow.apply_workflow)
+		with no corresponding eco_service.py function of its own - unlike
+		Engineering Change Request, whose transitions are each driven by a
+		dedicated ecr_service.py function. A single validate()-level guard
+		is therefore the only point that sees every transition regardless
+		of path."""
+		if self.is_new():
+			return
+		before = self.get_doc_before_save()
+		if not before or not self.has_value_changed("workflow_state"):
+			return
+		log_audit_event(
+			"ECO Transition",
+			"Engineering Change Order",
+			self.name,
+			{"from_state": before.workflow_state, "to_state": self.workflow_state},
+		)
 
 	def validate_closed_is_protected(self):
 		if self.is_new():

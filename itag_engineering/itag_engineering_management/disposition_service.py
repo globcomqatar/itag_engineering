@@ -11,6 +11,7 @@ warehouse names before treating this module as verified.
 import frappe
 from frappe import _
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.deviation_concession_service import (
 	record_consumption,
 	validate_deviation_usable,
@@ -111,6 +112,16 @@ def execute_disposition_decision(disposition_name, decision_idx):
 
 	_sync_disposition_status(disposition_name)
 	_refresh_matching_wip_units(disposition)
+	log_audit_event(
+		"Disposition Execution",
+		"Material Disposition",
+		disposition_name,
+		{
+			"decision_idx": decision_idx,
+			"decision_type": decision.decision_type,
+			"stock_entry": stock_entry_name,
+		},
+	)
 
 	return stock_entry_name
 

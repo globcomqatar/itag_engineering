@@ -42,6 +42,7 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.bom_traversal_service import find_where_used
 
 IMPACT_ANALYSIS_ROLES = ("Engineering Manager", "ITAG Engineering Administrator")
@@ -210,6 +211,12 @@ def run_impact_analysis(assessment_name):
 			update_modified=False,
 		)
 		_notify_assessment_complete(assessment.eco, assessment_name)
+		log_audit_event(
+			"Impact Analysis Execution",
+			"Change Impact Assessment",
+			assessment_name,
+			{"eco": assessment.eco, "status": "Complete", "summary_counts": summary_counts},
+		)
 	except Exception as e:
 		frappe.db.set_value(
 			"Change Impact Assessment",
@@ -218,6 +225,12 @@ def run_impact_analysis(assessment_name):
 			update_modified=False,
 		)
 		frappe.log_error(title="Change Impact Analysis failed", message=frappe.get_traceback())
+		log_audit_event(
+			"Impact Analysis Execution",
+			"Change Impact Assessment",
+			assessment_name,
+			{"status": "Failed", "error_status": str(e)},
+		)
 
 
 def resolve_affected_item_codes_with_ancestors(item_codes):

@@ -9,6 +9,7 @@ list of everything currently blocking release.
 import frappe
 from frappe import _
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.eir_service import CREATE_ITEM_ROLES
 from itag_engineering.itag_engineering_management.response import success
 
@@ -36,7 +37,8 @@ def evaluate_bom_readiness(bom_name, _visited=None):
 	those are internal, made under the same caller's permission, not
 	independent external invocations.
 	"""
-	if _visited is None:
+	is_top_level_call = _visited is None
+	if is_top_level_call:
 		_check_bom_readiness_permission()
 		_visited = set()
 
@@ -73,6 +75,11 @@ def evaluate_bom_readiness(bom_name, _visited=None):
 	status = READY_STATUS if ready else NOT_READY_STATUS
 
 	frappe.db.set_value("BOM", bom_name, "itag_release_readiness_status", status, update_modified=False)
+
+	if is_top_level_call:
+		log_audit_event(
+			"BOM Readiness Evaluation", "BOM", bom_name, {"ready": ready, "exceptions": exceptions}
+		)
 
 	return {"ready": ready, "status": status, "exceptions": exceptions}
 

@@ -3,6 +3,8 @@
 import frappe
 from frappe import _
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
+
 BOOKKEEPING_FIELDS = {
 	"name",
 	"owner",
@@ -51,7 +53,14 @@ def create_new_drawing_revision(drawing_number, new_revision, **fields):
 		new_fields[fieldname] = source.get(fieldname)
 	new_fields.update(fields)
 
-	return frappe.get_doc(new_fields).insert()
+	new_drawing = frappe.get_doc(new_fields).insert()
+	log_audit_event(
+		"Drawing Revision Creation",
+		"Engineering Drawing",
+		new_drawing.name,
+		{"drawing_number": drawing_number, "new_revision": new_revision, "source_revision": source.name},
+	)
+	return new_drawing
 
 
 def compare_drawing_revisions(drawing_number, revision_a, revision_b):

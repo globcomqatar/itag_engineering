@@ -6,6 +6,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
+
 # Rounded to this precision before comparing, per Global Constraint #8 -
 # reuses ERPNext's own flt()-with-precision convention rather than a
 # bespoke epsilon comparison.
@@ -23,6 +25,7 @@ class MaterialDisposition(Document):
 		self.compute_total_reconciled_quantity()
 		self.validate_reconciliation()
 		self.validate_executed_decisions_are_protected()
+		self.log_decision_approval_audit_events()
 
 	def compute_total_reconciled_quantity(self):
 		self.total_reconciled_quantity = sum(flt(row.quantity) for row in self.decisions)
@@ -43,6 +46,30 @@ class MaterialDisposition(Document):
 					"reconcile before this disposition can leave Draft."
 				).format(self.total_reconciled_quantity, self.assessed_quantity)
 			)
+
+	def log_decision_approval_audit_events(self):
+		"""Roadmap Section 22.4 "Disposition Approval" - fires once per
+		decision row, the first time that row's approved_by field is set
+		(Draft/blank -> a real approver), not on every subsequent save."""
+		if self.is_new():
+			return
+		before = self.get_doc_before_save()
+		if not before:
+			return
+		previous_rows_by_idx = {row.idx: row for row in before.decisions}
+		for row in self.decisions:
+			previous_row = previous_rows_by_idx.get(row.idx)
+			if row.approved_by and not (previous_row and previous_row.approved_by):
+				log_audit_event(
+					"Disposition Approval",
+					"Material Disposition",
+					self.name,
+					{
+						"decision_idx": row.idx,
+						"decision_type": row.decision_type,
+						"approved_by": row.approved_by,
+					},
+				)
 
 	def validate_executed_decisions_are_protected(self):
 		if self.is_new():

@@ -11,6 +11,7 @@ from itag_engineering.itag_engineering_management.approval_matrix_service import
 	resolve_approval_disciplines,
 	validate_approval_steps_segregation_of_duties,
 )
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.response import success
 
 ECO_ACTION_ROLES = ("Engineering Manager", "ITAG Engineering Administrator")
@@ -85,6 +86,12 @@ def create_eco_from_accepted_ecr(ecr_name):
 		"Engineering Change Request",
 		ecr_name,
 		{"originating_eco": eco.name, "workflow_state": "Accepted for ECO"},
+	)
+	log_audit_event(
+		"ECR Transition",
+		"Engineering Change Request",
+		ecr_name,
+		{"to_state": "Accepted for ECO", "originating_eco": eco.name},
 	)
 	return eco.name
 

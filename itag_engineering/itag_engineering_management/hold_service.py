@@ -13,6 +13,7 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.doctype.production_engineering_hold.production_engineering_hold import (
 	ALL_HOLDABLE_ACTIONS,
 )
@@ -280,6 +281,12 @@ def place_hold(**fields):
 	if not fields.get("blocked_actions"):
 		fields["blocked_actions"] = [{"action": action, "is_blocked": 1} for action in ALL_HOLDABLE_ACTIONS]
 	hold = frappe.get_doc(fields).insert(ignore_permissions=True)
+	log_audit_event(
+		"Hold Placement",
+		"Production Engineering Hold",
+		hold.name,
+		{"reference_doctype": hold.reference_doctype, "reference_name": hold.reference_name},
+	)
 	return hold.name
 
 
@@ -296,6 +303,12 @@ def release_hold(hold_name, release_reason):
 	hold.released_on = now_datetime()
 	hold.release_reason = release_reason
 	hold.save(ignore_permissions=True)
+	log_audit_event(
+		"Hold Release",
+		"Production Engineering Hold",
+		hold.name,
+		{"reference_doctype": hold.reference_doctype, "reference_name": hold.reference_name},
+	)
 	return hold.name
 
 

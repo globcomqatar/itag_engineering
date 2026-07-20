@@ -30,6 +30,7 @@ Started/In Progress/Stale, does no staleness work at all.
 
 import frappe
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.impact_analysis_service import (
 	compute_input_checksum,
 	resolve_affected_item_codes,
@@ -75,6 +76,12 @@ def check_staleness(assessment_name, eco=None):
 	if stale and assessment.staleness_status != "Stale":
 		frappe.db.set_value(
 			"Change Impact Assessment", assessment_name, "staleness_status", "Stale", update_modified=False
+		)
+		log_audit_event(
+			"Impact Analysis Staleness",
+			"Change Impact Assessment",
+			assessment_name,
+			{"eco": assessment.eco},
 		)
 	return stale
 

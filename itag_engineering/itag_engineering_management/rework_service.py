@@ -13,6 +13,7 @@ docstring.
 import frappe
 from frappe import _
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.compatibility import (
 	additional_rework_operations_compatible,
 )
@@ -113,6 +114,12 @@ def complete_rework(instruction_name):
 		update_modified=False,
 	)
 	_refresh_source_wip_unit(instruction)
+	log_audit_event(
+		"Rework Execution",
+		"Rework Instruction",
+		instruction.name,
+		{"source_work_order": instruction.source_work_order, "resulting_item": instruction.resulting_item},
+	)
 
 
 def _refresh_source_wip_unit(instruction):

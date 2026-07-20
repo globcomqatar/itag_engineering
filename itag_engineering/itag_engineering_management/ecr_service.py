@@ -10,6 +10,7 @@ close.
 import frappe
 from frappe import _
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.response import success
 
 # Roadmap Section 15.2: an ECR may originate from many departments, not just
@@ -45,6 +46,9 @@ def submit_ecr_for_review(ecr_name):
 	_validate_ecr_completeness(ecr)
 	ecr.workflow_state = "Submitted for Review"
 	ecr.save()
+	log_audit_event(
+		"ECR Transition", "Engineering Change Request", ecr.name, {"to_state": "Submitted for Review"}
+	)
 	return ecr.name
 
 
@@ -82,6 +86,12 @@ def request_more_information(ecr_name, comment):
 	ecr.add_comment("Comment", comment)
 	ecr.workflow_state = "More Information Required"
 	ecr.save()
+	log_audit_event(
+		"ECR Transition",
+		"Engineering Change Request",
+		ecr.name,
+		{"to_state": "More Information Required", "comment": comment},
+	)
 	return ecr.name
 
 
@@ -103,6 +113,9 @@ def reject_ecr(ecr_name, reason):
 	ecr.add_comment("Comment", _("Rejected: {0}").format(reason))
 	ecr.workflow_state = "Rejected"
 	ecr.save()
+	log_audit_event(
+		"ECR Transition", "Engineering Change Request", ecr.name, {"to_state": "Rejected", "reason": reason}
+	)
 	return ecr.name
 
 
@@ -123,6 +136,7 @@ def close_ecr(ecr_name):
 		frappe.throw(_("An Engineering Change Request can only be closed from Accepted for ECO or Rejected."))
 	ecr.workflow_state = "Closed"
 	ecr.save()
+	log_audit_event("ECR Transition", "Engineering Change Request", ecr.name, {"to_state": "Closed"})
 	return ecr.name
 
 

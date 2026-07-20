@@ -6,6 +6,7 @@ import json
 import frappe
 from frappe import _
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.duplicate_service import (
 	find_possible_duplicates,
 )
@@ -87,6 +88,9 @@ def create_item_from_eir(eir_name):
 		values = {itag_field: eir.get(eir_field) for itag_field, eir_field in ITEM_FIELD_MAP.items()}
 		item_code = reserve_item_code(eir.item_code_rule, values)
 		frappe.db.set_value("Engineering Item Request", eir_name, "reserved_item_code", item_code)
+		log_audit_event(
+			"Item Code Reservation", "Engineering Item Request", eir_name, {"item_code": item_code}
+		)
 
 	item_fields = {
 		"doctype": "Item",
@@ -112,6 +116,7 @@ def create_item_from_eir(eir_name):
 		eir_name,
 		{"created_item": item.item_code, "workflow_state": "Item Created"},
 	)
+	log_audit_event("Item Code Creation", "Item", item.item_code, {"originating_eir": eir_name})
 	return item.item_code
 
 
