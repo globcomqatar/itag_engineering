@@ -17,6 +17,7 @@ from itag_engineering.itag_engineering_management.hold_service import (
 )
 from itag_engineering.tests.factories import (
 	create_fresh_stock_item,
+	create_test_bom_with_operations,
 	create_test_material_disposition,
 	ensure_test_company,
 	ensure_test_warehouse_by_keyword,
@@ -46,10 +47,12 @@ class TestUAT006ContinueUnderOldRevision(FrappeTestCase):
 		warehouse = frappe.db.get_value(
 			"Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name"
 		)
+		bom = create_test_bom_with_operations(item=item)
 		work_order = frappe.get_doc(
 			{
 				"doctype": "Work Order",
 				"production_item": item,
+				"bom_no": bom.name,
 				"qty": 1,
 				"company": company,
 				"wip_warehouse": warehouse,
@@ -138,10 +141,12 @@ class TestUAT012EngineeringHold(FrappeTestCase):
 		warehouse = frappe.db.get_value(
 			"Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name"
 		)
+		bom = create_test_bom_with_operations(item=item)
 		work_order = frappe.get_doc(
 			{
 				"doctype": "Work Order",
 				"production_item": item,
+				"bom_no": bom.name,
 				"qty": 1,
 				"company": company,
 				"wip_warehouse": warehouse,
@@ -154,6 +159,9 @@ class TestUAT012EngineeringHold(FrappeTestCase):
 				"work_order": work_order.name,
 				"for_quantity": work_order.qty,
 				"company": company,
+				"wip_warehouse": warehouse,
+				"operation": "_Test Operation 1",
+				"workstation": "_Test Workstation 1",
 			}
 		).insert(ignore_permissions=True)
 
@@ -164,14 +172,23 @@ class TestUAT012EngineeringHold(FrappeTestCase):
 			hold_reason="UAT012-TEST hold reason.",
 		)
 
-		job_card.status = "Work In Progress"
+		# Job Card's real "Start" action (erpnext...job_card.py's
+		# make_time_log()) drives the "Work In Progress" transition by
+		# adding a Job Card Time Log row, not by setting `status` directly -
+		# JobCard.validate()'s own set_status() unconditionally recomputes
+		# `status` from docstatus/items/time_logs on every save (verified
+		# live), so a bare `job_card.status = "Work In Progress"` assignment
+		# is silently overwritten back to "Open" before hold_service's hook
+		# ever sees it. Appending a real time_log row is what genuinely
+		# reproduces the status transition the wired hook is meant to catch.
+		job_card.append("time_logs", {"from_time": frappe.utils.now_datetime()})
 		with self.assertRaises(frappe.ValidationError):
 			job_card.save(ignore_permissions=True)
 
 		release_hold(hold_name, "UAT012-TEST released - issue resolved.")
 
 		job_card.reload()
-		job_card.status = "Work In Progress"
+		job_card.append("time_logs", {"from_time": frappe.utils.now_datetime()})
 		job_card.save(ignore_permissions=True)
 		job_card.reload()
 		self.assertEqual(job_card.status, "Work In Progress")

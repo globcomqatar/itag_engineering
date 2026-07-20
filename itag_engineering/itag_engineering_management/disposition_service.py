@@ -215,10 +215,20 @@ def _create_and_submit_stock_entry(disposition, decision):
 	else:
 		purpose = "Material Issue"
 
+	# Stock Entry.stock_entry_type is mandatory (verified live via
+	# tabDocField - frappe.MandatoryError otherwise) and is never
+	# auto-derived from `purpose` on a plain .insert() - ERPNext's own
+	# set_stock_entry_type() helper that does that derivation is not wired
+	# into Stock Entry.validate(), it is only called by specific whitelisted
+	# helper endpoints this module does not go through. Standard ERPNext
+	# ships one "Stock Entry Type" fixture per purpose value, named
+	# identically to the purpose itself (confirmed live via `tabStock Entry
+	# Type`), so `purpose` doubles as the stock_entry_type name here.
 	stock_entry = frappe.get_doc(
 		{
 			"doctype": "Stock Entry",
 			"purpose": purpose,
+			"stock_entry_type": purpose,
 			"company": company,
 			"items": [item_row],
 		}

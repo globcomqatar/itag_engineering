@@ -8,6 +8,7 @@ test factories.
 """
 
 import frappe
+from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 
 
 def ensure_test_company():
@@ -437,13 +438,31 @@ def create_test_work_order_and_job_card(item, qty=1):
 	Neither document is submitted - callers that need the Build ITAG-0.5.0
 	baseline-freeze behavior should submit the Work Order themselves via
 	create_test_work_order()/create_fully_approved_engineering_release()
-	instead, which this bare fixture deliberately does not require."""
+	instead, which this bare fixture deliberately does not require.
+
+	Work Order.bom_no is mandatory (verified live via `tabDocField` -
+	frappe.MandatoryError otherwise), so a real BOM for `item` is created via
+	create_test_bom_with_operations() - the same Build ITAG-0.4.0 baseline
+	factory create_test_work_order() already relies on - rather than leaving
+	bom_no unset. erpnext.manufacturing.doctype.bom.bom.validate_bom_no()
+	only requires the BOM to be submitted when `frappe.flags.in_test` is
+	falsy, so the BOM here is deliberately left at docstatus 0 like the BOM
+	built by create_test_bom_with_operations() itself.
+
+	Job Card.wip_warehouse/operation/workstation are also mandatory
+	(verified live the same way) - operation/workstation are set to the
+	same "_Test Operation 1"/"_Test Workstation 1" fixture values the BOM's
+	own operations row uses (an established ERPNext test-fixture pair, see
+	create_test_bom_with_operations()'s docstring point 4), and wip_warehouse
+	reuses the same resolved test-company Warehouse as the Work Order."""
 	company = ensure_test_company()
 	warehouse = frappe.db.get_value("Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name")
+	bom = create_test_bom_with_operations(item=item)
 	work_order = frappe.get_doc(
 		{
 			"doctype": "Work Order",
 			"production_item": item,
+			"bom_no": bom.name,
 			"qty": qty,
 			"company": company,
 			"wip_warehouse": warehouse,
@@ -456,6 +475,9 @@ def create_test_work_order_and_job_card(item, qty=1):
 			"work_order": work_order.name,
 			"for_quantity": work_order.qty,
 			"company": company,
+			"wip_warehouse": warehouse,
+			"operation": "_Test Operation 1",
+			"workstation": "_Test Workstation 1",
 		}
 	).insert(ignore_permissions=True)
 	return work_order, job_card
@@ -468,11 +490,25 @@ def create_test_material_disposition(item, decisions, eco=None, warehouse=None, 
 	Warehouse for the test Company unless one is given, and computes
 	assessed_quantity as the sum of the given decision rows' own
 	quantities - so the disposition reconciles by construction unless a
-	test deliberately unbalances it."""
+	test deliberately unbalances it.
+
+	disposition_service.execute_disposition_decision() moves stock through a
+	real ERPNext Stock Entry (Material Issue/Material Transfer), and ERPNext's
+	own stock ledger genuinely rejects that with a live
+	erpnext.stock.stock_ledger.NegativeStockError unless the source Warehouse
+	already carries at least that much on-hand qty - verified live rather
+	than assumed. A real Material Receipt (via ERPNext's own
+	stock_entry_utils.make_stock_entry(), submitted) seeds
+	10x the combined decisions' quantity into `warehouse` before the
+	disposition is created, comfortably covering every decision row this
+	factory's callers execute without masking genuine reconciliation bugs
+	with an inflated/unbounded balance."""
 	company = ensure_test_company()
 	warehouse = warehouse or frappe.db.get_value(
 		"Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name"
 	)
+	seed_qty = sum(d["quantity"] for d in decisions) * 10
+	make_stock_entry(item_code=item, qty=seed_qty, to_warehouse=warehouse, company=company)
 	eco = eco or create_eco_from_accepted_ecr_factory(affected_item=item)
 	fields = {
 		"doctype": "Material Disposition",
