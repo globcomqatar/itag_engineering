@@ -47,11 +47,46 @@ class TestUAT017UnauthorizedApproval(FrappeTestCase):
 
 	def setUp(self):
 		frappe.db.delete("Engineering Approval Matrix", {"rule_name": ["like", "UAT017-TEST-%"]})
+		# frappe.db.delete() on the parent only issues a raw DELETE against
+		# `tabEngineering Approval Matrix` - it does not cascade to the
+		# "Approval Matrix Discipline" child table. Since this doctype
+		# autonames on rule_name (autoname: "field:rule_name"), the next
+		# test to reuse "UAT017-TEST-Default" re-inserts a parent row with
+		# the same name and appends fresh child rows on top of the previous
+		# test's orphaned ones still sitting under that same parent name -
+		# must be deleted explicitly here too (see test_eco_service.py's
+		# identical fix for "ECOSVC-TEST-%").
+		frappe.db.delete("Approval Matrix Discipline", {"parent": ["like", "UAT017-TEST-%"]})
 		frappe.db.delete("Engineering Change Request", {"request_title": ["like", "UAT017%"]})
+		# resolve_approval_disciplines() has no doctype-level scoping of its
+		# own (by design - it is meant to see every active rule on the
+		# site), but other test suites' factories (e.g.
+		# tests.factories.create_fully_approved_engineering_release's
+		# "Factory Test Approval Matrix") deliberately leave their own
+		# unconditional wildcard-matching rule in place *persistently*
+		# across test runs, for reuse by many other builds' tests. That
+		# collides with this suite's own priority-100 "UAT017-TEST-Default"
+		# wildcard rule and trips the ambiguous-match guard. Deactivate
+		# every pre-existing active rule for the duration of this test and
+		# restore them in tearDown (update_modified=False, reversible)
+		# rather than deleting them - same pattern as
+		# test_approval_matrix_service.py's TestApprovalMatrixService.
+		self._deactivated_rules = frappe.get_all(
+			"Engineering Approval Matrix", filters={"is_active": 1}, pluck="name"
+		)
+		for rule_name in self._deactivated_rules:
+			frappe.db.set_value(
+				"Engineering Approval Matrix", rule_name, "is_active", 0, update_modified=False
+			)
 
 	def tearDown(self):
 		frappe.db.delete("Engineering Approval Matrix", {"rule_name": ["like", "UAT017-TEST-%"]})
+		frappe.db.delete("Approval Matrix Discipline", {"parent": ["like", "UAT017-TEST-%"]})
 		frappe.db.delete("Engineering Change Request", {"request_title": ["like", "UAT017%"]})
+		for rule_name in self._deactivated_rules:
+			frappe.db.set_value(
+				"Engineering Approval Matrix", rule_name, "is_active", 1, update_modified=False
+			)
 		frappe.set_user("Administrator")
 
 	def _make_two_discipline_matrix(self):
