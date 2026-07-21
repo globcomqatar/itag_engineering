@@ -28,7 +28,8 @@ class TestBuild010ExitGate(FrappeTestCase):
 			frappe.set_user("Administrator")
 
 	def test_workspace_exists(self):
-		self.assertTrue(frappe.db.exists("Workspace", "ITAG Engineering Management"))
+		# Renamed from "ITAG Engineering Management" to "ITAG Engineering".
+		self.assertTrue(frappe.db.exists("Workspace", "ITAG Engineering"))
 
 	def test_ping_api_is_whitelisted(self):
 		from itag_engineering.itag_engineering_management.api import ping

@@ -19,6 +19,17 @@ The repo lives at `https://github.com/globcomqatar/itag_engineering` (private), 
 `develop`. Decision Log: `doc/ITAG_Decisions.md` (bench root). Per-build implementation plans:
 `docs/superpowers/plans/` (one file per build, `2026-MM-DD-build-X.Y.Z-<slug>.md`).
 
+**Versioning scheme (MAJOR.MINOR.PATCH), set in `itag_engineering/__init__.py`'s `__version__`
+(flit reads it from there via `pyproject.toml`'s `dynamic = ["version"]` — this is the only
+place the version lives, nowhere else needs a manual bump):** MAJOR tracks the Frappe framework
+version this app targets (`15`); MINOR increments for a big change — a new feature, a new build
+going live, anything that changes what the app *does*; PATCH increments for a small
+change/fix that doesn't add new capability. Current: `15.1.0`, marking Builds ITAG-0.1.0 through
+ITAG-0.11.0 complete and independently verified against the real bench. Next big change (e.g.
+Build ITAG-1.0.0 actually going live) → `15.2.0`; a small fix in between → `15.1.1`, `15.1.2`, ...
+**Every change to this app bumps the version as part of that same change — don't leave it for
+later.** Tag the release on GitHub to match (`git tag v15.1.0`, pushed alongside the commit).
+
 **Always run tests with `--skip-test-records`** — this bench's ERPNext install has no
 `payments` app, so Frappe's default test-record dependency auto-resolution chains into a
 nonexistent `Payment Gateway` DocType and crashes `bench run-tests` entirely. This app never
@@ -59,8 +70,10 @@ Check `ps aux | grep bench` before starting a run if there's any doubt one might
 
 ## Standing rule: every new DocType gets a Desk Workspace entry
 
-This app has one Desk Workspace, `ITAG Engineering Management` (module-owned, exported at
-`itag_engineering/itag_engineering_management/workspace/itag_engineering_management/itag_engineering_management.json`).
+This app has one Desk Workspace, `ITAG Engineering` (module-owned under the "ITAG Engineering
+Management" module — the workspace's own name/label was shortened from "ITAG Engineering
+Management" to "ITAG Engineering"; the underlying module name is unchanged, exported at
+`itag_engineering/itag_engineering_management/workspace/itag_engineering/itag_engineering.json`).
 It follows the same **two-tier structure every standard Frappe/ERPNext workspace uses**
 (compare `erpnext/selling/workspace/selling/selling.json` or `.../manufacturing/manufacturing.json`):
 
@@ -106,7 +119,7 @@ Pricing) — but Quick Access must stay a curated subset, never a mirror of the 
 hand-edited JSON file:**
 
 1. Confirm `developer_mode: 1` is set in the site config (`sites/frappedevelopment.localhost/site_config.json`) — this workspace's `on_update()` hook only auto-exports to a file when it is.
-2. Load the real document — `frappe.get_doc("Workspace", "ITAG Engineering Management")` — via a `bench execute` script (a throwaway module under `itag_engineering/`, e.g. `_scratch_probe.py`; delete it after use, it is not meant to be committed).
+2. Load the real document — `frappe.get_doc("Workspace", "ITAG Engineering")` — via a `bench execute` script (a throwaway module under `itag_engineering/`, e.g. `_scratch_probe.py`; delete it after use, it is not meant to be committed).
 3. Append the `Link` row (`{"type": "Link", "label": <DocType>, "link_to": <DocType>, "link_type": "DocType", ...}`) to `doc.links`, either under an existing group's `Card Break` (bump its `link_count`) or under a new `Card Break` for a new build phase, plus the matching `"card"` block in `content` if it's a new group. Only also append a `shortcuts` row + `"shortcut"` content block if this DocType is a deliberate Quick Access addition (see above). **Always use `doc.append("links"/"shortcuts"/"charts", {...})` for every child-table row — never assign a plain list of dicts directly (`doc.charts = [{...}]`)**, which crashes with `AttributeError: 'dict' object has no attribute 'is_new'` deep inside Frappe's `_set_defaults()` the moment you call `.save()`, since Frappe expects real BaseDocument-wrapped rows, not bare dicts.
 4. Call `doc.save()` — with `developer_mode` on and the workspace `public: 1`, this **automatically re-exports the JSON file** (Frappe prints `Wrote document file for Workspace ... at <path>` when it does). Confirm that message appears; if it doesn't, something is wrong with the `developer_mode`/`public` precondition, not the save itself.
 5. Never hand-edit `itag_engineering_management.json` directly — the same rule this app already applies to DocType JSON files applies here (they are Frappe-generated exports, not something to author by hand), and a hand edit will look subtly different from what Frappe itself produces (key ordering, escaping) the next time a real save happens, creating a noisy diff.
