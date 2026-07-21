@@ -16,7 +16,8 @@ require real human action — do not treat any of those as complete until the ac
 human approvers have signed off; an agent facilitates that build, it cannot substitute for it.
 
 The repo lives at `https://github.com/globcomqatar/itag_engineering` (private), branch
-`develop`. Decision Log: `doc/ITAG_Decisions.md` (bench root). Per-build implementation plans:
+`main` (renamed from `develop`; `main` is the GitHub default branch). Decision Log:
+`doc/ITAG_Decisions.md` (bench root). Per-build implementation plans:
 `docs/superpowers/plans/` (one file per build, `2026-MM-DD-build-X.Y.Z-<slug>.md`).
 
 **Versioning scheme (MAJOR.MINOR.PATCH), set in `itag_engineering/__init__.py`'s `__version__`
