@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\": \"hdr000\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">ITAG Engineering Management</span>\", \"col\": 12}}, {\"id\": \"para000\", \"type\": \"paragraph\", \"data\": {\"text\": \"Engineering Management and Product Lifecycle control layer for ERPNext Manufacturing (valve manufacturing). Covers Builds ITAG-0.1.0 through ITAG-0.11.0 - Item Engineering, Drawing/Spec/Revision control, BOM/Routing/Inspection, Engineering Release, Change Control, Engineering Impact Analysis, Hold &amp; Disposition, Production Continuation &amp; Rework, and WIP &amp; Traceability.\", \"col\": 12}}, {\"id\": \"hdr001\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>Item Engineering & Coding</b></span>\", \"col\": 12}}, {\"id\": \"sc002\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Item Request\", \"col\": 3}}, {\"id\": \"sc003\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Item Code Rule\", \"col\": 3}}, {\"id\": \"sc004\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Item Code Reservation\", \"col\": 3}}, {\"id\": \"sp005\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"hdr006\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>Drawing, Specification & Revision</b></span>\", \"col\": 12}}, {\"id\": \"sc007\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Drawing\", \"col\": 3}}, {\"id\": \"sc008\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Technical Specification\", \"col\": 3}}, {\"id\": \"sc009\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Product Revision\", \"col\": 3}}, {\"id\": \"sc010\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Inspection Plan\", \"col\": 3}}, {\"id\": \"sp011\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"hdr012\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>Engineering Release</b></span>\", \"col\": 12}}, {\"id\": \"sc013\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Release\", \"col\": 3}}, {\"id\": \"sc014\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Approval Matrix\", \"col\": 3}}, {\"id\": \"sp015\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"hdr016\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>Change Control</b></span>\", \"col\": 12}}, {\"id\": \"sc017\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Change Request\", \"col\": 3}}, {\"id\": \"sc018\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Change Order\", \"col\": 3}}, {\"id\": \"sc019\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Change Impact Assessment\", \"col\": 3}}, {\"id\": \"sp020\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"hdr021\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>Hold & Disposition</b></span>\", \"col\": 12}}, {\"id\": \"sc022\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Production Engineering Hold\", \"col\": 3}}, {\"id\": \"sc023\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Material Disposition\", \"col\": 3}}, {\"id\": \"sc024\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Deviation Request\", \"col\": 3}}, {\"id\": \"sc025\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Concession Approval\", \"col\": 3}}, {\"id\": \"sp026\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"hdr027\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>Production Continuation & Rework</b></span>\", \"col\": 12}}, {\"id\": \"sc028\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Production Change Continuation\", \"col\": 3}}, {\"id\": \"sc029\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Rework Instruction\", \"col\": 3}}, {\"id\": \"sp030\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"hdr031\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>WIP & Traceability</b></span>\", \"col\": 12}}, {\"id\": \"sc032\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"WIP Unit Register\", \"col\": 3}}, {\"id\": \"sp033\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"hdr034\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h5\\\"><b>Security, Audit & Settings</b></span>\", \"col\": 12}}, {\"id\": \"sc035\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Audit Log\", \"col\": 3}}, {\"id\": \"sc036\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Settings\", \"col\": 3}}, {\"id\": \"sp037\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"hdr038\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Masters &amp; Reports</b></span>\", \"col\": 12}}, {\"id\": \"card039\", \"type\": \"card\", \"data\": {\"card_name\": \"Item Engineering & Coding\", \"col\": 4}}, {\"id\": \"card040\", \"type\": \"card\", \"data\": {\"card_name\": \"Drawing, Specification & Revision\", \"col\": 4}}, {\"id\": \"card041\", \"type\": \"card\", \"data\": {\"card_name\": \"Engineering Release\", \"col\": 4}}, {\"id\": \"card042\", \"type\": \"card\", \"data\": {\"card_name\": \"Change Control\", \"col\": 4}}, {\"id\": \"card043\", \"type\": \"card\", \"data\": {\"card_name\": \"Hold & Disposition\", \"col\": 4}}, {\"id\": \"card044\", \"type\": \"card\", \"data\": {\"card_name\": \"Production Continuation & Rework\", \"col\": 4}}, {\"id\": \"card045\", \"type\": \"card\", \"data\": {\"card_name\": \"WIP & Traceability\", \"col\": 4}}, {\"id\": \"card046\", \"type\": \"card\", \"data\": {\"card_name\": \"Security, Audit & Settings\", \"col\": 4}}]",
+ "content": "[{\"id\": \"hdr000\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">ITAG Engineering Management</span>\", \"col\": 12}}, {\"id\": \"para000\", \"type\": \"paragraph\", \"data\": {\"text\": \"Engineering Management and Product Lifecycle control layer for ERPNext Manufacturing (valve manufacturing). Covers Builds ITAG-0.1.0 through ITAG-0.11.0 - Item Engineering, Drawing/Spec/Revision control, BOM/Routing/Inspection, Engineering Release, Change Control, Engineering Impact Analysis, Hold &amp; Disposition, Production Continuation &amp; Rework, and WIP &amp; Traceability.\", \"col\": 12}}, {\"id\": \"hdr001\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Quick Access</b></span>\", \"col\": 12}}, {\"id\": \"sc002\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Item Request\", \"col\": 3}}, {\"id\": \"sc003\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Drawing\", \"col\": 3}}, {\"id\": \"sc004\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Release\", \"col\": 3}}, {\"id\": \"sc005\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Change Request\", \"col\": 3}}, {\"id\": \"sc006\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Production Engineering Hold\", \"col\": 3}}, {\"id\": \"sc007\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Production Change Continuation\", \"col\": 3}}, {\"id\": \"sc008\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"WIP Unit Register\", \"col\": 3}}, {\"id\": \"sc009\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Audit Log\", \"col\": 3}}, {\"id\": \"sp010\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"hdr011\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\", \"col\": 12}}, {\"id\": \"card012\", \"type\": \"card\", \"data\": {\"card_name\": \"Item Engineering & Coding\", \"col\": 4}}, {\"id\": \"card013\", \"type\": \"card\", \"data\": {\"card_name\": \"Drawing, Specification & Revision\", \"col\": 4}}, {\"id\": \"card014\", \"type\": \"card\", \"data\": {\"card_name\": \"Engineering Release\", \"col\": 4}}, {\"id\": \"card015\", \"type\": \"card\", \"data\": {\"card_name\": \"Change Control\", \"col\": 4}}, {\"id\": \"card016\", \"type\": \"card\", \"data\": {\"card_name\": \"Hold & Disposition\", \"col\": 4}}, {\"id\": \"card017\", \"type\": \"card\", \"data\": {\"card_name\": \"Production Continuation & Rework\", \"col\": 4}}, {\"id\": \"card018\", \"type\": \"card\", \"data\": {\"card_name\": \"WIP & Traceability\", \"col\": 4}}, {\"id\": \"card019\", \"type\": \"card\", \"data\": {\"card_name\": \"Security, Audit & Settings\", \"col\": 4}}]",
  "creation": "2026-07-19 00:00:00",
  "custom_blocks": [],
  "docstatus": 0,
@@ -316,7 +316,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-07-21 09:04:15.413933",
+ "modified": "2026-07-21 09:30:33.507089",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "ITAG Engineering Management",
@@ -339,43 +339,8 @@
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "Item Code Rule",
-   "link_to": "Item Code Rule",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Item Code Reservation",
-   "link_to": "Item Code Reservation",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
    "label": "Engineering Drawing",
    "link_to": "Engineering Drawing",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Technical Specification",
-   "link_to": "Technical Specification",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Product Revision",
-   "link_to": "Product Revision",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Engineering Inspection Plan",
-   "link_to": "Engineering Inspection Plan",
    "type": "DocType"
   },
   {
@@ -388,29 +353,8 @@
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "Engineering Approval Matrix",
-   "link_to": "Engineering Approval Matrix",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
    "label": "Engineering Change Request",
    "link_to": "Engineering Change Request",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Engineering Change Order",
-   "link_to": "Engineering Change Order",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Change Impact Assessment",
-   "link_to": "Change Impact Assessment",
    "type": "DocType"
   },
   {
@@ -423,36 +367,8 @@
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "Material Disposition",
-   "link_to": "Material Disposition",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Deviation Request",
-   "link_to": "Deviation Request",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Concession Approval",
-   "link_to": "Concession Approval",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
    "label": "Production Change Continuation",
    "link_to": "Production Change Continuation",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Rework Instruction",
-   "link_to": "Rework Instruction",
    "type": "DocType"
   },
   {
@@ -467,13 +383,6 @@
    "doc_view": "List",
    "label": "Engineering Audit Log",
    "link_to": "Engineering Audit Log",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Engineering Settings",
-   "link_to": "Engineering Settings",
    "type": "DocType"
   }
  ],

@@ -57,28 +57,40 @@ Check `ps aux | grep bench` before starting a run if there's any doubt one might
    bugs (ERPNext core mandatory fields silently omitted from test fixtures, Frappe API
    behaviors that don't work the way a comment assumed, etc.) that only running it can surface.
 
-## Standing rule: every new DocType gets a Desk Workspace shortcut
+## Standing rule: every new DocType gets a Desk Workspace entry
 
 This app has one Desk Workspace, `ITAG Engineering Management` (module-owned, exported at
 `itag_engineering/itag_engineering_management/workspace/itag_engineering_management/itag_engineering_management.json`).
+It follows the same **two-tier structure every standard Frappe/ERPNext workspace uses**
+(compare `erpnext/selling/workspace/selling/selling.json` or `.../manufacturing/manufacturing.json`):
+
+1. **Quick Access** (top) — a SMALL curated row of `shortcuts` (the `Workspace Shortcut` child
+   table + matching `"shortcut"` content blocks), one flagship/entry-point DocType per build
+   phase, not the full list. This is a launcher, not an index.
+2. **Reports & Masters** (bottom) — the COMPREHENSIVE, one-entry-per-DocType listing, via the
+   `links` child table (`Card Break` rows grouping `Link` rows) and matching `"card"` content
+   blocks, one card per build-phase group.
 
 **Every DocType any future build/phase adds to this app (excluding child tables and the
-Engineering Settings Single, which already has its own shortcut) must get a shortcut added to
-this same workspace before that build is considered done** — do not let this drift the way it
-did across Builds 0.1.0-0.11.0, where the workspace stub existed with an empty `shortcuts`
-array the entire time until an explicit pass filled it in retroactively for all 21 DocTypes.
+Engineering Settings Single) must get a `Link` row under the correct Reports & Masters group —
+this is the mandatory, comprehensive part.** Only add it to Quick Access too if it's genuinely
+a primary entry point for that phase's workflow (most new DocTypes should NOT go in Quick
+Access — it stays small by design).
 
-**How to do this correctly — the same mechanism Frappe uses for DocTypes themselves, never a
+**Do not let the two sections duplicate each other's full content** — this exact mistake
+happened once already while building this workspace: every DocType was placed in BOTH the
+shortcuts row AND the Reports & Masters cards, so each one rendered twice on the page. A
+handful of intentional overlaps between the two sections is normal and matches Frappe's own
+convention (e.g. ERPNext's Selling workspace lists "Item" in both Quick Access and Items and
+Pricing) — but Quick Access must stay a curated subset, never a mirror of the full list.
+
+**How to update it correctly — the same mechanism Frappe uses for DocTypes themselves, never a
 hand-edited JSON file:**
 
 1. Confirm `developer_mode: 1` is set in the site config (`sites/frappedevelopment.localhost/site_config.json`) — this workspace's `on_update()` hook only auto-exports to a file when it is.
-2. Load the real document — `frappe.get_doc("Workspace", "ITAG Engineering Management")` — via a `bench execute` script (see `itag_engineering/_scratch_probe.py`-style throwaway module used to build this workspace originally; delete the scratch file after use, it is not meant to be committed).
-3. Append a `shortcuts` child row (`{"label": <DocType>, "link_to": <DocType>, "type": "DocType", "doc_view": "List", "color": "Grey"}`) and a matching `links` Card Break/Link pair under the correct build-phase group (add a new Card Break group for a new build phase, or append to an existing group's `link_count`/rows if the DocType belongs there).
-4. Add a `"shortcut"` block referencing the same `shortcut_name` (and, if it's a new group, a `"header"` block) to the `content` JSON block list, matching the existing blocks' shape.
-5. Call `doc.save()` — with `developer_mode` on and the workspace `public: 1`, this **automatically re-exports the JSON file** (Frappe prints `Wrote document file for Workspace ... at <path>` when it does). Confirm that message appears; if it doesn't, something is wrong with the `developer_mode`/`public` precondition, not the save itself.
-6. Never hand-edit `itag_engineering_management.json` directly — the same rule this app already applies to DocType JSON files applies here (they are Frappe-generated exports, not something to author by hand), and a hand edit will look subtly different from what Frappe itself produces (key ordering, escaping) the next time a real save happens, creating a noisy diff.
-7. Run `bench migrate` once afterward to confirm the change is stable and doesn't get reverted or duplicated on a normal migrate cycle.
-
-Reference for structure/conventions: any standard ERPNext workspace, e.g.
-`erpnext/manufacturing/workspace/manufacturing/manufacturing.json` — same `shortcuts`/`links`
-(Card Break + Link)/`content` (JSON-stringified block list) shape this app's workspace follows.
+2. Load the real document — `frappe.get_doc("Workspace", "ITAG Engineering Management")` — via a `bench execute` script (a throwaway module under `itag_engineering/`, e.g. `_scratch_probe.py`; delete it after use, it is not meant to be committed).
+3. Append the `Link` row (`{"type": "Link", "label": <DocType>, "link_to": <DocType>, "link_type": "DocType", ...}`) to `doc.links`, either under an existing group's `Card Break` (bump its `link_count`) or under a new `Card Break` for a new build phase, plus the matching `"card"` block in `content` if it's a new group. Only also append a `shortcuts` row + `"shortcut"` content block if this DocType is a deliberate Quick Access addition (see above).
+4. Call `doc.save()` — with `developer_mode` on and the workspace `public: 1`, this **automatically re-exports the JSON file** (Frappe prints `Wrote document file for Workspace ... at <path>` when it does). Confirm that message appears; if it doesn't, something is wrong with the `developer_mode`/`public` precondition, not the save itself.
+5. Never hand-edit `itag_engineering_management.json` directly — the same rule this app already applies to DocType JSON files applies here (they are Frappe-generated exports, not something to author by hand), and a hand edit will look subtly different from what Frappe itself produces (key ordering, escaping) the next time a real save happens, creating a noisy diff.
+6. Run `bench migrate` once afterward to confirm the change is stable and doesn't get reverted or duplicated on a normal migrate cycle.
+7. Actually look at the rendered workspace in the Desk (or a screenshot) before considering the change done — the duplication bug above was only caught by looking at the page, not by reading the JSON.
