@@ -66,7 +66,7 @@
    "options": "Company"
   },
   {
-   "description": "Free-text facility identifier. No dedicated Facility DocType exists yet - recorded as text per Decision Log #2 pending a formal facility model in a later build.",
+   "description": "Free-text facility identifier per Decision Log #2. No dedicated Facility DocType exists in this app - none of the roadmap's builds (ITAG-0.1.0 through ITAG-1.0.0) introduce one, so this remains a permanent free-text field, not a placeholder for a future model.",
    "fieldname": "default_engineering_facility",
    "fieldtype": "Data",
    "label": "Default Engineering Facility"
@@ -156,7 +156,7 @@
   },
   {
    "default": "1",
-   "description": "Coarse on/off default for engineering notifications. Granular per-event notification configuration is introduced by the builds that create those events (e.g. ECR/ECO in Build ITAG-0.6.0).",
+   "description": "Not currently read by any code in this app - ECR/ECO and other engineering-event notifications (e.g. Build ITAG-0.6.0's ECR/ECO transitions) are sent unconditionally today, regardless of this setting. No granular per-event notification configuration exists yet.",
    "fieldname": "notify_on_engineering_events",
    "fieldtype": "Check",
    "label": "Notify On Engineering Events"
@@ -173,7 +173,7 @@
   },
   {
    "default": "default",
-   "description": "Restricted to Frappe's standard queue names. Per Decision Log #13 (small shop scale, ~15-25 Work Orders/month), the long queue is expected to be needed only by later builds (e.g. Change Impact Analysis, Build ITAG-0.7.0).",
+   "description": "Restricted to Frappe's standard queue names. Not currently read by any code in this app - Change Impact Analysis (Build ITAG-0.7.0, fully implemented) always enqueues its background analysis job on the \"long\" queue directly, regardless of this setting.",
    "fieldname": "background_job_queue",
    "fieldtype": "Select",
    "label": "Background Job Queue",
