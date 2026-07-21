@@ -1,0 +1,116 @@
+[
+ {
+  "cards": [
+   {
+    "card": "Open Engineering Item Requests",
+    "parent": "ITAG Engineering",
+    "parentfield": "cards",
+    "parenttype": "Dashboard"
+   },
+   {
+    "card": "Active Production Holds",
+    "parent": "ITAG Engineering",
+    "parentfield": "cards",
+    "parenttype": "Dashboard"
+   },
+   {
+    "card": "Open Engineering Change Orders",
+    "parent": "ITAG Engineering",
+    "parentfield": "cards",
+    "parenttype": "Dashboard"
+   },
+   {
+    "card": "BOM Release Exceptions",
+    "parent": "ITAG Engineering",
+    "parentfield": "cards",
+    "parenttype": "Dashboard"
+   },
+   {
+    "card": "Open Material Dispositions",
+    "parent": "ITAG Engineering",
+    "parentfield": "cards",
+    "parenttype": "Dashboard"
+   },
+   {
+    "card": "WIP Units Currently Held",
+    "parent": "ITAG Engineering",
+    "parentfield": "cards",
+    "parenttype": "Dashboard"
+   }
+  ],
+  "chart_options": null,
+  "charts": [
+   {
+    "chart": "Engineering Item Requests by Status",
+    "parent": "ITAG Engineering",
+    "parentfield": "charts",
+    "parenttype": "Dashboard",
+    "width": "Half"
+   },
+   {
+    "chart": "New Engineering Item Requests",
+    "parent": "ITAG Engineering",
+    "parentfield": "charts",
+    "parenttype": "Dashboard",
+    "width": "Half"
+   },
+   {
+    "chart": "Engineering Drawings by Status",
+    "parent": "ITAG Engineering",
+    "parentfield": "charts",
+    "parenttype": "Dashboard",
+    "width": "Half"
+   },
+   {
+    "chart": "Product Revisions by Status",
+    "parent": "ITAG Engineering",
+    "parentfield": "charts",
+    "parenttype": "Dashboard",
+    "width": "Half"
+   },
+   {
+    "chart": "BOM Release Readiness",
+    "parent": "ITAG Engineering",
+    "parentfield": "charts",
+    "parenttype": "Dashboard",
+    "width": "Half"
+   },
+   {
+    "chart": "Engineering Releases by Status",
+    "parent": "ITAG Engineering",
+    "parentfield": "charts",
+    "parenttype": "Dashboard",
+    "width": "Half"
+   },
+   {
+    "chart": "Engineering Change Orders by Risk Level",
+    "parent": "ITAG Engineering",
+    "parentfield": "charts",
+    "parenttype": "Dashboard",
+    "width": "Half"
+   },
+   {
+    "chart": "Production Engineering Holds by Status",
+    "parent": "ITAG Engineering",
+    "parentfield": "charts",
+    "parenttype": "Dashboard",
+    "width": "Half"
+   },
+   {
+    "chart": "Material Dispositions by Status",
+    "parent": "ITAG Engineering",
+    "parentfield": "charts",
+    "parenttype": "Dashboard",
+    "width": "Half"
+   }
+  ],
+  "dashboard_name": "ITAG Engineering",
+  "docstatus": 0,
+  "doctype": "Dashboard",
+  "is_default": 0,
+  "is_standard": 0,
+  "modified": "2026-07-21 13:23:29.448326",
+  "module": "ITAG Engineering Management",
+  "name": "ITAG Engineering"
+ }
+]

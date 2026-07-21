@@ -101,11 +101,54 @@ fixtures = [
 		],
 	},
 	{
-		# Referenced by the ITAG Engineering Management workspace's "chart"
-		# content block - without this fixture, a fresh install's workspace
-		# would point at a Dashboard Chart record that doesn't exist yet.
+		# Referenced by the ITAG Engineering workspace's "chart" content block
+		# and by the "ITAG Engineering" Dashboard's charts table - without this
+		# fixture, a fresh install's workspace/dashboard would point at
+		# Dashboard Chart records that don't exist yet.
 		"doctype": "Dashboard Chart",
-		"filters": [["name", "in", ["Engineering Item Requests by Status"]]],
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"Engineering Item Requests by Status",
+					"New Engineering Item Requests",
+					"Engineering Drawings by Status",
+					"Product Revisions by Status",
+					"BOM Release Readiness",
+					"Engineering Releases by Status",
+					"Engineering Change Orders by Risk Level",
+					"Production Engineering Holds by Status",
+					"Material Dispositions by Status",
+				],
+			]
+		],
+	},
+	{
+		# Referenced by the "ITAG Engineering" Dashboard's cards table.
+		"doctype": "Number Card",
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"Open Engineering Item Requests",
+					"Active Production Holds",
+					"Open Engineering Change Orders",
+					"BOM Release Exceptions",
+					"Open Material Dispositions",
+					"WIP Units Currently Held",
+				],
+			]
+		],
+	},
+	{
+		# The standalone "ITAG Engineering" Dashboard record itself, reached
+		# from the workspace via the "Engineering Dashboard" URL shortcut
+		# (/app/dashboard-view/ITAG Engineering) - Workspace Link doesn't
+		# support link_type: "Dashboard", so the shortcut is the only route.
+		"doctype": "Dashboard",
+		"filters": [["name", "in", ["ITAG Engineering"]]],
 	},
 ]
 

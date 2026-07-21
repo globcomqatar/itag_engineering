@@ -5,7 +5,7 @@
    "label": "Engineering Item Requests by Status"
   }
  ],
- "content": "[{\"id\": \"hdr000\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">ITAG Engineering</span>\", \"col\": 12}}, {\"id\": \"chart000\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Engineering Item Requests by Status\", \"col\": 12}}, {\"id\": \"hdr001\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Quick Access</b></span>\", \"col\": 12}}, {\"id\": \"sc002\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Item Request\", \"col\": 3}}, {\"id\": \"sc003\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Drawing\", \"col\": 3}}, {\"id\": \"sc004\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Release\", \"col\": 3}}, {\"id\": \"sc005\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Change Request\", \"col\": 3}}, {\"id\": \"sc006\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Production Engineering Hold\", \"col\": 3}}, {\"id\": \"sc007\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Production Change Continuation\", \"col\": 3}}, {\"id\": \"sc008\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"WIP Unit Register\", \"col\": 3}}, {\"id\": \"sc009\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Audit Log\", \"col\": 3}}, {\"id\": \"sp010\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"hdr011\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\", \"col\": 12}}, {\"id\": \"card012\", \"type\": \"card\", \"data\": {\"card_name\": \"Item Engineering & Coding\", \"col\": 4}}, {\"id\": \"card013\", \"type\": \"card\", \"data\": {\"card_name\": \"Drawing, Specification & Revision\", \"col\": 4}}, {\"id\": \"card014\", \"type\": \"card\", \"data\": {\"card_name\": \"BOM, Routing & Inspection\", \"col\": 4}}, {\"id\": \"card015\", \"type\": \"card\", \"data\": {\"card_name\": \"Engineering Release\", \"col\": 4}}, {\"id\": \"card016\", \"type\": \"card\", \"data\": {\"card_name\": \"Change Control\", \"col\": 4}}, {\"id\": \"card017\", \"type\": \"card\", \"data\": {\"card_name\": \"Hold & Disposition\", \"col\": 4}}, {\"id\": \"card018\", \"type\": \"card\", \"data\": {\"card_name\": \"Production Continuation & Rework\", \"col\": 4}}, {\"id\": \"card019\", \"type\": \"card\", \"data\": {\"card_name\": \"WIP & Traceability\", \"col\": 4}}, {\"id\": \"card020\", \"type\": \"card\", \"data\": {\"card_name\": \"Security, Audit & Settings\", \"col\": 4}}]",
+ "content": "[{\"id\": \"hdr000\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">ITAG Engineering</span>\", \"col\": 12}}, {\"id\": \"chart000\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Engineering Item Requests by Status\", \"col\": 12}}, {\"id\": \"hdr001\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Quick Access</b></span>\", \"col\": 12}}, {\"id\": \"sc002\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Item Request\", \"col\": 3}}, {\"id\": \"sc003\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Drawing\", \"col\": 3}}, {\"id\": \"sc004\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Release\", \"col\": 3}}, {\"id\": \"sc005\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Change Request\", \"col\": 3}}, {\"id\": \"sc006\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Production Engineering Hold\", \"col\": 3}}, {\"id\": \"sc007\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Production Change Continuation\", \"col\": 3}}, {\"id\": \"sc008\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"WIP Unit Register\", \"col\": 3}}, {\"id\": \"scdash000\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Dashboard\", \"col\": 3}}, {\"id\": \"sc009\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Audit Log\", \"col\": 3}}, {\"id\": \"sp010\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"hdr011\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\", \"col\": 12}}, {\"id\": \"card012\", \"type\": \"card\", \"data\": {\"card_name\": \"Item Engineering & Coding\", \"col\": 4}}, {\"id\": \"card013\", \"type\": \"card\", \"data\": {\"card_name\": \"Drawing, Specification & Revision\", \"col\": 4}}, {\"id\": \"card014\", \"type\": \"card\", \"data\": {\"card_name\": \"BOM, Routing & Inspection\", \"col\": 4}}, {\"id\": \"card015\", \"type\": \"card\", \"data\": {\"card_name\": \"Engineering Release\", \"col\": 4}}, {\"id\": \"card016\", \"type\": \"card\", \"data\": {\"card_name\": \"Change Control\", \"col\": 4}}, {\"id\": \"card017\", \"type\": \"card\", \"data\": {\"card_name\": \"Hold & Disposition\", \"col\": 4}}, {\"id\": \"card018\", \"type\": \"card\", \"data\": {\"card_name\": \"Production Continuation & Rework\", \"col\": 4}}, {\"id\": \"card019\", \"type\": \"card\", \"data\": {\"card_name\": \"WIP & Traceability\", \"col\": 4}}, {\"id\": \"card020\", \"type\": \"card\", \"data\": {\"card_name\": \"Security, Audit & Settings\", \"col\": 4}}]",
  "creation": "2026-07-19 00:00:00",
  "custom_blocks": [],
  "docstatus": 0,
@@ -594,7 +594,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-07-21 12:07:11.739336",
+ "modified": "2026-07-21 13:25:04.640756",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "ITAG Engineering",
@@ -605,7 +605,7 @@
  "quick_lists": [],
  "restrict_to_domain": "",
  "roles": [],
- "sequence_id": 1.0,
+ "sequence_id": 2.0,
  "shortcuts": [
   {
    "color": "Grey",
@@ -662,6 +662,13 @@
    "label": "Engineering Audit Log",
    "link_to": "Engineering Audit Log",
    "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "label": "Engineering Dashboard",
+   "type": "URL",
+   "url": "/app/dashboard-view/ITAG Engineering"
   }
  ],
  "title": "ITAG Engineering"

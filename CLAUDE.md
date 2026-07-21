@@ -25,9 +25,10 @@ The repo lives at `https://github.com/globcomqatar/itag_engineering` (private), 
 place the version lives, nowhere else needs a manual bump):** MAJOR tracks the Frappe framework
 version this app targets (`15`); MINOR increments for a big change — a new feature, a new build
 going live, anything that changes what the app *does*; PATCH increments for a small
-change/fix that doesn't add new capability. Current: `15.1.0`, marking Builds ITAG-0.1.0 through
-ITAG-0.11.0 complete and independently verified against the real bench. Next big change (e.g.
-Build ITAG-1.0.0 actually going live) → `15.2.0`; a small fix in between → `15.1.1`, `15.1.2`, ...
+change/fix that doesn't add new capability. Current: `15.2.0`, marking Builds ITAG-0.1.0 through
+ITAG-0.11.0 complete and independently verified against the real bench, plus the standalone
+"ITAG Engineering" Dashboard (9 charts, 6 number cards) added on top. Next big change (e.g.
+Build ITAG-1.0.0 actually going live) → `15.3.0`; a small fix in between → `15.2.1`, `15.2.2`, ...
 **Every change to this app bumps the version as part of that same change — don't leave it for
 later.** Tag the release on GitHub to match (`git tag v15.1.0`, pushed alongside the commit).
 
