@@ -46,6 +46,60 @@ fixtures = [
 			]
 		],
 	},
+	{
+		# Every custom state name used by the 6 Workflows above needs a
+		# matching "Workflow State" master record (core Frappe DocType,
+		# module "Workflow", not owned by this app) or the Desk's list-view/
+		# kanban status indicator 404s trying to fetch it ("Workflow State
+		# <name> not found"). A native Select-typed workflow_state field (this
+		# app's own convention - see CLAUDE.md) does NOT auto-create these the
+		# way Frappe's own create_custom_field_for_workflow_state() does for
+		# an auto-generated Link field, so this app must ship them itself.
+		# Filtered to exactly the states this app introduces - the 5 global
+		# defaults (Draft, Approved, Rejected, Pending, Pending Approval)
+		# already exist and are not this app's fixture to own.
+		"doctype": "Workflow State",
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"Submitted for Review",
+					"Engineering Review",
+					"Duplicate Review",
+					"Returned for Correction",
+					"More Information Required",
+					"Under Review",
+					"Checked",
+					"Engineering Checked",
+					"Quality Review",
+					"Manufacturing Review",
+					"Cost Review",
+					"Customer Review",
+					"Customer Approval",
+					"Discipline Review",
+					"Production Review",
+					"Impact Analysis Required",
+					"Engineering Definition",
+					"Release Ready",
+					"Engineering Approved",
+					"Accepted for ECO",
+					"Item Created",
+					"Released",
+					"Released for Production",
+					"Released for Implementation",
+					"Implemented",
+					"Verified",
+					"Closed",
+					"Cancelled",
+					"Suspended",
+					"Withdrawn",
+					"Superseded",
+					"Obsolete",
+				],
+			]
+		],
+	},
 ]
 
 # Permission Query Conditions

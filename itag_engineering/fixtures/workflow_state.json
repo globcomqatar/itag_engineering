@@ -1,0 +1,290 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:22.723262",
+  "name": "Submitted for Review",
+  "style": "Warning",
+  "workflow_state_name": "Submitted for Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.106211",
+  "name": "Engineering Review",
+  "style": "Warning",
+  "workflow_state_name": "Engineering Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.111239",
+  "name": "Duplicate Review",
+  "style": "Warning",
+  "workflow_state_name": "Duplicate Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.118491",
+  "name": "Returned for Correction",
+  "style": "Warning",
+  "workflow_state_name": "Returned for Correction"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.123052",
+  "name": "More Information Required",
+  "style": "Warning",
+  "workflow_state_name": "More Information Required"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.126739",
+  "name": "Under Review",
+  "style": "Warning",
+  "workflow_state_name": "Under Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.131019",
+  "name": "Checked",
+  "style": "Warning",
+  "workflow_state_name": "Checked"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.136810",
+  "name": "Engineering Checked",
+  "style": "Warning",
+  "workflow_state_name": "Engineering Checked"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.140617",
+  "name": "Quality Review",
+  "style": "Warning",
+  "workflow_state_name": "Quality Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.144734",
+  "name": "Manufacturing Review",
+  "style": "Warning",
+  "workflow_state_name": "Manufacturing Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.149261",
+  "name": "Cost Review",
+  "style": "Warning",
+  "workflow_state_name": "Cost Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.154064",
+  "name": "Customer Review",
+  "style": "Warning",
+  "workflow_state_name": "Customer Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.157814",
+  "name": "Customer Approval",
+  "style": "Warning",
+  "workflow_state_name": "Customer Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.161673",
+  "name": "Discipline Review",
+  "style": "Warning",
+  "workflow_state_name": "Discipline Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.166712",
+  "name": "Production Review",
+  "style": "Warning",
+  "workflow_state_name": "Production Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.170985",
+  "name": "Impact Analysis Required",
+  "style": "Warning",
+  "workflow_state_name": "Impact Analysis Required"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.174799",
+  "name": "Engineering Definition",
+  "style": "Warning",
+  "workflow_state_name": "Engineering Definition"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.178409",
+  "name": "Release Ready",
+  "style": "Warning",
+  "workflow_state_name": "Release Ready"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.183011",
+  "name": "Engineering Approved",
+  "style": "Success",
+  "workflow_state_name": "Engineering Approved"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.188179",
+  "name": "Accepted for ECO",
+  "style": "Success",
+  "workflow_state_name": "Accepted for ECO"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.192014",
+  "name": "Item Created",
+  "style": "Success",
+  "workflow_state_name": "Item Created"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.196267",
+  "name": "Released",
+  "style": "Success",
+  "workflow_state_name": "Released"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.201830",
+  "name": "Released for Production",
+  "style": "Success",
+  "workflow_state_name": "Released for Production"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.206035",
+  "name": "Released for Implementation",
+  "style": "Success",
+  "workflow_state_name": "Released for Implementation"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.210140",
+  "name": "Implemented",
+  "style": "Success",
+  "workflow_state_name": "Implemented"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.215224",
+  "name": "Verified",
+  "style": "Success",
+  "workflow_state_name": "Verified"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.220703",
+  "name": "Closed",
+  "style": "Inverse",
+  "workflow_state_name": "Closed"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.225025",
+  "name": "Cancelled",
+  "style": "Danger",
+  "workflow_state_name": "Cancelled"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.230363",
+  "name": "Suspended",
+  "style": "Danger",
+  "workflow_state_name": "Suspended"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.235580",
+  "name": "Withdrawn",
+  "style": "Danger",
+  "workflow_state_name": "Withdrawn"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.239347",
+  "name": "Superseded",
+  "style": "Inverse",
+  "workflow_state_name": "Superseded"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-07-21 09:49:24.242773",
+  "name": "Obsolete",
+  "style": "Inverse",
+  "workflow_state_name": "Obsolete"
+ }
+]
