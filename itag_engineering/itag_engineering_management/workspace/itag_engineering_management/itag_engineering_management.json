@@ -1,6 +1,11 @@
 {
- "charts": [],
- "content": "[{\"id\": \"hdr000\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">ITAG Engineering Management</span>\", \"col\": 12}}, {\"id\": \"para000\", \"type\": \"paragraph\", \"data\": {\"text\": \"Engineering Management and Product Lifecycle control layer for ERPNext Manufacturing (valve manufacturing). Covers Builds ITAG-0.1.0 through ITAG-0.11.0 - Item Engineering, Drawing/Spec/Revision control, BOM/Routing/Inspection, Engineering Release, Change Control, Engineering Impact Analysis, Hold &amp; Disposition, Production Continuation &amp; Rework, and WIP &amp; Traceability.\", \"col\": 12}}, {\"id\": \"hdr001\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Quick Access</b></span>\", \"col\": 12}}, {\"id\": \"sc002\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Item Request\", \"col\": 3}}, {\"id\": \"sc003\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Drawing\", \"col\": 3}}, {\"id\": \"sc004\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Release\", \"col\": 3}}, {\"id\": \"sc005\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Change Request\", \"col\": 3}}, {\"id\": \"sc006\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Production Engineering Hold\", \"col\": 3}}, {\"id\": \"sc007\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Production Change Continuation\", \"col\": 3}}, {\"id\": \"sc008\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"WIP Unit Register\", \"col\": 3}}, {\"id\": \"sc009\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Audit Log\", \"col\": 3}}, {\"id\": \"sp010\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"hdr011\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\", \"col\": 12}}, {\"id\": \"card012\", \"type\": \"card\", \"data\": {\"card_name\": \"Item Engineering & Coding\", \"col\": 4}}, {\"id\": \"card013\", \"type\": \"card\", \"data\": {\"card_name\": \"Drawing, Specification & Revision\", \"col\": 4}}, {\"id\": \"card014\", \"type\": \"card\", \"data\": {\"card_name\": \"Engineering Release\", \"col\": 4}}, {\"id\": \"card015\", \"type\": \"card\", \"data\": {\"card_name\": \"Change Control\", \"col\": 4}}, {\"id\": \"card016\", \"type\": \"card\", \"data\": {\"card_name\": \"Hold & Disposition\", \"col\": 4}}, {\"id\": \"card017\", \"type\": \"card\", \"data\": {\"card_name\": \"Production Continuation & Rework\", \"col\": 4}}, {\"id\": \"card018\", \"type\": \"card\", \"data\": {\"card_name\": \"WIP & Traceability\", \"col\": 4}}, {\"id\": \"card019\", \"type\": \"card\", \"data\": {\"card_name\": \"Security, Audit & Settings\", \"col\": 4}}]",
+ "charts": [
+  {
+   "chart_name": "Engineering Item Requests by Status",
+   "label": "Engineering Item Requests by Status"
+  }
+ ],
+ "content": "[{\"id\": \"hdr000\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\">ITAG Engineering Management</span>\", \"col\": 12}}, {\"id\": \"chart000\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Engineering Item Requests by Status\", \"col\": 12}}, {\"id\": \"hdr001\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Quick Access</b></span>\", \"col\": 12}}, {\"id\": \"sc002\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Item Request\", \"col\": 3}}, {\"id\": \"sc003\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Drawing\", \"col\": 3}}, {\"id\": \"sc004\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Release\", \"col\": 3}}, {\"id\": \"sc005\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Change Request\", \"col\": 3}}, {\"id\": \"sc006\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Production Engineering Hold\", \"col\": 3}}, {\"id\": \"sc007\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Production Change Continuation\", \"col\": 3}}, {\"id\": \"sc008\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"WIP Unit Register\", \"col\": 3}}, {\"id\": \"sc009\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Engineering Audit Log\", \"col\": 3}}, {\"id\": \"sp010\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"hdr011\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\", \"col\": 12}}, {\"id\": \"card012\", \"type\": \"card\", \"data\": {\"card_name\": \"Item Engineering & Coding\", \"col\": 4}}, {\"id\": \"card013\", \"type\": \"card\", \"data\": {\"card_name\": \"Drawing, Specification & Revision\", \"col\": 4}}, {\"id\": \"card014\", \"type\": \"card\", \"data\": {\"card_name\": \"BOM, Routing & Inspection\", \"col\": 4}}, {\"id\": \"card015\", \"type\": \"card\", \"data\": {\"card_name\": \"Engineering Release\", \"col\": 4}}, {\"id\": \"card016\", \"type\": \"card\", \"data\": {\"card_name\": \"Change Control\", \"col\": 4}}, {\"id\": \"card017\", \"type\": \"card\", \"data\": {\"card_name\": \"Hold & Disposition\", \"col\": 4}}, {\"id\": \"card018\", \"type\": \"card\", \"data\": {\"card_name\": \"Production Continuation & Rework\", \"col\": 4}}, {\"id\": \"card019\", \"type\": \"card\", \"data\": {\"card_name\": \"WIP & Traceability\", \"col\": 4}}, {\"id\": \"card020\", \"type\": \"card\", \"data\": {\"card_name\": \"Security, Audit & Settings\", \"col\": 4}}]",
  "creation": "2026-07-19 00:00:00",
  "custom_blocks": [],
  "docstatus": 0,
@@ -16,7 +21,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Item Engineering & Coding",
-   "link_count": 3,
+   "link_count": 5,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -55,10 +60,32 @@
    "type": "Link"
   },
   {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Engineering Item Request Register",
+   "link_count": 0,
+   "link_to": "Engineering Item Request Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Item Engineering Baseline",
+   "link_count": 0,
+   "link_to": "Item Engineering Baseline",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
    "hidden": 0,
    "is_query_report": 0,
    "label": "Drawing, Specification & Revision",
-   "link_count": 4,
+   "link_count": 6,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -108,10 +135,118 @@
    "type": "Link"
   },
   {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Drawing Revision Register",
+   "link_count": 0,
+   "link_to": "Drawing Revision Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Product Revision History",
+   "link_count": 0,
+   "link_to": "Product Revision History",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "BOM, Routing & Inspection",
+   "link_count": 7,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "BOM Revision Comparison",
+   "link_count": 0,
+   "link_to": "BOM Revision Comparison",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "BOM Release Readiness Exceptions",
+   "link_count": 0,
+   "link_to": "BOM Release Readiness Exceptions",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Multi-Level BOM Engineering Baseline",
+   "link_count": 0,
+   "link_to": "Multi-Level BOM Engineering Baseline",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Routing Revision Register",
+   "link_count": 0,
+   "link_to": "Routing Revision Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Operation Hold Point Register",
+   "link_count": 0,
+   "link_to": "Operation Hold Point Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Inspection Plan Revision Register",
+   "link_count": 0,
+   "link_to": "Inspection Plan Revision Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Components Used in Obsolete or Superseded BOMs",
+   "link_count": 0,
+   "link_to": "Components Used in Obsolete or Superseded BOMs",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
    "hidden": 0,
    "is_query_report": 0,
    "label": "Engineering Release",
-   "link_count": 2,
+   "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -139,10 +274,32 @@
    "type": "Link"
   },
   {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Engineering Release Register",
+   "link_count": 0,
+   "link_to": "Engineering Release Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Effective Release by Item",
+   "link_count": 0,
+   "link_to": "Effective Release by Item",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
    "hidden": 0,
    "is_query_report": 0,
    "label": "Change Control",
-   "link_count": 3,
+   "link_count": 5,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -181,10 +338,32 @@
    "type": "Link"
   },
   {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "ECO Portfolio",
+   "link_count": 0,
+   "link_to": "ECO Portfolio",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "ECR Aging and Status",
+   "link_count": 0,
+   "link_to": "ECR Aging and Status",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
    "hidden": 0,
    "is_query_report": 0,
    "label": "Hold & Disposition",
-   "link_count": 4,
+   "link_count": 6,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -234,10 +413,32 @@
    "type": "Link"
   },
   {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Active Production Holds",
+   "link_count": 0,
+   "link_to": "Active Production Holds",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Material Disposition Status",
+   "link_count": 0,
+   "link_to": "Material Disposition Status",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
    "hidden": 0,
    "is_query_report": 0,
    "label": "Production Continuation & Rework",
-   "link_count": 2,
+   "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -265,10 +466,32 @@
    "type": "Link"
   },
   {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Production Continuation Register",
+   "link_count": 0,
+   "link_to": "Production Continuation Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Rework Instruction Status",
+   "link_count": 0,
+   "link_to": "Rework Instruction Status",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
    "hidden": 0,
    "is_query_report": 0,
    "label": "WIP & Traceability",
-   "link_count": 1,
+   "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -285,10 +508,43 @@
    "type": "Link"
   },
   {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "WIP Unit Status",
+   "link_count": 0,
+   "link_to": "WIP Unit Status",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Backward Traceability",
+   "link_count": 0,
+   "link_to": "Backward Traceability",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Forward Traceability",
+   "link_count": 0,
+   "link_to": "Forward Traceability",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
    "hidden": 0,
    "is_query_report": 0,
    "label": "Security, Audit & Settings",
-   "link_count": 2,
+   "link_count": 4,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -314,9 +570,31 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Data Quality Exception Register",
+   "link_count": 0,
+   "link_to": "Data Quality Exception Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Permission Exception Report",
+   "link_count": 0,
+   "link_to": "Permission Exception Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2026-07-21 09:56:53.541072",
+ "modified": "2026-07-21 11:29:19.971576",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "ITAG Engineering Management",

@@ -43,6 +43,25 @@ class TestEngineeringSettings(FrappeTestCase):
 		)
 		self.settings.reload()
 
+	def tearDown(self):
+		# Engineering Settings is a Single - restore it to a clean,
+		# unconfigured state so a real administrator never sees test data
+		# (a previous test-fixture leak left "_Test Company 7"/"Test
+		# Facility" visible in the live settings record after a full suite
+		# run, since Singles are not covered by the same per-class rollback
+		# regular doctype records get).
+		self.settings.db_set(
+			{
+				"default_company": "",
+				"default_engineering_facility": "",
+				"configuration_readiness_status": "Not Configured",
+				"last_validated_on": None,
+				"engineering_release_enforcement": 0,
+				"work_order_baseline_enforcement": 0,
+				"traceability_enabled": 0,
+			}
+		)
+
 	def test_compatibility_mode_can_be_set_and_recorded(self):
 		self.settings.compatibility_mode = "v15"
 		self.settings.save()

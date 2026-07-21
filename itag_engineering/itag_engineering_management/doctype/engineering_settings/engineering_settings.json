@@ -108,14 +108,14 @@
   },
   {
    "default": "0",
-   "description": "Build ITAG-0.5.0 feature. Cannot be enabled while Configuration Readiness Status is not Ready. Has no effect until Engineering Release is implemented.",
+   "description": "Cannot be enabled while Configuration Readiness Status is not Ready. Informational only: Engineering Release (Build ITAG-0.5.0) is fully implemented and its baseline requirement is already unconditionally enforced in code - this checkbox does not currently gate any additional behavior.",
    "fieldname": "engineering_release_enforcement",
    "fieldtype": "Check",
    "label": "Engineering Release Enforcement"
   },
   {
    "default": "0",
-   "description": "Build ITAG-0.5.0 feature. Cannot be enabled while Configuration Readiness Status is not Ready. Has no effect until Work Order baseline freeze is implemented.",
+   "description": "Cannot be enabled while Configuration Readiness Status is not Ready. Informational only: Work Order baseline freeze (Build ITAG-0.5.0) is fully implemented and already unconditionally enforced (a Work Order cannot submit without a resolved Engineering Release) - this checkbox does not currently gate any additional behavior.",
    "fieldname": "work_order_baseline_enforcement",
    "fieldtype": "Check",
    "label": "Work Order Baseline Enforcement"
@@ -126,7 +126,7 @@
   },
   {
    "default": "0",
-   "description": "Build ITAG-0.10.0 feature. Cannot be enabled while Configuration Readiness Status is not Ready. Has no effect until the traceability service is implemented.",
+   "description": "Cannot be enabled while Configuration Readiness Status is not Ready. Informational only: Traceability (Build ITAG-0.10.0) is fully implemented and already active - this checkbox does not currently gate any additional behavior.",
    "fieldname": "traceability_enabled",
    "fieldtype": "Check",
    "label": "Traceability Enabled"
@@ -198,12 +198,12 @@
    "label": "Feature Activation"
   },
   {
-   "default": "Foundation Only",
-   "description": "System-managed. Reflects which build tier's features are active on this instance. Extended by each later build's patch as its capabilities go live.",
+   "default": "Full (Builds ITAG-0.1.0 - 0.11.0)",
+   "description": "Read-only marker of which build tier is active on this instance. Set manually (via a data migration/console update, not through this form) by the development/operations team when a new build's capabilities go live - there is no automatic per-build update mechanism in this app.",
    "fieldname": "feature_activation_status",
    "fieldtype": "Select",
    "label": "Feature Activation Status",
-   "options": "Foundation Only",
+   "options": "Foundation Only\nFull (Builds ITAG-0.1.0 - 0.11.0)",
    "read_only": 1
   }
  ],

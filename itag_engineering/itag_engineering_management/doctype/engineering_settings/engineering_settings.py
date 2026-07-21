@@ -11,10 +11,11 @@ from frappe.utils import now_datetime
 ADMIN_ROLES = ("System Manager", "ITAG Engineering Administrator")
 
 # Production-blocking flags per roadmap Section 9.4: "Production-blocking features
-# shall remain disabled until configuration-readiness checks pass." None of the
-# underlying capabilities exist yet (Engineering Release ships in Build ITAG-0.5.0,
-# Traceability in Build ITAG-0.10.0) - these fields exist now only so later builds
-# don't need a schema change to introduce enforcement.
+# shall remain disabled until configuration-readiness checks pass." Engineering
+# Release (Build ITAG-0.5.0), Work Order baseline freeze (Build ITAG-0.5.0), and
+# Traceability (Build ITAG-0.10.0) are all now fully implemented and already
+# unconditionally enforced in code - these flags are currently informational only
+# (nothing outside this file reads them) rather than real gates on that behavior.
 PRODUCTION_BLOCKING_FLAGS = (
 	"engineering_release_enforcement",
 	"work_order_baseline_enforcement",

@@ -77,6 +77,24 @@ this is the mandatory, comprehensive part.** Only add it to Quick Access too if 
 a primary entry point for that phase's workflow (most new DocTypes should NOT go in Quick
 Access — it stays small by design).
 
+**Every new build/phase's REPORTS need a home in Reports & Masters too, not just its
+DocTypes** — this was a second real gap found after the first fix: an entire build's worth of
+reports (Build 0.4.0's 7 BOM/Routing/Inspection reports) had no card anywhere in the workspace,
+and every existing card only ever listed `link_type: "DocType"` rows, never `link_type:
+"Report"` rows, despite the section being named "Reports & Masters." A build that adds no new
+DocType of its own (like 0.4.0) still needs its own Card Break group, populated with Report
+links only. For a build that does add DocTypes, include at least one or two representative
+Report links (`"type": "Link", "link_to": <report name>, "link_type": "Report", "is_query_report": 1`)
+alongside the DocType links in the same card, matching standard ERPNext workspaces (e.g.
+Manufacturing mixes `link_type: "DocType"` and Report links in the same cards) — don't rely on
+DocType links alone to satisfy "this build is represented in the workspace."
+
+**A chart is optional but welcome** (matches the pattern of ERPNext's own workspaces, e.g.
+Selling's "Sales Order Trends") — a `Dashboard Chart` record (`chart_type: "Group By"`,
+`document_type`, `group_by_based_on` a Select/Link field on that doctype, `type: "Donut"`/`"Bar"`/etc.,
+`is_public: 1`) referenced by a `"chart"` content block (`{"type": "chart", "data": {"chart_name": ..., "col": 12}}`)
+placed right after the title header. Showing "No Data" until real records exist is expected and fine.
+
 **Do not let the two sections duplicate each other's full content** — this exact mistake
 happened once already while building this workspace: every DocType was placed in BOTH the
 shortcuts row AND the Reports & Masters cards, so each one rendered twice on the page. A
@@ -89,7 +107,7 @@ hand-edited JSON file:**
 
 1. Confirm `developer_mode: 1` is set in the site config (`sites/frappedevelopment.localhost/site_config.json`) — this workspace's `on_update()` hook only auto-exports to a file when it is.
 2. Load the real document — `frappe.get_doc("Workspace", "ITAG Engineering Management")` — via a `bench execute` script (a throwaway module under `itag_engineering/`, e.g. `_scratch_probe.py`; delete it after use, it is not meant to be committed).
-3. Append the `Link` row (`{"type": "Link", "label": <DocType>, "link_to": <DocType>, "link_type": "DocType", ...}`) to `doc.links`, either under an existing group's `Card Break` (bump its `link_count`) or under a new `Card Break` for a new build phase, plus the matching `"card"` block in `content` if it's a new group. Only also append a `shortcuts` row + `"shortcut"` content block if this DocType is a deliberate Quick Access addition (see above).
+3. Append the `Link` row (`{"type": "Link", "label": <DocType>, "link_to": <DocType>, "link_type": "DocType", ...}`) to `doc.links`, either under an existing group's `Card Break` (bump its `link_count`) or under a new `Card Break` for a new build phase, plus the matching `"card"` block in `content` if it's a new group. Only also append a `shortcuts` row + `"shortcut"` content block if this DocType is a deliberate Quick Access addition (see above). **Always use `doc.append("links"/"shortcuts"/"charts", {...})` for every child-table row — never assign a plain list of dicts directly (`doc.charts = [{...}]`)**, which crashes with `AttributeError: 'dict' object has no attribute 'is_new'` deep inside Frappe's `_set_defaults()` the moment you call `.save()`, since Frappe expects real BaseDocument-wrapped rows, not bare dicts.
 4. Call `doc.save()` — with `developer_mode` on and the workspace `public: 1`, this **automatically re-exports the JSON file** (Frappe prints `Wrote document file for Workspace ... at <path>` when it does). Confirm that message appears; if it doesn't, something is wrong with the `developer_mode`/`public` precondition, not the save itself.
 5. Never hand-edit `itag_engineering_management.json` directly — the same rule this app already applies to DocType JSON files applies here (they are Frappe-generated exports, not something to author by hand), and a hand edit will look subtly different from what Frappe itself produces (key ordering, escaping) the next time a real save happens, creating a noisy diff.
 6. Run `bench migrate` once afterward to confirm the change is stable and doesn't get reverted or duplicated on a normal migrate cycle.

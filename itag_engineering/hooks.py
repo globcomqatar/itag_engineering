@@ -100,6 +100,13 @@ fixtures = [
 			]
 		],
 	},
+	{
+		# Referenced by the ITAG Engineering Management workspace's "chart"
+		# content block - without this fixture, a fresh install's workspace
+		# would point at a Dashboard Chart record that doesn't exist yet.
+		"doctype": "Dashboard Chart",
+		"filters": [["name", "in", ["Engineering Item Requests by Status"]]],
+	},
 ]
 
 # Permission Query Conditions
