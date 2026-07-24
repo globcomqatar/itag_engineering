@@ -12,6 +12,7 @@
   "item_category",
   "product_family",
   "valve_type",
+  "item_description",
   "column_break_1",
   "nominal_size",
   "pressure_class",
@@ -78,6 +79,12 @@
    "fieldtype": "Link",
    "label": "Valve Type",
    "options": "Valve Type"
+  },
+  {
+   "description": "Copied to the created Item's own Description field once this EIR is approved and an Item is created.",
+   "fieldname": "item_description",
+   "fieldtype": "Small Text",
+   "label": "Item Description"
   },
   {
    "fieldname": "column_break_1",

@@ -41,6 +41,7 @@ class TestEirService(FrappeTestCase):
 				"valve_type": "BALL",
 				"nominal_size": "6IN",
 				"pressure_class": "CL300",
+				"item_description": "Cast steel gate valve, 6 inch, class 300, per EIRSVC test spec.",
 				"is_new_item_code": 1,
 				"item_code_rule": self.rule.name,
 			}
@@ -87,6 +88,14 @@ class TestEirService(FrappeTestCase):
 		self.assertEqual(self.eir.workflow_state, "Item Created")
 		self.assertEqual(
 			frappe.db.get_value("Item Code Reservation", {"item_code": item_code}, "status"), "Consumed"
+		)
+
+	def test_create_item_copies_item_description_to_item(self):
+		frappe.db.set_value("Engineering Item Request", self.eir.name, "workflow_state", "Approved")
+		item_code = create_item_from_eir(self.eir.name)
+		self.assertEqual(
+			frappe.db.get_value("Item", item_code, "description"),
+			"Cast steel gate valve, 6 inch, class 300, per EIRSVC test spec.",
 		)
 
 	def test_create_item_is_idempotent_on_retry(self):

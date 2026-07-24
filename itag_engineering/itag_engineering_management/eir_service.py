@@ -99,6 +99,7 @@ def create_item_from_eir(eir_name):
 		"item_group": "Products",
 		"stock_uom": "Nos",
 		"itag_engineering_status": "Approved",
+		"description": eir.item_description,
 	}
 	for itag_field, eir_field in ITEM_FIELD_MAP.items():
 		item_fields[itag_field] = eir.get(eir_field)

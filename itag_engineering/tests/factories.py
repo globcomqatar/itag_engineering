@@ -113,6 +113,7 @@ def create_test_eir(**overrides):
 		"valve_type": "BALL",
 		"nominal_size": "6IN",
 		"pressure_class": "CL300",
+		"item_description": "Factory test item description.",
 		"is_new_item_code": 1,
 		"item_code_rule": rule.name,
 	}
