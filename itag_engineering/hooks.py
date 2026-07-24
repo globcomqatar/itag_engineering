@@ -17,6 +17,8 @@ after_install = "itag_engineering.install.after_install"
 
 after_migrate = [
 	"itag_engineering.install.create_roles",
+	"itag_engineering.install.create_default_valve_types",
+	"itag_engineering.install.create_default_product_families",
 	"itag_engineering.setup.custom_fields.sync_custom_fields",
 ]
 

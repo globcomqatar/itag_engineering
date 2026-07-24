@@ -20,7 +20,7 @@ class TestEngineeringItemRequest(FrappeTestCase):
 				"doctype": "Engineering Item Request",
 				"request_title": "EIR Test New Gate Valve",
 				"item_category": "Manufactured",
-				"product_family": "GATE",
+				"product_family": "CS",
 				"valve_type": "BALL",
 				"is_new_item_code": 1,
 			}
@@ -68,7 +68,7 @@ class TestEngineeringItemRequest(FrappeTestCase):
 				"doctype": "Engineering Item Request",
 				"request_title": "EIR Test Guard Valve",
 				"item_category": "Manufactured",
-				"product_family": "GATE",
+				"product_family": "CS",
 				"valve_type": "BALL",
 				"is_new_item_code": 1,
 			}
@@ -100,7 +100,7 @@ class TestEngineeringItemRequest(FrappeTestCase):
 				"doctype": "Engineering Item Request",
 				"request_title": "EIR Test Already Created Valve",
 				"item_category": "Manufactured",
-				"product_family": "GATE",
+				"product_family": "CS",
 				"valve_type": "BALL",
 				"is_new_item_code": 1,
 			}

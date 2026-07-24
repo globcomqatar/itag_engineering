@@ -11,10 +11,10 @@ from itag_engineering.tests.factories import create_test_eir
 class TestUAT001NewManufacturedValveItem(FrappeTestCase):
 	def setUp(self):
 		frappe.db.delete("Engineering Item Request", {"request_title": "Factory Test Valve Request"})
-		frappe.db.delete("Item", {"item_code": ["like", "GATE-BALL-%"]})
+		frappe.db.delete("Item", {"item_code": ["like", "CS-BALL-%"]})
 
 	def tearDown(self):
-		frappe.db.delete("Item", {"item_code": ["like", "GATE-BALL-%"]})
+		frappe.db.delete("Item", {"item_code": ["like", "CS-BALL-%"]})
 		frappe.db.delete("Engineering Item Request", {"request_title": "Factory Test Valve Request"})
 
 	def test_uat_001_new_manufactured_valve_item(self):
@@ -22,7 +22,7 @@ class TestUAT001NewManufacturedValveItem(FrappeTestCase):
 		frappe.db.set_value("Engineering Item Request", eir.name, "workflow_state", "Approved")
 		item_code = create_item_from_eir(eir.name)
 		item = frappe.get_doc("Item", item_code)
-		self.assertEqual(item.itag_product_family, "GATE")
+		self.assertEqual(item.itag_product_family, "CS")
 		self.assertEqual(item.itag_valve_type, "BALL")
 
 
@@ -45,7 +45,7 @@ class TestUAT002DuplicateItemPrevention(FrappeTestCase):
 				"item_name": "Existing Gate Valve",
 				"item_group": "Products",
 				"stock_uom": "Nos",
-				"itag_product_family": "GATE",
+				"itag_product_family": "CS",
 				"itag_valve_type": "BALL",
 				"itag_nominal_size": "6IN",
 				"itag_pressure_class": "CL300",

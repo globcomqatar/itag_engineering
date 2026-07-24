@@ -20,7 +20,7 @@ class TestDuplicateService(FrappeTestCase):
 				"item_name": "Test Gate Valve",
 				"item_group": "Products",
 				"stock_uom": "Nos",
-				"itag_product_family": "GATE",
+				"itag_product_family": "CS",
 				"itag_valve_type": "BALL",
 				"itag_nominal_size": "6IN",
 				"itag_pressure_class": "CL300",
@@ -32,19 +32,19 @@ class TestDuplicateService(FrappeTestCase):
 
 	def test_finds_item_matching_all_fields(self):
 		results = find_possible_duplicates(
-			product_family="GATE", valve_type="BALL", nominal_size="6IN", pressure_class="CL300"
+			product_family="CS", valve_type="BALL", nominal_size="6IN", pressure_class="CL300"
 		)
 		self.assertEqual(len(results), 1)
 		self.assertEqual(results[0]["item_code"], "DUPTEST-001")
 		self.assertEqual(results[0]["match_score"], 4)
 
 	def test_partial_match_still_returned_with_lower_score(self):
-		results = find_possible_duplicates(product_family="GATE", pressure_class="CL150")
+		results = find_possible_duplicates(product_family="CS", pressure_class="CL150")
 		self.assertEqual(len(results), 1)
 		self.assertEqual(results[0]["match_score"], 1)
 
 	def test_no_match_returns_empty(self):
-		results = find_possible_duplicates(product_family="BUTTERFLY")
+		results = find_possible_duplicates(product_family="FS")
 		self.assertEqual(results, [])
 
 	def test_no_criteria_returns_empty(self):

@@ -69,13 +69,15 @@
   },
   {
    "fieldname": "product_family",
-   "fieldtype": "Data",
-   "label": "Product Family"
+   "fieldtype": "Link",
+   "label": "Product Family",
+   "options": "Product Family"
   },
   {
    "fieldname": "valve_type",
-   "fieldtype": "Data",
-   "label": "Valve Type"
+   "fieldtype": "Link",
+   "label": "Valve Type",
+   "options": "Valve Type"
   },
   {
    "fieldname": "column_break_1",

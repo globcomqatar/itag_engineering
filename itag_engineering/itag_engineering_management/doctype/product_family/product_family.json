@@ -1,0 +1,92 @@
+{
+ "actions": [],
+ "autoname": "field:product_family_code",
+ "creation": "2026-07-24 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "product_family_code",
+  "product_family_name",
+  "is_active",
+  "column_break_1",
+  "description"
+ ],
+ "fields": [
+  {
+   "description": "Short controlled code (e.g. CS, FS) - this is what Item Code Rule segments and generated Item Codes actually embed, so it must stay short and space-free.",
+   "fieldname": "product_family_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Code",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "product_family_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Product Family Name",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Active"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ITAG Engineering Management",
+ "name": "Product Family",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "ITAG Engineering Administrator",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Requestor"
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Engineering Creator"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "product_family_name"
+}

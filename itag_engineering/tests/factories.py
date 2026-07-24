@@ -109,7 +109,7 @@ def create_test_eir(**overrides):
 		"doctype": "Engineering Item Request",
 		"request_title": "Factory Test Valve Request",
 		"item_category": "Manufactured",
-		"product_family": "GATE",
+		"product_family": "CS",
 		"valve_type": "BALL",
 		"nominal_size": "6IN",
 		"pressure_class": "CL300",

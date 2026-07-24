@@ -21,13 +21,15 @@ def get_custom_fields():
 			{
 				"fieldname": "itag_product_family",
 				"label": "Product Family",
-				"fieldtype": "Data",
+				"fieldtype": "Link",
+				"options": "Product Family",
 				"insert_after": "itag_engineering_classification",
 			},
 			{
 				"fieldname": "itag_valve_type",
 				"label": "Valve Type",
-				"fieldtype": "Data",
+				"fieldtype": "Link",
+				"options": "Valve Type",
 				"insert_after": "itag_product_family",
 			},
 			{
