@@ -2,6 +2,24 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Engineering Release", {
+	onload(frm) {
+		// company is read_only:1 (Decision Log #2 single-company scope) and
+		// EngineeringRelease.apply_default_company() always forces it server-
+		// side at save - but on a brand-new unsaved form, Frappe's own core
+		// client boilerplate pre-fills any Link field named "company" from
+		// the CURRENT USER's session default Company (frappe.defaults),
+		// which is not necessarily this app's configured Default Company.
+		// Without this, a user could see the wrong company displayed in the
+		// read-only field right up until save, even though the saved value
+		// is always correct.
+		if (frm.is_new()) {
+			frappe.db.get_single_value("Engineering Settings", "default_company").then((value) => {
+				if (value) {
+					frm.set_value("company", value);
+				}
+			});
+		}
+	},
 	refresh(frm) {
 		// The workflow's own "Release for Production" transition only flips
 		// release_status - it does not run the real

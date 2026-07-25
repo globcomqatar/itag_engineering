@@ -27,6 +27,24 @@ class ChangeImpactAssessment(Document):
 	post-load) exactly as before this fix.
 	"""
 
+	def before_insert(self):
+		"""company is read_only:1 in the Desk (Decision Log #2 single-company
+		scope). Always overwritten, not just filled-if-blank: a brand-new
+		Desk form's read-only Company field can arrive here already
+		non-blank, pre-filled client-side by Frappe's own core boilerplate
+		from the current user's session default Company (not necessarily
+		this app's configured Default Company) - the same quirk
+		EngineeringRelease.apply_default_company() guards against. The
+		normal creation path (impact_analysis_service.enqueue_impact_analysis())
+		already resolves the correct value via _resolve_eco_company() before
+		this ever runs, and in this app's single-company scope that value is
+		always identical to Default Company anyway, so overwriting here is
+		never a real behavior change - only a guard against the manual-Desk-
+		creation edge case this doctype's permissions do allow."""
+		default_company = frappe.db.get_single_value("Engineering Settings", "default_company")
+		if default_company:
+			self.company = default_company
+
 	@property
 	def impact_results(self):
 		raw = self.__dict__.get("impact_results")

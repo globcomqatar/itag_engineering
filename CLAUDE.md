@@ -25,7 +25,7 @@ The repo lives at `https://github.com/globcomqatar/itag_engineering` (private), 
 place the version lives, nowhere else needs a manual bump):** MAJOR tracks the Frappe framework
 version this app targets (`15`); MINOR increments for a big change — a new feature, a new build
 going live, anything that changes what the app *does*; PATCH increments for a small
-change/fix that doesn't add new capability. Current: `15.5.1`, marking Builds ITAG-0.1.0 through
+change/fix that doesn't add new capability. Current: `15.5.2`, marking Builds ITAG-0.1.0 through
 ITAG-0.11.0 complete and independently verified against the real bench, the standalone
 "ITAG Engineering" Dashboard (9 charts, 6 number cards), the `Valve Type`/`Product Family`
 master DocTypes (converting Engineering Item Request's and Item's matching fields from free-text
@@ -44,8 +44,22 @@ resolve_effective_release(), so a customer- or project-scoped Engineering Releas
 Work Order's baseline-freeze check, and — `15.5.1` — Engineering Item Request's `uom` field
 (a selectable Link to the core UOM DocType, added next to Valve Type), copied to the created
 Item's own `stock_uom` on creation (falls back to "Nos" if left blank, same as before this field
-existed). Next big change (e.g. Build ITAG-1.0.0 actually going live) → `15.6.0`; a small fix in
-between → `15.5.2`, `15.5.3`, ...
+existed), and — `15.5.2` — Engineering Settings' `compatibility_mode` field hidden from the Desk
+(this app targets Frappe/ERPNext 15 only; the field still exists with its "v15" default so
+compatibility.py's get_compatibility_mode()/is_v15() are unaffected, it's just no longer shown as
+if it were a real choice), plus single-company enforcement (Decision Log #2) made real rather
+than just documented: Engineering Release's and Change Impact Assessment's `company` fields are
+now read_only and always forced to Engineering Settings' Default Company at creation
+(EngineeringRelease.apply_default_company(), ChangeImpactAssessment.before_insert()), and
+eco_service/impact_analysis_service's `_resolve_eco_company()` fallback now reads Default Company
+instead of an arbitrary/unordered `frappe.db.get_value("Company", {}, "name")` (this site has 11
+Company records with no guaranteed order). Engineering Approval Matrix's and Item Code Rule's own
+`company` fields were deliberately left untouched - both have a tested, documented "blank =
+matches/applies to any Company" wildcard semantic (approval_matrix_service.py's specificity
+matching, permission_service.py's row-visibility filter) that forcing a single value would break;
+user confirmed 2026-07-25 to preserve that forward-compatibility hook rather than force it too.
+Next big change (e.g. Build ITAG-1.0.0 actually going live) → `15.6.0`; a small fix in between →
+`15.5.3`, `15.5.4`, ...
 **Every change to this app bumps the version as part of that same change — don't leave it for
 later.** For a PATCH bump, commit locally only — do not push or tag. For a MINOR (or MAJOR) bump,
 commit on `main` locally, then create and push a `feature-<MAJOR>.<MINOR>.0` branch from that
