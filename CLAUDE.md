@@ -62,9 +62,13 @@ Next big change (e.g. Build ITAG-1.0.0 actually going live) → `15.6.0`; a smal
 `15.5.3`, `15.5.4`, ...
 **Every change to this app bumps the version as part of that same change — don't leave it for
 later.** For a PATCH bump, commit locally only — do not push or tag. For a MINOR (or MAJOR) bump,
-commit on `main` locally, then create and push a `feature-<MAJOR>.<MINOR>.0` branch from that
-commit — never push straight to `main` or push `main` itself for a minor bump (see the
-`itag_engineering` git push policy in this session's/agent's memory for the full rationale).
+commit on `main` locally, then sync that same commit to a single persistent `staging` branch on
+GitHub (`git push origin main:staging`, or fast-forward a local `staging` branch and push it) and
+confirm local `main`/`staging` and `origin/staging` all point at the same commit afterward — never
+push straight to `main` or push `main` itself for a minor bump. `origin/main` only ever advances
+via a human-reviewed PR merging `staging` in. (Changed 2026-07-25 from the earlier one-branch-per-
+version `feature-<MAJOR>.<MINOR>.0` scheme to this single rolling `staging` branch - see the
+`itag_engineering` git push policy in this session's/agent's memory for the full rationale.)
 
 **Always run tests with `--skip-test-records`** — this bench's ERPNext install has no
 `payments` app, so Frappe's default test-record dependency auto-resolution chains into a
