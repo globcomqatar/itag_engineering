@@ -24,8 +24,26 @@ POST_RELEASE_ALLOWED_FIELDS = {"release_status", "modified", "modified_by"}
 
 class EngineeringRelease(Document):
 	def validate(self):
+		self.apply_default_company()
 		self.guard_released_for_production_requires_checksum()
 		self.validate_immutable_once_released()
+
+	def apply_default_company(self):
+		"""Decision Log #2 single-company scope: company is read_only:1 in
+		the Desk (there is no dedicated create_engineering_release() service
+		function to default it from - this doctype is always created via a
+		direct frappe.get_doc() insert), so this is the one place a new
+		release actually gets stamped with Engineering Settings' Default
+		Company. Only applied to a NEW document - an existing release's
+		company is left untouched (frozen anyway once Released, per
+		validate_immutable_once_released() below; re-deriving it on every
+		later save would otherwise trip that same guard the instant Default
+		Company ever changed)."""
+		if not self.is_new():
+			return
+		default_company = frappe.db.get_single_value("Engineering Settings", "default_company")
+		if default_company:
+			self.company = default_company
 
 	def guard_released_for_production_requires_checksum(self):
 		"""Structural guard against Frappe's raw workflow engine

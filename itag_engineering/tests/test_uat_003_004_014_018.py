@@ -144,6 +144,135 @@ class TestUAT014CustomerSpecificRelease(FrappeTestCase):
 		)
 
 
+class TestWorkOrderBaselineCustomerAndProjectContext(FrappeTestCase):
+	"""Regression test for a real integration gap found while running Build
+	ITAG-0.5.0's full demo end-to-end through the Desk UI (2026-07-25):
+	freeze_baseline_before_submit() called resolve_effective_release() with
+	only production_item/company, so a customer- or project-scoped
+	Engineering Release could never satisfy a Work Order's baseline-freeze
+	requirement even when the Work Order's own sales_order/project genuinely
+	matched. Fixed in work_order_baseline.py by resolving customer via
+	sales_order.customer and passing doc.project through directly."""
+
+	def setUp(self):
+		frappe.db.delete("Engineering Release", {"item": ["like", "UATWOBC-%"]})
+		frappe.db.delete("Work Order", {"production_item": ["like", "UATWOBC-%"]})
+
+	def tearDown(self):
+		frappe.db.delete("Engineering Release", {"item": ["like", "UATWOBC-%"]})
+		frappe.db.delete("Work Order", {"production_item": ["like", "UATWOBC-%"]})
+
+	def test_customer_scoped_release_resolves_via_work_order_sales_order(self):
+		from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
+
+		from itag_engineering.tests.factories import create_test_bom_with_operations
+
+		item = create_fresh_stock_item("UATWOBC-CUST-ITEM").name
+		bom = create_test_bom_with_operations(item=item)
+		company = ensure_test_company()
+		customer = ensure_test_customer()
+		warehouse = frappe.db.get_value(
+			"Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name"
+		)
+
+		release = frappe.get_doc(
+			{
+				"doctype": "Engineering Release",
+				"company": company,
+				"item": bom.item,
+				"product_revision": bom.itag_product_revision,
+				"drawing_revision": bom.itag_drawing_revision,
+				"bom": bom.name,
+				"effective_datetime": now_datetime(),
+				"release_classification": "Customer-Specific",
+				"customer": customer,
+			}
+		).insert(ignore_permissions=True)
+		release.db_set({"release_status": "Released for Production", "release_checksum": "customer-ctx"})
+
+		# ERPNext's own Work Order.validate_sales_order() requires the
+		# linked Sales Order to be submitted (docstatus == 1) before it will
+		# even accept the link, regardless of what freeze_baseline_before_submit
+		# itself needs - so this Sales Order must be a real, submitted one.
+		sales_order = make_sales_order(
+			company=company,
+			customer=customer,
+			item=item,
+			warehouse=warehouse,
+			qty=1,
+			rate=100,
+		)
+
+		work_order = frappe.get_doc(
+			{
+				"doctype": "Work Order",
+				"production_item": item,
+				"bom_no": bom.name,
+				"qty": 1,
+				"company": company,
+				"wip_warehouse": warehouse,
+				"fg_warehouse": warehouse,
+				"sales_order": sales_order.name,
+			}
+		).insert(ignore_permissions=True)
+
+		# Without the fix, this raises: resolve_effective_release() would
+		# have been called with customer=None, and the only release for this
+		# item is customer-scoped, so it would never be found.
+		work_order.submit()
+		work_order.reload()
+
+		self.assertEqual(work_order.itag_engineering_release, release.name)
+
+	def test_project_scoped_release_resolves_via_work_order_project(self):
+		from itag_engineering.tests.factories import create_test_bom_with_operations
+
+		item = create_fresh_stock_item("UATWOBC-PROJ-ITEM").name
+		bom = create_test_bom_with_operations(item=item)
+		company = ensure_test_company()
+		warehouse = frappe.db.get_value(
+			"Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name"
+		)
+		project = frappe.get_doc({"doctype": "Project", "project_name": "UATWOBC Test Project"}).insert(
+			ignore_permissions=True
+		)
+
+		release = frappe.get_doc(
+			{
+				"doctype": "Engineering Release",
+				"company": company,
+				"item": bom.item,
+				"product_revision": bom.itag_product_revision,
+				"drawing_revision": bom.itag_drawing_revision,
+				"bom": bom.name,
+				"effective_datetime": now_datetime(),
+				"project": project.name,
+			}
+		).insert(ignore_permissions=True)
+		release.db_set({"release_status": "Released for Production", "release_checksum": "project-ctx"})
+
+		work_order = frappe.get_doc(
+			{
+				"doctype": "Work Order",
+				"production_item": item,
+				"bom_no": bom.name,
+				"qty": 1,
+				"company": company,
+				"wip_warehouse": warehouse,
+				"fg_warehouse": warehouse,
+				"project": project.name,
+			}
+		).insert(ignore_permissions=True)
+
+		# Without the fix, this raises: resolve_effective_release() would
+		# have been called with project=None, and the only release for this
+		# item is project-scoped, so it would never be found.
+		work_order.submit()
+		work_order.reload()
+
+		self.assertEqual(work_order.itag_engineering_release, release.name)
+
+
 class TestUAT018ReleasedDrawingImmutabilityRegression(FrappeTestCase):
 	"""UAT-018 (Build ITAG-0.3.0's own UAT): regression only, carried forward
 	per the roadmap's convention that later builds re-run earlier UATs they

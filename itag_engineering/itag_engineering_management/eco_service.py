@@ -202,11 +202,22 @@ def resolve_eco_approval_disciplines(eco_name):
 
 
 def _resolve_eco_company(eco):
+	"""Decision Log #2 single-company scope: Engineering Settings' Default
+	Company is the correct fallback, not an arbitrary/unordered Company
+	lookup - a real site can have many Company records (ERPNext demo data,
+	other apps' test fixtures) with no guaranteed ordering, so the old
+	frappe.db.get_value("Company", {}, "name") could return any of them,
+	not necessarily the one this app actually operates against. Only falls
+	further back to that arbitrary lookup if Default Company itself has
+	never been configured, to avoid ever returning None where the old code
+	guaranteed some value."""
 	if eco.current_release:
 		company = frappe.db.get_value("Engineering Release", eco.current_release, "company")
 		if company:
 			return company
-	return frappe.db.get_value("Company", {}, "name")
+	return frappe.db.get_single_value("Engineering Settings", "default_company") or frappe.db.get_value(
+		"Company", {}, "name"
+	)
 
 
 def add_controlled_change(eco_name, change_dict):

@@ -126,10 +126,12 @@
    "label": "Scope"
   },
   {
+   "description": "Per Decision Log #2: single company scope for v1. Always set from the source ECO's Engineering Release's own company (impact_analysis_service._resolve_eco_company()), which itself falls back to Engineering Settings' Default Company - see ChangeImpactAssessment.apply_default_company() for the one remaining gap (manual creation via the Desk, bypassing that service).",
    "fieldname": "company",
    "fieldtype": "Link",
    "label": "Company",
-   "options": "Company"
+   "options": "Company",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_scope",

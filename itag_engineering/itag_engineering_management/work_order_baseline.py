@@ -54,17 +54,28 @@ def freeze_baseline_before_submit(doc, method=None):
 	"""doc_events["Work Order"]["before_submit"]. Roadmap Section 13.8:
 	"Work Order submission is blocked when no valid release exists." Resolves
 	the effective Engineering Release for this Work Order's
-	production_item/company and freezes all 6 baseline Link fields from it
-	onto the Work Order before the submit itself completes.
+	production_item/company (plus customer/project context, see below) and
+	freezes all 6 baseline Link fields from it onto the Work Order before the
+	submit itself completes.
 
 	`production_item`/`company` are Work Order's own well-established
-	ERPNext fieldnames - this environment has no live bench to re-confirm
-	frappe.get_meta("Work Order") against, so this is carried over from
-	established ERPNext convention rather than a fresh live check; confirm
-	against a real bench before treating this as verified, per this build's
-	own plan.
+	ERPNext fieldnames - confirmed live against `tabWork Order` on a real
+	bench (2026-07-25).
+
+	resolve_effective_release()'s customer/project matching only widens
+	eligibility (a customer/project-scoped release is never picked for a
+	DIFFERENT or blank context; passing None here as before would just have
+	kept excluding those releases, never included a wrong one) - passing the
+	real context here was a genuine gap, not previously guarded against
+	elsewhere. Work Order has no `customer` field of its own (confirmed live
+	against `tabWork Order`); it is only reachable via `sales_order.customer`
+	when this Work Order actually originated from a Sales Order. `project`
+	is a direct Work Order field.
 	"""
-	release_name = resolve_effective_release(doc.production_item, doc.company)
+	customer = frappe.db.get_value("Sales Order", doc.sales_order, "customer") if doc.sales_order else None
+	release_name = resolve_effective_release(
+		doc.production_item, doc.company, customer=customer, project=doc.project
+	)
 	if not release_name:
 		frappe.throw(
 			_(

@@ -82,10 +82,12 @@
    "label": "Engineering Baseline"
   },
   {
+   "description": "Per Decision Log #2: single company/facility scope for v1. Always forced to Engineering Settings' Default Company on creation - see EngineeringRelease.apply_default_company().",
    "fieldname": "company",
    "fieldtype": "Link",
    "label": "Company",
    "options": "Company",
+   "read_only": 1,
    "reqd": 1
   },
   {

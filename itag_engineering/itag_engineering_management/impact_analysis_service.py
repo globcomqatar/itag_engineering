@@ -113,12 +113,17 @@ def _next_analysis_version(eco_name):
 
 def _resolve_eco_company(eco):
 	"""Same resolution rule as eco_service._resolve_eco_company() -
-	Engineering Change Order has no company field of its own."""
+	Engineering Change Order has no company field of its own. Falls back to
+	Engineering Settings' Default Company (Decision Log #2 single-company
+	scope), not an arbitrary/unordered Company lookup - see that function's
+	own docstring for why."""
 	if eco.current_release:
 		company = frappe.db.get_value("Engineering Release", eco.current_release, "company")
 		if company:
 			return company
-	return frappe.db.get_value("Company", {}, "name")
+	return frappe.db.get_single_value("Engineering Settings", "default_company") or frappe.db.get_value(
+		"Company", {}, "name"
+	)
 
 
 def resolve_affected_item_codes(eco):

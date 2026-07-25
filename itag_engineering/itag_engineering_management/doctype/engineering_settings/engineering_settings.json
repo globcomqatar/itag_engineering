@@ -50,6 +50,7 @@
    "description": "Per Decision Log #1: v15 only for this release. Dual v15/v16 compatibility is not implemented and must not be selected until a compatibility-service update adds it.",
    "fieldname": "compatibility_mode",
    "fieldtype": "Select",
+   "hidden": 1,
    "label": "Compatibility Mode",
    "options": "v15",
    "reqd": 1
