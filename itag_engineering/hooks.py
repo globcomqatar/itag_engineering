@@ -7,6 +7,14 @@ app_license = "mit"
 
 required_apps = ["erpnext"]
 
+# Client Scripts
+# --------------
+
+# BOM is a core ERPNext DocType, not this app's own - injecting JS here
+# (rather than a doctype/ folder + hand-edit) is the sanctioned way to add
+# a client-side button to it without ever touching core files.
+doctype_js = {"BOM": "public/js/bom.js"}
+
 # Installation
 # ------------
 
