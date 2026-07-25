@@ -163,6 +163,53 @@ def resolve_release_approval_matrix(release_name):
 	return result
 
 
+def approve_or_reject_release_step(release_name, step_idx, approve, comments=None):
+	"""Per-Approval-Step-row action. Build ITAG-0.5.0 never actually
+	implemented a dedicated function for this - the approval_steps table
+	field is read_only:1 (materialized display only), and its own test
+	suite approved steps by mutating the Document object directly, so
+	_validate_all_approval_steps_approved() could never actually be
+	satisfied by any real user action. Mirrors
+	eco_service.approve_or_reject_workflow_step() exactly, which documents
+	the identical gap for Engineering Change Order and fixed it the same
+	way; there is no other existing shape in this app to diverge from.
+
+	Checks the CURRENT user actually holds the step's required_role before
+	allowing an Approve/Reject (same UAT-017 "Unauthorized Approval" rule
+	release_service/eco_service already enforce elsewhere) and re-runs the
+	segregation-of-duties check across all approval_steps after recording
+	this approval, so a violation is caught immediately rather than only
+	at final release submission time.
+	"""
+	_check_release_action_permission()
+	release = frappe.get_doc("Engineering Release", release_name)
+	step_idx = int(step_idx)
+	matching = [row for row in release.approval_steps if row.idx == step_idx]
+	if not matching:
+		frappe.throw(_("No Approval Step row with idx {0}.").format(step_idx))
+	step = matching[0]
+
+	_check_approver_has_required_role(step)
+
+	step.status = "Approved" if approve else "Rejected"
+	step.approver = frappe.session.user
+	step.approved_on = now_datetime()
+	if comments:
+		step.comments = comments
+
+	validate_approval_steps_segregation_of_duties(release.approval_steps)
+	release.save()
+	return release.name
+
+
+def _check_approver_has_required_role(step):
+	if step.required_role and step.required_role not in frappe.get_roles():
+		frappe.throw(
+			_("You do not hold the required role ({0}) to approve this step.").format(step.required_role),
+			frappe.PermissionError,
+		)
+
+
 def submit_engineering_release(release_name):
 	"""The transactional release boundary, roadmap Section 13.6. Wrapped in
 	a frappe.db savepoint: any failure from the point the savepoint is taken
@@ -421,6 +468,12 @@ def resolve_release_approval_matrix_api(release_name):
 @frappe.whitelist()
 def submit_engineering_release_api(release_name):
 	return success(data=submit_engineering_release(release_name))
+
+
+@frappe.whitelist()
+def approve_or_reject_release_step_api(release_name, step_idx, approve, comments=None):
+	approve = frappe.parse_json(approve) if isinstance(approve, str) else approve
+	return success(data={"name": approve_or_reject_release_step(release_name, step_idx, approve, comments)})
 
 
 @frappe.whitelist()
