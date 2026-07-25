@@ -25,15 +25,22 @@ The repo lives at `https://github.com/globcomqatar/itag_engineering` (private), 
 place the version lives, nowhere else needs a manual bump):** MAJOR tracks the Frappe framework
 version this app targets (`15`); MINOR increments for a big change — a new feature, a new build
 going live, anything that changes what the app *does*; PATCH increments for a small
-change/fix that doesn't add new capability. Current: `15.3.1`, marking Builds ITAG-0.1.0 through
+change/fix that doesn't add new capability. Current: `15.4.0`, marking Builds ITAG-0.1.0 through
 ITAG-0.11.0 complete and independently verified against the real bench, the standalone
 "ITAG Engineering" Dashboard (9 charts, 6 number cards), the `Valve Type`/`Product Family`
 master DocTypes (converting Engineering Item Request's and Item's matching fields from free-text
-to Link), and Engineering Item Request's `item_description` field (copied to the created Item's
-`description` on approval) added on top. Next big change (e.g. Build ITAG-1.0.0 actually going
-live) → `15.4.0`; a small fix in between → `15.3.2`, `15.3.3`, ...
+to Link), Engineering Item Request's `item_description` field (copied to the created Item's
+`description` on approval), and — added in `15.4.0`, discovered while running a full click-driven
+EIR-through-WIP/Traceability demo against the real Desk UI — the Desk UI triggers that were
+missing for Engineering Release submission/approval-step/approval-matrix actions, ECO
+approval-discipline resolution, BOM release-readiness evaluation, Production Engineering Hold
+release, and the Backward/Forward Traceability reports' required filter. Next big change (e.g.
+Build ITAG-1.0.0 actually going live) → `15.5.0`; a small fix in between → `15.4.1`, `15.4.2`, ...
 **Every change to this app bumps the version as part of that same change — don't leave it for
-later.** Tag the release on GitHub to match (`git tag v15.1.0`, pushed alongside the commit).
+later.** For a PATCH bump, commit locally only — do not push or tag. For a MINOR (or MAJOR) bump,
+commit on `main` locally, then create and push a `feature-<MAJOR>.<MINOR>.0` branch from that
+commit — never push straight to `main` or push `main` itself for a minor bump (see the
+`itag_engineering` git push policy in this session's/agent's memory for the full rationale).
 
 **Always run tests with `--skip-test-records`** — this bench's ERPNext install has no
 `payments` app, so Frappe's default test-record dependency auto-resolution chains into a
