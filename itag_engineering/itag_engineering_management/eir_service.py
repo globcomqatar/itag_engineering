@@ -97,7 +97,7 @@ def create_item_from_eir(eir_name):
 		"item_code": item_code,
 		"item_name": eir.request_title,
 		"item_group": "Products",
-		"stock_uom": "Nos",
+		"stock_uom": eir.uom or "Nos",
 		"itag_engineering_status": "Approved",
 		"description": eir.item_description,
 	}

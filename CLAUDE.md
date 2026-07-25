@@ -25,7 +25,7 @@ The repo lives at `https://github.com/globcomqatar/itag_engineering` (private), 
 place the version lives, nowhere else needs a manual bump):** MAJOR tracks the Frappe framework
 version this app targets (`15`); MINOR increments for a big change — a new feature, a new build
 going live, anything that changes what the app *does*; PATCH increments for a small
-change/fix that doesn't add new capability. Current: `15.5.0`, marking Builds ITAG-0.1.0 through
+change/fix that doesn't add new capability. Current: `15.5.1`, marking Builds ITAG-0.1.0 through
 ITAG-0.11.0 complete and independently verified against the real bench, the standalone
 "ITAG Engineering" Dashboard (9 charts, 6 number cards), the `Valve Type`/`Product Family`
 master DocTypes (converting Engineering Item Request's and Item's matching fields from free-text
@@ -41,8 +41,11 @@ eco_service.approve_or_reject_workflow_step() already existed), and
 work_order_baseline.freeze_baseline_before_submit() now actually resolving and passing
 customer/project context (via sales_order.customer and doc.project) to
 resolve_effective_release(), so a customer- or project-scoped Engineering Release can satisfy a
-Work Order's baseline-freeze check. Next big change (e.g. Build ITAG-1.0.0 actually going live)
-→ `15.6.0`; a small fix in between → `15.5.1`, `15.5.2`, ...
+Work Order's baseline-freeze check, and — `15.5.1` — Engineering Item Request's `uom` field
+(a selectable Link to the core UOM DocType, added next to Valve Type), copied to the created
+Item's own `stock_uom` on creation (falls back to "Nos" if left blank, same as before this field
+existed). Next big change (e.g. Build ITAG-1.0.0 actually going live) → `15.6.0`; a small fix in
+between → `15.5.2`, `15.5.3`, ...
 **Every change to this app bumps the version as part of that same change — don't leave it for
 later.** For a PATCH bump, commit locally only — do not push or tag. For a MINOR (or MAJOR) bump,
 commit on `main` locally, then create and push a `feature-<MAJOR>.<MINOR>.0` branch from that

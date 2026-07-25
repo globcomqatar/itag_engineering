@@ -24,6 +24,33 @@ class TestUAT001NewManufacturedValveItem(FrappeTestCase):
 		item = frappe.get_doc("Item", item_code)
 		self.assertEqual(item.itag_product_family, "CS")
 		self.assertEqual(item.itag_valve_type, "BALL")
+		# No uom given on this factory EIR - falls back to "Nos", the
+		# pre-existing hardcoded default, unchanged for a request that
+		# doesn't specify one.
+		self.assertEqual(item.stock_uom, "Nos")
+
+
+class TestEIRUOMMapsToItemStockUOM(FrappeTestCase):
+	"""Regression test: Engineering Item Request's new `uom` field (a
+	selectable Link to the core UOM DocType, added next to Valve Type)
+	must be copied to the created Item's own stock_uom field -
+	create_item_from_eir() previously hardcoded "Nos" regardless of what
+	the request actually needed."""
+
+	def setUp(self):
+		frappe.db.delete("Engineering Item Request", {"request_title": "UATUOM Test Request"})
+		frappe.db.delete("Item", {"item_code": ["like", "CS-BALL-%"]})
+
+	def tearDown(self):
+		frappe.db.delete("Item", {"item_code": ["like", "CS-BALL-%"]})
+		frappe.db.delete("Engineering Item Request", {"request_title": "UATUOM Test Request"})
+
+	def test_eir_uom_is_copied_to_item_stock_uom(self):
+		eir = create_test_eir(request_title="UATUOM Test Request", uom="Kg")
+		frappe.db.set_value("Engineering Item Request", eir.name, "workflow_state", "Approved")
+		item_code = create_item_from_eir(eir.name)
+		item = frappe.get_doc("Item", item_code)
+		self.assertEqual(item.stock_uom, "Kg")
 
 
 class TestUAT002DuplicateItemPrevention(FrappeTestCase):

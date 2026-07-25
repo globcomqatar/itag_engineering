@@ -12,6 +12,7 @@
   "item_category",
   "product_family",
   "valve_type",
+  "uom",
   "item_description",
   "column_break_1",
   "nominal_size",
@@ -79,6 +80,13 @@
    "fieldtype": "Link",
    "label": "Valve Type",
    "options": "Valve Type"
+  },
+  {
+   "description": "Copied to the created Item's own Stock UOM field once this EIR is approved and an Item is created. Defaults to \"Nos\" if left blank.",
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "UOM",
+   "options": "UOM"
   },
   {
    "description": "Copied to the created Item's own Description field once this EIR is approved and an Item is created.",
