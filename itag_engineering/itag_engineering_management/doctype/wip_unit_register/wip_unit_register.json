@@ -104,7 +104,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "description": "Denormalized copy of the linked Batch/Serial's own itag_heat_number for quick display - kept in sync by wip_service.py, never hand-edited.",
    "fieldname": "heat_number",
    "fieldtype": "Data",
    "label": "Heat Number",
@@ -152,7 +151,6 @@
    "label": "Engineering Baseline"
   },
   {
-   "description": "Copied from original_work_order's Build ITAG-0.5.0-frozen baseline at creation.",
    "fieldname": "drawing_revision",
    "fieldtype": "Link",
    "label": "Drawing Revision",
@@ -197,7 +195,6 @@
   },
   {
    "default": "Not Inspected",
-   "description": "Kept LIVE by wip_service.refresh_wip_status() from the latest linked Quality Inspection - never hand-edited.",
    "fieldname": "quality_status",
    "fieldtype": "Select",
    "in_list_view": 1,
@@ -207,7 +204,6 @@
   },
   {
    "default": "Not Held",
-   "description": "Kept LIVE by wip_service.refresh_wip_status() querying hold_service.is_reference_held() - never a hand-maintained independent flag.",
    "fieldname": "hold_status",
    "fieldtype": "Select",
    "in_list_view": 1,
@@ -268,38 +264,26 @@
   {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "print": 1,
    "read": 1,
-   "role": "System Manager",
+   "report": 1,
+   "role": "Engineering User",
    "share": 1,
    "write": 1
   },
   {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
    "read": 1,
-   "role": "ITAG Engineering Administrator",
+   "report": 1,
+   "role": "Engineering Manager",
    "share": 1,
    "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Engineering Manager",
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Production Manager",
-   "write": 1
-  },
-  {
-   "read": 1,
-   "role": "Production Supervisor"
-  },
-  {
-   "read": 1,
-   "role": "Quality Manager"
   }
  ],
  "sort_field": "modified",

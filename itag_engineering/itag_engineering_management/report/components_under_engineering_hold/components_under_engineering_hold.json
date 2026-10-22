@@ -11,11 +11,8 @@
  "report_name": "Components Under Engineering Hold",
  "report_type": "Script Report",
  "roles": [
-  {"role": "System Manager"},
-  {"role": "ITAG Engineering Administrator"},
+  {"role": "Engineering User"},
   {"role": "Engineering Manager"},
-  {"role": "Production Manager"},
-  {"role": "Production Supervisor"},
-  {"role": "Quality Manager"}
+  {"role": "Engineering Master Manager"}
  ]
 }

@@ -35,16 +35,14 @@
    "fieldtype": "Data",
    "label": "Rule Name",
    "reqd": 1,
-   "unique": 1,
-   "description": "Stable id of this series. For a numbered series use the prefix itself, for example 530."
+   "unique": 1
   },
   {
    "fieldname": "series_name",
    "fieldtype": "Data",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Series Name",
-   "description": "Name shown when this series is picked, for example Tag Plate."
+   "label": "Series Name"
   },
   {
    "default": "1",
@@ -57,8 +55,7 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Series Prefix",
-   "description": "Starting code for this series. Tag Plate uses 530, so generated item codes are 530-00001, 530-00002, and so on. Each prefix has its own sequence."
+   "label": "Series Prefix"
   },
   {
    "default": "5",
@@ -66,8 +63,7 @@
    "fieldname": "sequence_digits",
    "fieldtype": "Int",
    "label": "Sequence Digits",
-   "non_negative": 1,
-   "description": "Digits after the hyphen. 5 produces 00001."
+   "non_negative": 1
   },
   {
    "fieldname": "column_break_1",
@@ -75,7 +71,6 @@
   },
   {
    "default": "1",
-   "description": "Higher priority rules are evaluated first when more than one rule matches the same Item.",
    "fieldname": "priority",
    "fieldtype": "Int",
    "label": "Priority"
@@ -86,7 +81,6 @@
    "label": "Scope"
   },
   {
-   "description": "Leave blank for a global rule (per Decision Log #2, single-company scope for v1 - this field exists for forward compatibility, not current use).",
    "fieldname": "company",
    "fieldtype": "Link",
    "label": "Company",
@@ -141,8 +135,7 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Code Pattern",
-   "read_only": 1,
-   "description": "Pattern for this series, for example 530-#####. The first real item code is 530-00001."
+   "read_only": 1
   },
   {
    "fieldname": "segments_section",
@@ -166,23 +159,33 @@
  "permissions": [
   {
    "create": 1,
-   "delete": 1,
+   "email": 1,
+   "print": 1,
    "read": 1,
-   "role": "System Manager",
+   "report": 1,
+   "role": "Engineering User",
    "share": 1,
    "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Engineering Manager"
   },
   {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
    "read": 1,
-   "role": "ITAG Engineering Administrator",
+   "report": 1,
+   "role": "Engineering Master Manager",
    "share": 1,
    "write": 1
-  },
-  {
-   "read": 1,
-   "role": "Engineering Manager"
   }
  ],
  "sort_field": "modified",

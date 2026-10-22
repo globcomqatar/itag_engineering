@@ -11,9 +11,8 @@
  "report_name": "Scrap by ECO and Revision",
  "report_type": "Script Report",
  "roles": [
-  {"role": "System Manager"},
-  {"role": "ITAG Engineering Administrator"},
+  {"role": "Engineering User"},
   {"role": "Engineering Manager"},
-  {"role": "Quality Manager"}
+  {"role": "Engineering Master Manager"}
  ]
 }

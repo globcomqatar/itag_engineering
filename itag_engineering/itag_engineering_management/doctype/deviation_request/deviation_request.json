@@ -60,7 +60,6 @@
    "options": "Material Disposition"
   },
   {
-   "description": "Decision Log #11: links to ERPNext's existing Quality Action module rather than duplicating an NCR workflow.",
    "fieldname": "quality_action",
    "fieldtype": "Link",
    "label": "Quality Action",
@@ -101,14 +100,12 @@
   },
   {
    "default": "0",
-   "description": "Discrete counter - incremented once per consuming Material Disposition Decision (see remaining_quantity for the actual quantity ledger).",
    "fieldname": "use_count",
    "fieldtype": "Int",
    "label": "Use Count",
    "read_only": 1
   },
   {
-   "description": "Set to quantity_limit on creation, decremented by deviation_concession_service.py as consumption is recorded - not computed from any child table on this doctype.",
    "fieldname": "remaining_quantity",
    "fieldtype": "Float",
    "label": "Remaining Quantity",
@@ -120,7 +117,6 @@
    "label": "Serial or Batch Scope"
   },
   {
-   "description": "Free text, not a Customer Link - scope may be \"any\" or a project code rather than a single definite Customer record.",
    "fieldname": "customer_or_project",
    "fieldtype": "Data",
    "label": "Customer or Project"
@@ -169,7 +165,6 @@
    "label": "Requires Inspection"
   },
   {
-   "description": "Decision Log #14: a recorded external customer-approval reference, not a blocking third-party login flow.",
    "fieldname": "customer_approval_reference",
    "fieldtype": "Data",
    "label": "Customer Approval Reference"
@@ -196,29 +191,25 @@
   {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "print": 1,
    "read": 1,
-   "role": "System Manager",
+   "report": 1,
+   "role": "Engineering User",
    "share": 1,
    "write": 1
   },
   {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
    "read": 1,
-   "role": "ITAG Engineering Administrator",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
+   "report": 1,
    "role": "Engineering Manager",
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Quality Manager",
+   "share": 1,
    "write": 1
   }
  ],

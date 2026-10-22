@@ -14,7 +14,7 @@ from itag_engineering.itag_engineering_management.approval_matrix_service import
 from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.response import success
 
-ECO_ACTION_ROLES = ("Engineering Manager", "ITAG Engineering Administrator")
+ECO_ACTION_ROLES = ("Engineering Manager",)
 
 # Interchangeability has no natural default at seed time (a fresh ECO
 # created straight from an ECR's own affected-object list has not been

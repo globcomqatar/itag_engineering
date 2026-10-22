@@ -38,7 +38,6 @@
    "reqd": 1
   },
   {
-   "description": "Human-readable revision label copied from the existing record at the time this row is added - revision fields differ by doctype, so there is no single generic \"revision\" fetch.",
    "fieldname": "existing_revision",
    "fieldtype": "Data",
    "label": "Existing Revision"
@@ -48,7 +47,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "description": "Data, not a Link/Dynamic Link - the proposed new record commonly does not exist yet at ECO-drafting time. Populated with the real record name once created by whatever downstream process actually creates it.",
    "fieldname": "proposed_record",
    "fieldtype": "Data",
    "in_list_view": 1,

@@ -25,7 +25,7 @@ from itag_engineering.itag_engineering_management.audit_service import log_audit
 from itag_engineering.itag_engineering_management.bom_readiness_service import evaluate_bom_readiness
 from itag_engineering.itag_engineering_management.response import success
 
-RELEASE_ROLES = ("Engineering Approver", "Engineering Manager", "ITAG Engineering Administrator")
+RELEASE_ROLES = ("Engineering Manager",)
 
 # release_status values that mean "already submitted" - submit_engineering_release()
 # is a safe no-op against any of these (roadmap Section 13.6 step 11's

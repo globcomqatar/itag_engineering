@@ -53,7 +53,6 @@
    "options": "Engineering Change Order"
   },
   {
-   "description": "The \"Rework\" Material Disposition Decision this instruction executes.",
    "fieldname": "disposition",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -130,7 +129,6 @@
    "options": "Batch"
   },
   {
-   "description": "No dedicated Heat Number doctype exists yet - same free-text convention as Build ITAG-0.8.0's Material Disposition.",
    "fieldname": "source_heat_number",
    "fieldtype": "Data",
    "label": "Source Heat Number"
@@ -185,7 +183,6 @@
    "options": "Rework Material"
   },
   {
-   "description": "Reused from Build ITAG-0.4.0 - not a new child doctype. Build ITAG-0.9.0 added Inspection Step's own \"completed\" field for this instruction's completion gating.",
    "fieldname": "inspection_steps",
    "fieldtype": "Table",
    "label": "Inspection Steps",
@@ -204,7 +201,6 @@
    "label": "Result"
   },
   {
-   "description": "Per Decision Log #4, only different from source_item when the rework crosses the new-Item-Code threshold; equal to source_item for a same-Item-Code revision-only rework.",
    "fieldname": "resulting_item",
    "fieldtype": "Link",
    "label": "Resulting Item",
@@ -237,34 +233,26 @@
   {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "print": 1,
    "read": 1,
-   "role": "System Manager",
+   "report": 1,
+   "role": "Engineering User",
    "share": 1,
    "write": 1
   },
   {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
    "read": 1,
-   "role": "ITAG Engineering Administrator",
+   "report": 1,
+   "role": "Engineering Manager",
    "share": 1,
    "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Engineering Manager",
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Production Manager",
-   "write": 1
-  },
-  {
-   "read": 1,
-   "role": "Production Supervisor"
   }
  ],
  "sort_field": "modified",

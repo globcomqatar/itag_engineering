@@ -11,10 +11,8 @@
  "report_name": "Open Work Orders Without Frozen Baseline",
  "report_type": "Script Report",
  "roles": [
-  {"role": "System Manager"},
-  {"role": "ITAG Engineering Administrator"},
+  {"role": "Engineering User"},
   {"role": "Engineering Manager"},
-  {"role": "Production Manager"},
-  {"role": "Production Supervisor"}
+  {"role": "Engineering Master Manager"}
  ]
 }

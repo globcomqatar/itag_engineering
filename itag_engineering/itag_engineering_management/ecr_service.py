@@ -13,28 +13,13 @@ from frappe import _
 from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.response import success
 
-# Roadmap Section 15.2: an ECR may originate from many departments, not just
-# Engineering - these are the closest existing roles to that originator
-# list. This app has no dedicated "Customer Service User"/"Supplier User"
-# role (Decision Log #4's 16-role list does not include either), so those
-# two originating_department options remain selectable on the form but have
-# no distinct submitting role of their own; Engineering Manager/ITAG
-# Engineering Administrator can submit on their behalf. Confirm this
-# against a live bench/Decision Log addition before assuming it is final.
+# Engineering User files the request. Engineering Manager reviews it.
 SUBMIT_ROLES = (
-	"Engineering Requestor",
-	"Production Planner",
-	"Production Supervisor",
-	"Quality Engineer",
-	"Sales User",
-	"Procurement User",
-	"Stores User",
-	"Workshop Technician",
+	"Engineering User",
 	"Engineering Manager",
-	"ITAG Engineering Administrator",
 )
 
-REVIEW_ROLES = ("Engineering Manager", "ITAG Engineering Administrator")
+REVIEW_ROLES = ("Engineering Manager",)
 
 
 def submit_ecr_for_review(ecr_name):

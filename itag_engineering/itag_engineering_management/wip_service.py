@@ -29,10 +29,8 @@ import frappe
 from frappe import _
 
 WIP_ACTION_ROLES = (
+	"Engineering User",
 	"Engineering Manager",
-	"ITAG Engineering Administrator",
-	"Production Manager",
-	"Production Supervisor",
 )
 
 QUALITY_INSPECTION_STATUS_MAP = {"Accepted": "Passed", "Rejected": "Failed"}

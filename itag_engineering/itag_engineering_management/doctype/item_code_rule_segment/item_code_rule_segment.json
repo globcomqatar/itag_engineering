@@ -28,7 +28,6 @@
   },
   {
    "depends_on": "eval:!([\"Fixed Prefix\", \"Sequence\", \"Custom Field\"].includes(doc.segment_type))",
-   "description": "Item field this segment reads from, e.g. itag_product_family",
    "fieldname": "source_fieldname",
    "fieldtype": "Data",
    "in_list_view": 1,

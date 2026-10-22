@@ -70,7 +70,6 @@
    "options": "Standard\nCustomer-Specific\nEmergency"
   },
   {
-   "description": "SHA-256 of item|product_revision|drawing_revision|bom|routing|inspection_plan, computed by submit_engineering_release() at the moment of release - not before.",
    "fieldname": "release_checksum",
    "fieldtype": "Data",
    "label": "Release Checksum",
@@ -82,7 +81,6 @@
    "label": "Engineering Baseline"
   },
   {
-   "description": "Per Decision Log #2: single company/facility scope for v1. Always forced to Engineering Settings' Default Company on creation - see EngineeringRelease.apply_default_company().",
    "fieldname": "company",
    "fieldtype": "Link",
    "label": "Company",
@@ -91,7 +89,6 @@
    "reqd": 1
   },
   {
-   "description": "Free-text only - no standalone Facility DocType exists (Decision Log #2, single-facility scope).",
    "fieldname": "facility",
    "fieldtype": "Data",
    "label": "Facility"
@@ -123,7 +120,6 @@
    "reqd": 1
   },
   {
-   "description": "The specific BOM record IS the revision (Build ITAG-0.4.0's itag_engineering_revision field on BOM) - there is no separate BOM Revision doctype.",
    "fieldname": "bom",
    "fieldtype": "Link",
    "label": "BOM",
@@ -131,7 +127,6 @@
    "reqd": 1
   },
   {
-   "description": "Optional - not every Item requires a distinct Routing.",
    "fieldname": "routing",
    "fieldtype": "Link",
    "label": "Routing",
@@ -215,7 +210,6 @@
    "label": "Approval"
   },
   {
-   "description": "Set by resolve_release_approval_matrix() - not editable directly.",
    "fieldname": "approval_matrix",
    "fieldtype": "Link",
    "label": "Approval Matrix",
@@ -239,7 +233,6 @@
    "read_only": 1
   },
   {
-   "description": "Materialized by resolve_release_approval_matrix(), one row per resolved discipline.",
    "fieldname": "approval_steps",
    "fieldtype": "Table",
    "label": "Approval Steps",
@@ -268,33 +261,25 @@
   {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "print": 1,
    "read": 1,
-   "role": "System Manager",
+   "report": 1,
+   "role": "Engineering User",
    "share": 1,
    "write": 1
   },
   {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
    "read": 1,
-   "role": "ITAG Engineering Administrator",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
+   "report": 1,
    "role": "Engineering Manager",
-   "write": 1
-  },
-  {
-   "read": 1,
-   "role": "Quality Manager",
-   "write": 1
-  },
-  {
-   "read": 1,
-   "role": "Engineering Approver",
+   "share": 1,
    "write": 1
   }
  ],

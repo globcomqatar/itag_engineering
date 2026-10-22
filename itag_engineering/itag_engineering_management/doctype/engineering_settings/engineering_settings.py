@@ -8,7 +8,7 @@ from frappe.utils import now_datetime
 
 # Roles allowed to change this Single DocType and to run Validate Configuration.
 # Kept in sync with this DocType's own "permissions" list in engineering_settings.json.
-ADMIN_ROLES = ("System Manager", "ITAG Engineering Administrator")
+ADMIN_ROLES = ("System Manager", "Engineering Manager", "Engineering Master Manager")
 
 # Production-blocking flags per roadmap Section 9.4: "Production-blocking features
 # shall remain disabled until configuration-readiness checks pass." Engineering

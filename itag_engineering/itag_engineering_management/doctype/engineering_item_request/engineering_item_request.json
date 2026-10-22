@@ -73,7 +73,6 @@
   },
   {
    "default": "General",
-   "description": "Copied onto the Item as Item Type when the Item is created.",
    "fieldname": "item_type",
    "fieldtype": "Select",
    "label": "Item Type",
@@ -86,21 +85,18 @@
    "options": "Product Family"
   },
   {
-   "description": "This selects the Item Code Rule. Tag Plate uses rule 530, so the pattern is 530-#####. Set that rule on the Valve Type.",
    "fieldname": "valve_type",
    "fieldtype": "Link",
    "label": "Valve Type",
    "options": "Valve Type"
   },
   {
-   "description": "Copied to the created Item's own Stock UOM field once this EIR is approved and an Item is created. Defaults to \"Nos\" if left blank.",
    "fieldname": "uom",
    "fieldtype": "Link",
    "label": "UOM",
    "options": "UOM"
   },
   {
-   "description": "Copied to the created Item's own Description field once this EIR is approved and an Item is created.",
    "fieldname": "item_description",
    "fieldtype": "Small Text",
    "label": "Item Description"
@@ -150,7 +146,6 @@
    "label": "New Code vs. Revision (Decision Log #4)"
   },
   {
-   "description": "Set only when this request is a revision of an existing Item, not a new Item Code.",
    "fieldname": "existing_item_reference",
    "fieldtype": "Link",
    "label": "Existing Item Reference",
@@ -187,7 +182,6 @@
    "label": "Item Code Rule"
   },
   {
-   "description": "Filled from the Valve Type. Create Item uses this rule's pattern and its own number sequence. You do not type the item code.",
    "fieldname": "item_code_rule",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -198,7 +192,6 @@
   {
    "fetch_from": "item_code_rule.preview_template",
    "fetch_if_empty": 0,
-   "description": "Pattern on the Item Code Rule. Create Item replaces ##### with the next number from that rule, for example 530-00003.",
    "fieldname": "code_pattern",
    "fieldtype": "Data",
    "label": "Code Pattern",
@@ -227,43 +220,26 @@
  "permissions": [
   {
    "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
    "read": 1,
-   "role": "System Manager",
+   "report": 1,
+   "role": "Engineering User",
    "share": 1,
    "write": 1
   },
   {
    "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
    "read": 1,
-   "role": "ITAG Engineering Administrator",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Engineering Requestor",
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Engineering Creator",
-   "write": 1
-  },
-  {
-   "read": 1,
-   "role": "Engineering Checker",
-   "write": 1
-  },
-  {
-   "read": 1,
-   "role": "Engineering Approver",
-   "write": 1
-  },
-  {
-   "read": 1,
+   "report": 1,
    "role": "Engineering Manager",
+   "share": 1,
    "write": 1
   }
  ],

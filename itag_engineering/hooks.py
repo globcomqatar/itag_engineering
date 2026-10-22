@@ -23,8 +23,16 @@ after_install = "itag_engineering.install.after_install"
 # Migration
 # ---------
 
+# DocType sync checks permission rows against Role. Create the three roles
+# before that sync, then drop the retired ones after the new rows are in.
+before_migrate = [
+	"itag_engineering.install.create_roles",
+]
+
 after_migrate = [
 	"itag_engineering.install.create_roles",
+	"itag_engineering.install.remove_retired_engineering_roles",
+	"itag_engineering.install.remove_engineering_workflows",
 	"itag_engineering.install.create_default_valve_types",
 	"itag_engineering.install.create_default_product_families",
 	"itag_engineering.install.create_default_code_series",
@@ -41,77 +49,6 @@ before_tests = "itag_engineering.install.before_tests"
 # --------
 
 fixtures = [
-	{
-		"doctype": "Workflow",
-		"filters": [
-			[
-				"name",
-				"in",
-				[
-					"Engineering Item Request Workflow",
-					"Engineering Drawing Workflow",
-					"Product Revision Workflow",
-					"Engineering Release Workflow",
-					"Engineering Change Request Workflow",
-					"Engineering Change Order Workflow",
-				],
-			]
-		],
-	},
-	{
-		# Every custom state name used by the 6 Workflows above needs a
-		# matching "Workflow State" master record (core Frappe DocType,
-		# module "Workflow", not owned by this app) or the Desk's list-view/
-		# kanban status indicator 404s trying to fetch it ("Workflow State
-		# <name> not found"). A native Select-typed workflow_state field (this
-		# app's own convention - see CLAUDE.md) does NOT auto-create these the
-		# way Frappe's own create_custom_field_for_workflow_state() does for
-		# an auto-generated Link field, so this app must ship them itself.
-		# Filtered to exactly the states this app introduces - the 5 global
-		# defaults (Draft, Approved, Rejected, Pending, Pending Approval)
-		# already exist and are not this app's fixture to own.
-		"doctype": "Workflow State",
-		"filters": [
-			[
-				"name",
-				"in",
-				[
-					"Submitted for Review",
-					"Engineering Review",
-					"Duplicate Review",
-					"Returned for Correction",
-					"More Information Required",
-					"Under Review",
-					"Checked",
-					"Engineering Checked",
-					"Quality Review",
-					"Manufacturing Review",
-					"Cost Review",
-					"Customer Review",
-					"Customer Approval",
-					"Discipline Review",
-					"Production Review",
-					"Impact Analysis Required",
-					"Engineering Definition",
-					"Release Ready",
-					"Engineering Approved",
-					"Accepted for ECO",
-					"Item Created",
-					"Released",
-					"Released for Production",
-					"Released for Implementation",
-					"Implemented",
-					"Verified",
-					"Closed",
-					"Cancelled",
-					"Suspended",
-					"Withdrawn",
-					"Superseded",
-					"Obsolete",
-				],
-			]
-		],
-	},
 	{
 		# Referenced by the ITAG Engineering workspace's "chart" content block
 		# and by the "ITAG Engineering" Dashboard's charts table - without this

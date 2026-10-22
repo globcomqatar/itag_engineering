@@ -3,8 +3,8 @@
 
 frappe.ui.form.on("Engineering Settings", {
 	refresh(frm) {
-		// The server method enforces its own role gate (System Manager /
-		// ITAG Engineering Administrator); this button is only a convenience.
+		// The server method enforces its own role gate (System Manager,
+		// Engineering Manager, Engineering Master Manager). This button is only a convenience.
 		frm.add_custom_button(__("Validate Configuration"), () => {
 			frm.call("validate_configuration").then((r) => {
 				if (!r.message) {

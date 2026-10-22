@@ -25,7 +25,6 @@
    "reqd": 1
   },
   {
-   "description": "The literal DocType name, not a Select-constrained Dynamic Link target list - this log spans nearly every doctype in the app and a hardcoded enum would need updating every build.",
    "fieldname": "reference_doctype",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -67,7 +66,6 @@
    "label": "Details"
   },
   {
-   "description": "Free-form event-specific payload.",
    "fieldname": "details",
    "fieldtype": "JSON",
    "label": "Details",
@@ -82,29 +80,27 @@
  "owner": "Administrator",
  "permissions": [
   {
-   "create": 1,
-   "delete": 1,
+   "email": 1,
+   "print": 1,
    "read": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
+   "report": 1,
+   "role": "Engineering User"
   },
   {
-   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
    "read": 1,
-   "role": "ITAG Engineering Administrator"
-  },
-  {
-   "read": 1,
-   "role": "Internal Auditor"
-  },
-  {
-   "read": 1,
+   "report": 1,
    "role": "Engineering Manager"
   },
   {
+   "email": 1,
+   "export": 1,
+   "print": 1,
    "read": 1,
-   "role": "Quality Manager"
+   "report": 1,
+   "role": "Engineering Master Manager"
   }
  ],
  "sort_field": "creation",
