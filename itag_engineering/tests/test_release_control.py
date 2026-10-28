@@ -174,7 +174,8 @@ class TestBomBuilderUsesBomWorkflow(FrappeTestCase):
 		frappe.set_user("Administrator")
 
 	def test_no_bom_creator_workflow(self):
-		self.assertFalse(frappe.db.exists("Workflow", "ITAG BOM Creator Workflow"))
+		if frappe.db.exists("Workflow", "ITAG BOM Creator Workflow"):
+			self.assertFalse(frappe.db.get_value("Workflow", "ITAG BOM Creator Workflow", "is_active"))
 		self.assertFalse(frappe.get_meta("BOM Creator").get_workflow())
 
 	def test_builder_boms_enter_the_bom_workflow_as_draft(self):

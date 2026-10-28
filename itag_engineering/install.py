@@ -224,12 +224,19 @@ def deactivate_retired_workflows():
 
 
 def remove_engineering_workflows():
-	"""Delete the six workflows this app used to ship. Status fields stay.
-	The two workflows added in 15.5.6 ("ITAG BOM Workflow" and
-	"ITAG Engineering Release Workflow") have different names and are kept."""
+	"""fix5 (Waheed's rule: delete nothing): the six workflows this app used to
+	ship are deactivated (is_active = 0), never deleted. Idempotent. Status
+	fields stay. The two 15.5.6 workflows ("ITAG BOM Workflow" and "ITAG
+	Engineering Release Workflow") have different names and are untouched.
+	Rollback: set is_active = 1 on the Workflow record."""
+	changed = False
 	for name in ENGINEERING_WORKFLOWS:
-		if frappe.db.exists("Workflow", name):
-			frappe.delete_doc("Workflow", name, force=1, ignore_permissions=True)
+		if frappe.db.get_value("Workflow", name, "is_active"):
+			frappe.db.set_value("Workflow", name, "is_active", 0)
+			frappe.clear_cache(doctype=frappe.db.get_value("Workflow", name, "document_type"))
+			changed = True
+	if changed:
+		frappe.cache.delete_value("workflow")
 
 
 def create_default_valve_types():
@@ -348,13 +355,14 @@ def grant_engineering_bom_permissions():
 
 
 def sync_report_roles():
-	"""Make each of this app's standard reports carry exactly the roles in its
-	JSON file. Report JSONs have no `modified` stamp, so a plain migrate does
+	"""Make each of this app's standard reports carry at least the roles in its
+	JSON file (fix5: missing roles are added; nothing is deleted). Report JSONs have no `modified` stamp, so a plain migrate does
 	not re-import changed roles; this keeps the site in step with the code
 	(15.5.6 restores System Manager on every report)."""
 	import json
 	import os
 
+	REPORT_ROLE_EXTRAS.clear()
 	report_dir = frappe.get_app_path("itag_engineering", "itag_engineering_management", "report")
 	for folder in sorted(os.listdir(report_dir)):
 		path = os.path.join(report_dir, folder, f"{folder}.json")
@@ -372,14 +380,29 @@ def sync_report_roles():
 		current = frappe.get_all(
 			"Has Role", filters={"parent": name, "parenttype": "Report"}, pluck="role", order_by="idx"
 		)
-		if sorted(current) == sorted(wanted):
-			continue
-		frappe.db.delete("Has Role", {"parent": name, "parenttype": "Report"})
-		report = frappe.get_doc("Report", name)
-		report.set("roles", [])
-		for role in wanted:
-			report.append("roles", {"role": role}).db_insert()
+		# fix5 (Waheed's rule: delete nothing): reconcile by adding only.
+		# A Has Role row has no enabled/disabled flag, so a role on the site
+		# but not in the JSON cannot be neutralised without deleting its row.
+		# Such extras are left in place and logged for a manual decision.
+		missing = [r for r in wanted if r not in current]
+		extras = [r for r in current if r not in wanted]
+		if missing:
+			report = frappe.get_doc("Report", name)
+			idx = len(current)
+			for role in missing:
+				idx += 1
+				report.append("roles", {"role": role, "idx": idx}).db_insert()
+		if extras:
+			REPORT_ROLE_EXTRAS[name] = extras
+			frappe.logger("itag_engineering").warning(
+				f"sync_report_roles: report {name!r} has roles not in its JSON, left in place: {extras}"
+			)
 	frappe.clear_cache()
+
+
+# Filled by sync_report_roles(): report -> roles on the site that are not in
+# the JSON. Kept (never deleted); see the log line for each.
+REPORT_ROLE_EXTRAS = {}
 
 
 # 15.5.6 fix2 (Ahmed, 28-Oct-2026), QA defects D1, D2 and D4. Read-only
