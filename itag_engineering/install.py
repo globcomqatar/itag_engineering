@@ -498,3 +498,43 @@ def revoke_blocked_permissions():
 				changed = True
 	if changed:
 		frappe.clear_cache()
+
+
+# fix6 (Waheed, 28-Oct-2026): Engineering Drawing is submittable. The JSON
+# carries the rights; if a site has Custom DocPerm rows on it (they replace the
+# JSON rows), the same rights are applied there. Rows are only updated.
+DRAWING_SUBMIT_RIGHTS = {
+	"Engineering User": {"submit": 0, "cancel": 0, "amend": 0},
+	"Engineering Manager": {"submit": 1, "cancel": 1, "amend": 1},
+	"Engineering Master Manager": {"submit": 1, "cancel": 1, "amend": 1},
+}
+
+
+def apply_drawing_submit_permissions():
+	"""Idempotent. Also makes an amended drawing take its normal name
+	({drawing_number}-{drawing_revision}) instead of an "-1" counter, so the
+	amended copy is the next revision. Rollback: remove the Engineering
+	Drawing row under Document Naming Settings > Amended Documents."""
+	changed = False
+	for row in frappe.get_all(
+		"Custom DocPerm", filters={"parent": "Engineering Drawing", "permlevel": 0},
+		fields=["name", "role", "submit", "cancel", "amend"],
+	):
+		want = DRAWING_SUBMIT_RIGHTS.get(row.role)
+		if want and any(row.get(k) != v for k, v in want.items()):
+			frappe.db.set_value("Custom DocPerm", row.name, want)
+			changed = True
+	if frappe.db.table_exists("Amended Document Naming Settings") and not frappe.db.exists(
+		"Amended Document Naming Settings", {"document_type": "Engineering Drawing"}
+	):
+		frappe.get_doc({
+			"doctype": "Amended Document Naming Settings",
+			"parent": "Document Naming Settings",
+			"parenttype": "Document Naming Settings",
+			"parentfield": "amend_naming_override",
+			"document_type": "Engineering Drawing",
+			"action": "Default Naming",
+		}).db_insert()
+		changed = True
+	if changed:
+		frappe.clear_cache()

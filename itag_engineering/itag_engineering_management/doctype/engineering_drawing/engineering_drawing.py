@@ -18,11 +18,20 @@ POST_RELEASE_ALLOWED_FIELDS = {
 	"superseded_date",
 	"modified",
 	"modified_by",
+	# fix6: submitting a drawing that was already Released (before drawings
+	# were submittable) only changes docstatus.
+	"docstatus",
 }
 
 
 class EngineeringDrawing(Document):
+	def before_naming(self):
+		# fix6: the amended copy is named after its next revision.
+		self.prepare_amended_revision()
+
 	def validate(self):
+		self.prepare_amended_revision()
+		self.release_on_submit()
 		self.sync_release_status_from_workflow_state()
 		self.sync_file_checksum()
 		self.validate_release_requires_checksum()
@@ -159,6 +168,33 @@ class EngineeringDrawing(Document):
 				)
 
 
+	def prepare_amended_revision(self):
+		"""fix6 (Waheed, 28-Oct-2026): a submitted drawing is locked. It is
+		changed by Cancel + Amend, and the amended copy is the next revision
+		(A -> B, 1 -> 2), starting again as Draft."""
+		if not (self.is_new() and self.amended_from):
+			return
+		source_rev = frappe.db.get_value("Engineering Drawing", self.amended_from, "drawing_revision")
+		if self.drawing_revision == source_rev:
+			self.drawing_revision = next_revision(source_rev)
+		self.release_status = self.workflow_state = "Draft"
+		self.superseded_date = None
+		self.effective_date = None
+		self.approved_by = None
+
+	def release_on_submit(self):
+		"""fix6: Submit is the release step (Engineering Manager or Engineering
+		Master Manager). The usual release guards (checksum) still apply."""
+		if getattr(self, "_action", None) == "submit" and self.release_status not in RELEASED_STATES:
+			self.release_status = self.workflow_state = "Released"
+
+	def on_cancel(self):
+		"""fix6: a cancelled drawing revision is marked Superseded (it stays
+		on record; nothing is deleted). Its amended copy is the next revision."""
+		if self.release_status not in ("Superseded", "Obsolete"):
+			self.db_set({"release_status": "Superseded", "workflow_state": "Superseded",
+				"superseded_date": frappe.utils.today()})
+
 	def log_status_audit_event(self):
 		"""fix3 (Ahmed, 28-Oct-2026): one Engineering Audit Log entry on every
 		status change. A change into Released keeps its own event type
@@ -189,3 +225,21 @@ class EngineeringDrawing(Document):
 			return
 		if before.file_checksum and self.approved_file != before.approved_file:
 			frappe.throw(_("The approved file cannot be replaced once a file checksum has been recorded."))
+
+
+def next_revision(rev):
+	"""A -> B, Z -> AA, 1 -> 2, 01 -> 02; anything else gets a numeric suffix."""
+	rev = (rev or "").strip()
+	if rev.isdigit():
+		return str(int(rev) + 1).zfill(len(rev))
+	if rev.isalpha() and rev.isupper():
+		chars = list(rev)
+		i = len(chars) - 1
+		while i >= 0:
+			if chars[i] != "Z":
+				chars[i] = chr(ord(chars[i]) + 1)
+				return "".join(chars)
+			chars[i] = "A"
+			i -= 1
+		return "A" + "".join(chars)
+	return f"{rev}.1" if rev else "A"

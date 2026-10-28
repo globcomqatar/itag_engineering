@@ -35,7 +35,8 @@
   "dates_section",
   "effective_date",
   "superseded_date",
-  "change_description"
+  "change_description",
+  "amended_from"
  ],
  "fields": [
   {
@@ -70,6 +71,7 @@
    "options": "Assembly\nDetail\nSchematic\nGeneral Arrangement"
   },
   {
+   "allow_on_submit": 1,
    "default": "Draft",
    "fieldname": "release_status",
    "fieldtype": "Select",
@@ -78,6 +80,7 @@
    "options": "Draft\nEngineering Review\nChecked\nApproved\nReleased\nSuperseded\nObsolete"
   },
   {
+   "allow_on_submit": 1,
    "default": "Draft",
    "fieldname": "workflow_state",
    "fieldtype": "Select",
@@ -205,6 +208,7 @@
    "label": "Effective Date"
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "superseded_date",
    "fieldtype": "Date",
    "label": "Superseded Date",
@@ -214,10 +218,21 @@
    "fieldname": "change_description",
    "fieldtype": "Small Text",
    "label": "Change Description"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Engineering Drawing",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   }
  ],
+ "is_submittable": 1,
  "links": [],
- "modified": "2026-10-28 14:45:00.000000",
+ "modified": "2026-10-28 15:50:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "Engineering Drawing",
@@ -235,6 +250,8 @@
    "write": 1
   },
   {
+   "amend": 1,
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
@@ -245,6 +262,22 @@
    "report": 1,
    "role": "Engineering Manager",
    "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Engineering Master Manager",
+   "share": 1,
+   "submit": 1,
    "write": 1
   }
  ],
