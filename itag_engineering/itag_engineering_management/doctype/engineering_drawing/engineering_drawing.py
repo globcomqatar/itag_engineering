@@ -28,8 +28,7 @@ class EngineeringDrawing(Document):
 		self.validate_release_requires_checksum()
 		self.validate_immutable_once_released()
 		self.validate_file_not_replaced_after_release()
-		self.validate_creator_cannot_release()
-		self.log_release_audit_event()
+		self.log_status_audit_event()
 
 	def sync_file_checksum(self):
 		"""Populate file_checksum automatically from approved_file's content
@@ -79,7 +78,18 @@ class EngineeringDrawing(Document):
 		a path this can or needs to close - the same is true elsewhere in this
 		app, e.g. the doc_status/submission fields on other doctypes.)
 		"""
-		self.release_status = self.workflow_state
+		# fix3 (Ahmed, 28-Oct-2026): drawings have no workflow. Users set
+		# release_status directly; workflow_state follows it. A save that only
+		# changes workflow_state (older scripts and tests) still works.
+		if self.workflow_state != self.release_status:
+			before = None if self.is_new() else self.get_doc_before_save()
+			before_ws = before.workflow_state if before else None
+			if self.workflow_state != before_ws and (
+				not before or self.release_status == before.release_status
+			):
+				self.release_status = self.workflow_state
+			else:
+				self.workflow_state = self.release_status
 
 	def validate_release_requires_checksum(self):
 		"""Structural guard against Frappe's raw workflow engine (
@@ -148,46 +158,27 @@ class EngineeringDrawing(Document):
 					)
 				)
 
-	def validate_creator_cannot_release(self):
-		"""Segregation of duties (roadmap Section 22.3(c)) - Build
-		ITAG-0.11.0's own security audit found this rule was never actually
-		implemented in Build ITAG-0.3.0, only assumed; a genuine gap, closed
-		here: the same user who created this Engineering Drawing may not
-		also be the one who releases it. Administrator is exempt - this
-		app's own required break-glass account (roadmap Section 22.2's
-		"Administrator exception controls" - Administrator must never be
-		accidentally locked out), and also the identity every test in this
-		app's suite creates AND drives documents through their full
-		workflow as, so blocking Administrator here would make this guard
-		untestable and would incorrectly reject the entire existing test
-		suite's own driving pattern, not just real self-release attempts."""
-		if self.is_new() or frappe.session.user == "Administrator":
-			return
-		before = self.get_doc_before_save()
-		if not before or before.release_status == "Released" or self.release_status != "Released":
-			return
-		if frappe.session.user == self.owner:
-			frappe.throw(
-				_(
-					"The creator of this Engineering Drawing ({0}) cannot also release it - a "
-					"different Engineering Manager must perform the release."
-				).format(self.owner)
-			)
 
-	def log_release_audit_event(self):
-		"""Roadmap Section 22.4 "Drawing Revision Release" - logged as the
-		LAST statement in validate(), after every other guard above has
-		already passed, so a save that is about to genuinely succeed is
-		what gets logged (never a save later guards would still reject).
-		Fires only on the transition INTO "Released" specifically, not on
-		every subsequent save of an already-released drawing."""
+	def log_status_audit_event(self):
+		"""fix3 (Ahmed, 28-Oct-2026): one Engineering Audit Log entry on every
+		status change. A change into Released keeps its own event type
+		(roadmap 22.4 "Drawing Revision Release"). Logged last in validate(),
+		after every guard has passed."""
 		if self.is_new():
 			return
 		before = self.get_doc_before_save()
-		if not before or before.release_status == "Released" or self.release_status != "Released":
+		if not before or before.release_status == self.release_status:
 			return
+		event = "Drawing Revision Release" if self.release_status == "Released" else "Drawing Status Change"
 		log_audit_event(
-			"Drawing Revision Release", "Engineering Drawing", self.name, {"revision": self.drawing_revision}
+			event,
+			"Engineering Drawing",
+			self.name,
+			{
+				"revision": self.drawing_revision,
+				"from_status": before.release_status,
+				"to_status": self.release_status,
+			},
 		)
 
 	def validate_file_not_replaced_after_release(self):

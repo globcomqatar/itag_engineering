@@ -147,50 +147,6 @@
  },
  {
   "doctype": "Workflow",
-  "name": "ITAG Engineering Drawing Workflow",
-  "docstatus": 0,
-  "modified": "2026-10-28 14:30:00.000000",
-  "workflow_name": "ITAG Engineering Drawing Workflow",
-  "document_type": "Engineering Drawing",
-  "is_active": 1,
-  "override_status": 0,
-  "send_email_alert": 0,
-  "workflow_state_field": "workflow_state",
-  "states": [
-   {
-    "doctype": "Workflow Document State",
-    "state": "Draft",
-    "doc_status": "0",
-    "allow_edit": "Engineering User",
-    "is_optional_state": 0,
-    "parentfield": "states",
-    "parenttype": "Workflow"
-   },
-   {
-    "doctype": "Workflow Document State",
-    "state": "Released",
-    "doc_status": "0",
-    "allow_edit": "Engineering Manager",
-    "is_optional_state": 0,
-    "parentfield": "states",
-    "parenttype": "Workflow"
-   }
-  ],
-  "transitions": [
-   {
-    "doctype": "Workflow Transition",
-    "state": "Draft",
-    "action": "Release",
-    "next_state": "Released",
-    "allowed": "Engineering Manager",
-    "allow_self_approval": 0,
-    "parentfield": "transitions",
-    "parenttype": "Workflow"
-   }
-  ]
- },
- {
-  "doctype": "Workflow",
   "name": "ITAG Engineering Change Request Workflow",
   "docstatus": 0,
   "modified": "2026-10-28 14:30:00.000000",

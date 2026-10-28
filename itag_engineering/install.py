@@ -201,6 +201,9 @@ ENGINEERING_WORKFLOWS = (
 	"Engineering Release Workflow",
 	"Engineering Change Request Workflow",
 	"Engineering Change Order Workflow",
+	# fix3 (Ahmed, 28-Oct-2026): drawings have no workflow. Removes the one a
+	# fix2 build may have created.
+	"ITAG Engineering Drawing Workflow",
 )
 
 
@@ -397,3 +400,19 @@ def grant_read_only_support_permissions():
 			if not (row and row.get(right)):
 				update_permission_property(doctype, role, 0, right, 1, validate=False)
 	frappe.clear_cache()
+
+
+# fix3 (Ahmed, 28-Oct-2026): Engineering User has no access to Delivery Note.
+# Removes any Custom DocPerm row for that role (standard ERPNext ships none).
+# Traceability reads Delivery Note data server-side, so it is not affected.
+NO_ACCESS_PERMISSIONS = (("Delivery Note", "Engineering User"),)
+
+
+def remove_blocked_permissions():
+	changed = False
+	for doctype, role in NO_ACCESS_PERMISSIONS:
+		for name in frappe.get_all("Custom DocPerm", filters={"parent": doctype, "role": role}, pluck="name"):
+			frappe.delete_doc("Custom DocPerm", name, ignore_permissions=True, force=True)
+			changed = True
+	if changed:
+		frappe.clear_cache()

@@ -1,7 +1,7 @@
 # Copyright (c) 2026, Globcom Qatar and contributors
 # For license information, please see license.txt
-"""15.5.6 fix2: QA defects D1-D6 on 76859f8 (Sami, 28-Oct-2026), design by
-Ahmed (CTO) 28-Oct-2026. Drawing Draft -> Released; ECR Draft -> Submitted
+"""15.5.6 fix2/fix3: QA defects D1-D6 on 76859f8 (Sami, 28-Oct-2026), design by
+Ahmed (CTO) 28-Oct-2026. Drawings: no workflow, status set directly; ECR Draft -> Submitted
 for Review -> Approved / Rejected; ECO Draft -> Approved -> Implemented ->
 Closed; read-only support permissions; audit log for ECR/ECO actions."""
 
@@ -52,7 +52,6 @@ class TestFix2Base(FrappeTestCase):
 class TestWorkflowFixtures(TestFix2Base):
 	def test_three_new_workflows_are_active_with_expected_shape(self):
 		shape = {
-			"ITAG Engineering Drawing Workflow": {("Draft", "Release", "Released", "Engineering Manager")},
 			"ITAG Engineering Change Request Workflow": {
 				("Draft", "Submit", "Submitted for Review", "Engineering User"),
 				("Draft", "Submit", "Submitted for Review", "Engineering Manager"),
@@ -77,12 +76,19 @@ class TestWorkflowFixtures(TestFix2Base):
 			for s in wf.states:
 				self.assertIn(s.allow_edit, allowed_roles)
 
+	def test_drawing_has_no_workflow(self):
+		self.assertFalse(frappe.db.exists("Workflow", "ITAG Engineering Drawing Workflow"))
+		self.assertFalse(frappe.db.get_value("Workflow", {"document_type": "Engineering Drawing"}))
+		self.assertFalse(frappe.get_meta("Engineering Drawing").get_field("release_status").read_only)
+
 	def test_no_new_roles(self):
 		for role in ("Engineering Approver", "Engineering Creator", "ITAG Engineering Administrator"):
 			self.assertFalse(frappe.db.exists("Role", role), role)
 
 
-class TestD3DrawingRelease(TestFix2Base):
+class TestD3DrawingStatus(TestFix2Base):
+	"""fix3: no workflow, no approval, no creator guard; audit on every change."""
+
 	def _drawing(self, owner_key="user"):
 		frappe.set_user(_user(owner_key))
 		doc = frappe.get_doc(
@@ -95,49 +101,40 @@ class TestD3DrawingRelease(TestFix2Base):
 				"file_checksum": "f2-test-checksum",
 			}
 		).insert()
-		frappe.set_user("Administrator")
 		return doc
 
-	def test_manager_releases_drawing_without_approval_step(self):
+	def test_creator_sets_released_directly_and_it_is_audited(self):
 		dwg = self._drawing()
-		frappe.set_user(_user("mgr"))
-		dwg = frappe.get_doc("Engineering Drawing", dwg.name)
-		apply_workflow(dwg, "Release")
+		dwg.release_status = "Released"
+		dwg.save()
 		dwg.reload()
-		self.assertEqual(dwg.workflow_state, "Released")
 		self.assertEqual(dwg.release_status, "Released")
+		self.assertEqual(dwg.workflow_state, "Released")
 		self.assertEqual(_audit_count("Engineering Drawing", dwg.name, "Drawing Revision Release"), 1)
+		dwg.release_status = "Superseded"
+		dwg.save()
+		self.assertEqual(_audit_count("Engineering Drawing", dwg.name, "Drawing Status Change"), 1)
+		self.assertEqual(_audit_count("Engineering Drawing", dwg.name), 2)
 
-	def test_engineering_user_cannot_release(self):
+	def test_unchanged_status_is_not_audited(self):
 		dwg = self._drawing()
-		frappe.set_user(_user("user2"))
-		dwg = frappe.get_doc("Engineering Drawing", dwg.name)
-		with self.assertRaises(frappe.ValidationError):
-			apply_workflow(dwg, "Release")
-
-	def test_creator_cannot_release_own_drawing_even_as_manager(self):
-		dwg = self._drawing(owner_key="mgr_user")
-		frappe.set_user(_user("mgr_user"))
-		dwg = frappe.get_doc("Engineering Drawing", dwg.name)
-		with self.assertRaises(frappe.ValidationError):
-			apply_workflow(dwg, "Release")
-		self.assertEqual(frappe.db.get_value("Engineering Drawing", dwg.name, "release_status"), "Draft")
-
-	def test_creator_cannot_release_by_direct_save(self):
-		dwg = self._drawing(owner_key="mgr_user")
-		frappe.set_user(_user("mgr_user"))
-		dwg = frappe.get_doc("Engineering Drawing", dwg.name)
-		dwg.workflow_state = "Released"
-		with self.assertRaises(frappe.ValidationError):
-			dwg.save()
+		dwg.drawing_title = "F2 renamed"
+		dwg.save()
+		self.assertEqual(_audit_count("Engineering Drawing", dwg.name), 0)
 
 	def test_release_still_requires_checksum(self):
 		dwg = self._drawing()
 		frappe.db.set_value("Engineering Drawing", dwg.name, "file_checksum", None)
-		frappe.set_user(_user("mgr"))
 		dwg = frappe.get_doc("Engineering Drawing", dwg.name)
+		dwg.release_status = "Released"
 		with self.assertRaises(frappe.ValidationError):
-			apply_workflow(dwg, "Release")
+			dwg.save()
+
+	def test_released_drawing_unblocks_product_revision_check(self):
+		dwg = self._drawing()
+		dwg.release_status = "Released"
+		dwg.save()
+		self.assertEqual(frappe.db.get_value("Engineering Drawing", dwg.name, "release_status"), "Released")
 
 
 class TestD5D6EcrEco(TestFix2Base):
@@ -308,3 +305,20 @@ class TestD1D2D4Permissions(TestFix2Base):
 			)
 			self.assertEqual(row.read, 1)
 			self.assertFalse(any(row[k] for k in ("write", "create", "delete", "submit", "cancel", "amend")))
+
+
+class TestFix3DeliveryNote(TestFix2Base):
+	def test_engineering_user_has_no_delivery_note_access(self):
+		from frappe.permissions import add_permission, update_permission_property
+
+		from itag_engineering.install import remove_blocked_permissions
+
+		add_permission("Delivery Note", "Engineering User", 0)
+		update_permission_property("Delivery Note", "Engineering User", 0, "report", 1, validate=False)
+		remove_blocked_permissions()
+		self.assertFalse(
+			frappe.db.exists("Custom DocPerm", {"parent": "Delivery Note", "role": "Engineering User"})
+		)
+		frappe.set_user(_user("user"))
+		for ptype in ("read", "report", "select", "write", "create"):
+			self.assertFalse(frappe.has_permission("Delivery Note", ptype), ptype)

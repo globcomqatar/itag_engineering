@@ -41,6 +41,7 @@ after_migrate = [
 	"itag_engineering.install.grant_engineering_bom_permissions",
 	"itag_engineering.install.sync_report_roles",
 	"itag_engineering.install.grant_read_only_support_permissions",
+	"itag_engineering.install.remove_blocked_permissions",
 ]
 
 # Testing
@@ -66,8 +67,8 @@ fixtures = [
 				[
 					"ITAG BOM Workflow",
 					"ITAG Engineering Release Workflow",
-					# 15.5.6 fix2 (Ahmed, 28-Oct-2026): drawing release, ECR and ECO lifecycles.
-					"ITAG Engineering Drawing Workflow",
+					# 15.5.6 fix2 (Ahmed, 28-Oct-2026): ECR and ECO lifecycles. Drawings
+					# have no workflow; users set the status directly.
 					"ITAG Engineering Change Request Workflow",
 					"ITAG Engineering Change Order Workflow",
 				],

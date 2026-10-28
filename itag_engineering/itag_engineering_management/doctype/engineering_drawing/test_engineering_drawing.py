@@ -128,7 +128,7 @@ class TestEngineeringDrawing(FrappeTestCase):
 		# review also uncovered and fixed alongside the sync bug).
 		self.assertIn("Drawing Title", str(ctx.exception))
 
-	@unittest.skip("Outside Ahmed's 28-Oct-2026 design (15.5.6 fix2): the drawing workflow is Draft -> Released only, with no Supersede or Obsolete action. Kept for an Ahmed decision; see /workspace/itag-gaps/design-notes-v1.md.")
+	@unittest.skip("Follow-up by Ahmed's ruling (28-Oct-2026): drawing Supersede and Obsolete are a follow-up. See follow-ups.md.")
 	def test_released_drawing_can_transition_to_superseded(self):
 		drawing = self._new_drawing()
 		for next_state in ():
@@ -145,7 +145,7 @@ class TestEngineeringDrawing(FrappeTestCase):
 		self.assertEqual(drawing.workflow_state, "Superseded")
 		self.assertEqual(drawing.release_status, "Superseded")
 
-	@unittest.skip("Outside Ahmed's 28-Oct-2026 design (15.5.6 fix2): the drawing workflow is Draft -> Released only, with no Supersede or Obsolete action. Kept for an Ahmed decision; see /workspace/itag-gaps/design-notes-v1.md.")
+	@unittest.skip("Follow-up by Ahmed's ruling (28-Oct-2026): drawing Supersede and Obsolete are a follow-up. See follow-ups.md.")
 	def test_released_drawing_with_dates_can_transition_to_superseded(self):
 		"""Regression test for the review finding that the same str-vs-native-type
 		bug fixed for `creation` also independently affects `revision_date` and
