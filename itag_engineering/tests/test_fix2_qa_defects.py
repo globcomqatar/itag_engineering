@@ -76,10 +76,56 @@ class TestWorkflowFixtures(TestFix2Base):
 			for s in wf.states:
 				self.assertIn(s.allow_edit, allowed_roles)
 
-	def test_drawing_has_no_workflow(self):
-		self.assertFalse(frappe.db.exists("Workflow", "ITAG Engineering Drawing Workflow"))
-		self.assertFalse(frappe.db.get_value("Workflow", {"document_type": "Engineering Drawing"}))
+	def test_drawing_has_no_active_workflow(self):
+		self.assertFalse(
+			frappe.db.get_value("Workflow", {"document_type": "Engineering Drawing", "is_active": 1})
+		)
 		self.assertFalse(frappe.get_meta("Engineering Drawing").get_field("release_status").read_only)
+
+	def test_drawing_workflow_is_deactivated_not_deleted(self):
+		from frappe.model.workflow import get_workflow_name
+
+		from itag_engineering.install import deactivate_retired_workflows
+
+		name = "ITAG Engineering Drawing Workflow"
+		if not frappe.db.exists("Workflow", name):
+			frappe.get_doc(
+				{
+					"doctype": "Workflow",
+					"workflow_name": name,
+					"document_type": "Engineering Drawing",
+					"workflow_state_field": "workflow_state",
+					"is_active": 0,
+					"states": [
+						{"state": "Draft", "doc_status": "0", "allow_edit": "Engineering User"},
+						{"state": "Released", "doc_status": "0", "allow_edit": "Engineering Manager"},
+					],
+					"transitions": [
+						{"state": "Draft", "action": "Release", "next_state": "Released", "allowed": "Engineering Manager"}
+					],
+				}
+			).insert(ignore_permissions=True)
+		frappe.db.set_value("Workflow", name, "is_active", 1)
+		deactivate_retired_workflows()
+		deactivate_retired_workflows()  # idempotent
+		self.assertTrue(frappe.db.exists("Workflow", name))
+		self.assertEqual(frappe.db.get_value("Workflow", name, "is_active"), 0)
+		self.assertIsNone(get_workflow_name("Engineering Drawing"))
+		# The inactive workflow doesn't drive state: a user sets Released directly.
+		frappe.set_user(_user("user"))
+		dwg = frappe.get_doc(
+			{
+				"doctype": "Engineering Drawing",
+				"drawing_number": "F4-TEST-DWG-" + frappe.generate_hash(length=6),
+				"drawing_revision": "A",
+				"drawing_title": "F4 test drawing",
+				"drawing_type": "Assembly",
+				"file_checksum": "f4-test-checksum",
+			}
+		).insert()
+		dwg.release_status = "Released"
+		dwg.save()
+		self.assertEqual(frappe.db.get_value("Engineering Drawing", dwg.name, "workflow_state"), "Released")
 
 	def test_no_new_roles(self):
 		for role in ("Engineering Approver", "Engineering Creator", "ITAG Engineering Administrator"):
@@ -249,6 +295,36 @@ class TestD5D6EcrEco(TestFix2Base):
 		self.assertEqual(eco.workflow_state, "Closed")
 		self.assertEqual(_audit_count("Engineering Change Order", eco.name, "ECO Transition"), 3)
 
+	def _eco_at(self, state):
+		eco = self._eco_with_steps()
+		frappe.set_user(_user("mgr2"))
+		eco_service.approve_or_reject_workflow_step(eco.name, 1, True)
+		frappe.set_user("Administrator")
+		self._act("mgr2", "Engineering Change Order", eco.name, "Approve")
+		if state == "Implemented":
+			self._act("mgr2", "Engineering Change Order", eco.name, "Mark Implemented")
+		return eco
+
+	def test_eco_creator_cannot_implement(self):
+		eco = self._eco_at("Approved")  # mgr created it
+		with self.assertRaises((frappe.PermissionError, frappe.ValidationError)):
+			self._act("mgr", "Engineering Change Order", eco.name, "Mark Implemented")
+		self._direct_save_raises("mgr", "Engineering Change Order", eco.name, "Implemented")
+
+	def test_eco_creator_cannot_close(self):
+		eco = self._eco_at("Implemented")
+		with self.assertRaises((frappe.PermissionError, frappe.ValidationError)):
+			self._act("mgr", "Engineering Change Order", eco.name, "Close")
+		self._direct_save_raises("mgr", "Engineering Change Order", eco.name, "Closed")
+
+	def test_administrator_creator_gets_no_exemption(self):
+		eco = self._eco_at("Approved")
+		frappe.db.set_value("Engineering Change Order", eco.name, "owner", "Administrator")
+		eco = frappe.get_doc("Engineering Change Order", eco.name)
+		eco.workflow_state = "Implemented"
+		with self.assertRaises(frappe.PermissionError):
+			eco.save()
+
 	def test_eco_cannot_be_approved_with_pending_steps(self):
 		eco = self._eco_with_steps()
 		with self.assertRaises(frappe.ValidationError):
@@ -311,14 +387,18 @@ class TestFix3DeliveryNote(TestFix2Base):
 	def test_engineering_user_has_no_delivery_note_access(self):
 		from frappe.permissions import add_permission, update_permission_property
 
-		from itag_engineering.install import remove_blocked_permissions
+		from itag_engineering.install import PERMISSION_RIGHTS, revoke_blocked_permissions
 
 		add_permission("Delivery Note", "Engineering User", 0)
 		update_permission_property("Delivery Note", "Engineering User", 0, "report", 1, validate=False)
-		remove_blocked_permissions()
-		self.assertFalse(
-			frappe.db.exists("Custom DocPerm", {"parent": "Delivery Note", "role": "Engineering User"})
-		)
+		filters = {"parent": "Delivery Note", "role": "Engineering User"}
+		rows_before = frappe.db.count("Custom DocPerm", filters)
+		revoke_blocked_permissions()
+		revoke_blocked_permissions()  # idempotent
+		# Nothing deleted; every right is 0.
+		self.assertEqual(frappe.db.count("Custom DocPerm", filters), rows_before)
+		for row in frappe.get_all("Custom DocPerm", filters=filters, fields=list(PERMISSION_RIGHTS)):
+			self.assertFalse(any(row.values()), row)
 		frappe.set_user(_user("user"))
 		for ptype in ("read", "report", "select", "write", "create"):
 			self.assertFalse(frappe.has_permission("Delivery Note", ptype), ptype)

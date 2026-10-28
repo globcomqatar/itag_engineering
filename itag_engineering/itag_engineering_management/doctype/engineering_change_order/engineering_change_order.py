@@ -67,6 +67,16 @@ class EngineeringChangeOrder(Document):
 					_("You requested this change, so a different Engineering Manager must approve it."),
 					frappe.PermissionError,
 				)
+		# fix4 (Ahmed, 28-Oct-2026): the ECO creator can't approve, implement
+		# or close it. No Administrator exemption.
+		for state, verb in (("Implemented", "implement"), ("Closed", "close")):
+			if self._state_changed_to(state) and user == self.owner:
+				frappe.throw(
+					_("You created this Engineering Change Order, so a different person must {0} it.").format(
+						_(verb)
+					),
+					frappe.PermissionError,
+				)
 		if self._state_changed_to("Implemented"):
 			self.implemented_by = user
 			self.implementation_status = "Implemented"

@@ -33,6 +33,7 @@ after_migrate = [
 	"itag_engineering.install.create_roles",
 	"itag_engineering.install.remove_retired_engineering_roles",
 	"itag_engineering.install.remove_engineering_workflows",
+	"itag_engineering.install.deactivate_retired_workflows",
 	"itag_engineering.install.create_default_valve_types",
 	"itag_engineering.install.create_default_product_families",
 	"itag_engineering.install.create_default_code_series",
@@ -41,7 +42,7 @@ after_migrate = [
 	"itag_engineering.install.grant_engineering_bom_permissions",
 	"itag_engineering.install.sync_report_roles",
 	"itag_engineering.install.grant_read_only_support_permissions",
-	"itag_engineering.install.remove_blocked_permissions",
+	"itag_engineering.install.revoke_blocked_permissions",
 ]
 
 # Testing

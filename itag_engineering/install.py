@@ -201,10 +201,26 @@ ENGINEERING_WORKFLOWS = (
 	"Engineering Release Workflow",
 	"Engineering Change Request Workflow",
 	"Engineering Change Order Workflow",
-	# fix3 (Ahmed, 28-Oct-2026): drawings have no workflow. Removes the one a
-	# fix2 build may have created.
-	"ITAG Engineering Drawing Workflow",
 )
+
+# fix4 (Ahmed, 28-Oct-2026; Waheed's rule: delete nothing): drawings have no
+# workflow, so the one a fix2 build may have created is deactivated, never
+# deleted. Reactivate by setting is_active = 1 on the Workflow record.
+DEACTIVATED_WORKFLOWS = ("ITAG Engineering Drawing Workflow",)
+
+
+def deactivate_retired_workflows():
+	"""Idempotent. Frappe only applies a Workflow whose is_active is 1, so an
+	inactive one never drives the document's state."""
+	changed = False
+	for name in DEACTIVATED_WORKFLOWS:
+		if frappe.db.get_value("Workflow", name, "is_active"):
+			frappe.db.set_value("Workflow", name, "is_active", 0)
+			doctype = frappe.db.get_value("Workflow", name, "document_type")
+			frappe.clear_cache(doctype=doctype)
+			changed = True
+	if changed:
+		frappe.cache.delete_value("workflow")
 
 
 def remove_engineering_workflows():
@@ -402,17 +418,26 @@ def grant_read_only_support_permissions():
 	frappe.clear_cache()
 
 
-# fix3 (Ahmed, 28-Oct-2026): Engineering User has no access to Delivery Note.
-# Removes any Custom DocPerm row for that role (standard ERPNext ships none).
+# fix3/fix4 (Ahmed, 28-Oct-2026): Engineering User has no access to Delivery
+# Note. Standard ERPNext ships no row for that role; any Custom DocPerm row is
+# kept (Waheed's rule: delete nothing) but every right on it is set to 0.
 # Traceability reads Delivery Note data server-side, so it is not affected.
 NO_ACCESS_PERMISSIONS = (("Delivery Note", "Engineering User"),)
+PERMISSION_RIGHTS = (
+	"select", "read", "write", "create", "delete", "submit", "cancel", "amend",
+	"report", "export", "import", "share", "print", "email",
+)
 
 
-def remove_blocked_permissions():
+def revoke_blocked_permissions():
 	changed = False
 	for doctype, role in NO_ACCESS_PERMISSIONS:
-		for name in frappe.get_all("Custom DocPerm", filters={"parent": doctype, "role": role}, pluck="name"):
-			frappe.delete_doc("Custom DocPerm", name, ignore_permissions=True, force=True)
-			changed = True
+		for row in frappe.get_all(
+			"Custom DocPerm", filters={"parent": doctype, "role": role}, fields=["name", *PERMISSION_RIGHTS]
+		):
+			granted = {right: 0 for right in PERMISSION_RIGHTS if row.get(right)}
+			if granted:
+				frappe.db.set_value("Custom DocPerm", row.name, granted)
+				changed = True
 	if changed:
 		frappe.clear_cache()
