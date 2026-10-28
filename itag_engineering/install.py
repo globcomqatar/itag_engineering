@@ -66,10 +66,14 @@ RETIRED_ROLES = (
 
 def after_install():
 	create_roles()
-	create_default_valve_types()
-	create_default_product_families()
-	create_default_code_series()
-	create_valve_types_for_code_series()
+
+
+# fix6 (Waheed, 28-Oct-2026, item F): the app no longer creates or overwrites
+# Product Family, Valve Type or Item Code Rule records on install or migrate.
+# The business maintains them in the system; existing records are kept. The
+# lists below are used only by before_tests() to give a test site the records
+# the app tests expect. Rollback: call the four _ensure_test_* seeders from
+# after_install and hooks.after_migrate again (they only insert missing rows).
 
 
 # Rows taken from the client's part-class sheet. A blank name on that sheet
@@ -89,7 +93,7 @@ DEFAULT_CODE_SERIES = [
 ]
 
 
-def create_default_code_series():
+def _ensure_test_code_series():
 	"""Idempotent. Inserts a missing series only. Never overwrites a series
 	a user has already renamed or deactivated."""
 	for prefix, series_name in DEFAULT_CODE_SERIES:
@@ -113,7 +117,7 @@ def create_default_code_series():
 		).insert(ignore_permissions=True)
 
 
-def create_valve_types_for_code_series():
+def _ensure_test_valve_types_for_code_series():
 	"""One Valve Type per numbered series. The engineering request picks the
 	Valve Type, and the item code comes from the series linked here.
 	Idempotent: an existing Valve Type is left alone except to fill a blank
@@ -271,7 +275,7 @@ def remove_engineering_workflows():
 		frappe.cache.delete_value("workflow")
 
 
-def create_default_valve_types():
+def _ensure_test_valve_types():
 	"""Idempotent, same shape as create_roles(): only inserts a Valve Type
 	that doesn't already exist by code, never touches/reactivates one a
 	user has since edited or deactivated. Also listed in hooks.py's
@@ -291,8 +295,8 @@ def create_default_valve_types():
 		).insert(ignore_permissions=True)
 
 
-def create_default_product_families():
-	"""Idempotent, same shape as create_default_valve_types()."""
+def _ensure_test_product_families():
+	"""Idempotent, same shape as _ensure_test_valve_types()."""
 	for code, name in DEFAULT_PRODUCT_FAMILIES:
 		if frappe.db.exists("Product Family", code):
 			continue
@@ -317,6 +321,10 @@ def before_tests():
 	_ensure_test_holiday_list()
 	_ensure_test_operation_and_workstation()
 	_ensure_test_dropdown_values()
+	_ensure_test_valve_types()
+	_ensure_test_product_families()
+	_ensure_test_code_series()
+	_ensure_test_valve_types_for_code_series()
 	frappe.db.commit()
 
 
