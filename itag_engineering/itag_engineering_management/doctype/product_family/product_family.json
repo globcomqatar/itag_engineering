@@ -13,7 +13,6 @@
  ],
  "fields": [
   {
-   "description": "Short controlled code (e.g. CS, FS) - this is what Item Code Rule segments and generated Item Codes actually embed, so it must stay short and space-free.",
    "fieldname": "product_family_code",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -54,35 +53,33 @@
  "permissions": [
   {
    "create": 1,
-   "delete": 1,
+   "email": 1,
+   "print": 1,
    "read": 1,
-   "role": "System Manager",
+   "report": 1,
+   "role": "Engineering User",
    "share": 1,
    "write": 1
   },
   {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Engineering Manager"
+  },
+  {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
    "read": 1,
-   "role": "ITAG Engineering Administrator",
+   "report": 1,
+   "role": "Engineering Master Manager",
    "share": 1,
    "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Engineering Manager",
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Engineering Requestor"
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Engineering Creator"
   }
  ],
  "sort_field": "modified",

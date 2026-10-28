@@ -64,7 +64,6 @@
    "label": "Reference"
   },
   {
-   "description": "\"WIP Unit Register\" added by Build ITAG-0.10.0 - the \"Specific Quantity or WIP Unit\" hold_scope had no matching reference_doctype option until that DocType existed.",
    "fieldname": "reference_doctype",
    "fieldtype": "Select",
    "label": "Reference Doctype",
@@ -84,7 +83,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "description": "Only meaningful for \"Specific Quantity or WIP Unit\" scope.",
    "fieldname": "quantity",
    "fieldtype": "Float",
    "label": "Quantity"
@@ -117,7 +115,6 @@
    "label": "Blocked Actions"
   },
   {
-   "description": "Defaults to all actions blocked when a new hold is created (place_hold() seeds this - a hold blocks broadly unless deliberately scoped down).",
    "fieldname": "blocked_actions",
    "fieldtype": "Table",
    "label": "Blocked Actions",
@@ -166,7 +163,6 @@
    "read_only": 1
   },
   {
-   "description": "Required when releasing a hold - enforced by hold_service.release_hold().",
    "fieldname": "release_reason",
    "fieldtype": "Text",
    "label": "Release Reason",
@@ -183,36 +179,26 @@
   {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "print": 1,
    "read": 1,
-   "role": "System Manager",
+   "report": 1,
+   "role": "Engineering User",
    "share": 1,
    "write": 1
   },
   {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
    "read": 1,
-   "role": "ITAG Engineering Administrator",
+   "report": 1,
+   "role": "Engineering Manager",
    "share": 1,
    "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Engineering Manager",
-   "write": 1
-  },
-  {
-   "read": 1,
-   "role": "Quality Manager"
-  },
-  {
-   "read": 1,
-   "role": "Production Supervisor"
-  },
-  {
-   "read": 1,
-   "role": "Production Planner"
   }
  ],
  "sort_field": "modified",

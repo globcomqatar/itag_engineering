@@ -41,8 +41,9 @@ class TestProductFamily(FrappeTestCase):
 				}
 			).insert()
 
-	def test_engineering_requestor_can_create(self):
+	def test_engineering_user_and_master_manager_can_create(self):
 		meta = frappe.get_meta("Product Family")
 		roles_with_create = [p.role for p in meta.permissions if p.create]
-		self.assertIn("Engineering Requestor", roles_with_create)
-		self.assertIn("Engineering Creator", roles_with_create)
+		self.assertIn("Engineering User", roles_with_create)
+		self.assertIn("Engineering Master Manager", roles_with_create)
+		self.assertNotIn("Engineering Manager", roles_with_create)

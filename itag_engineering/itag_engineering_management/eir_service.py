@@ -25,9 +25,7 @@ ITEM_FIELD_MAP = {
 }
 
 CREATE_ITEM_ROLES = (
-	"System Manager",
-	"ITAG Engineering Administrator",
-	"Engineering Approver",
+	"Engineering User",
 	"Engineering Manager",
 )
 

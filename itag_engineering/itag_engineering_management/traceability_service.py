@@ -40,14 +40,12 @@ from itag_engineering.itag_engineering_management.audit_service import log_audit
 from itag_engineering.itag_engineering_management.release_service import retrieve_released_baseline
 
 TRACEABILITY_ROLES = (
+	"Engineering User",
 	"Engineering Manager",
-	"ITAG Engineering Administrator",
-	"Quality Manager",
-	"Production Manager",
-	"Production Supervisor",
+	"Engineering Master Manager",
 )
 
-CUSTOMER_INFO_ROLES = ("Engineering Manager", "ITAG Engineering Administrator", "Quality Manager")
+CUSTOMER_INFO_ROLES = ("Engineering Manager", "Engineering Master Manager")
 
 
 def backward_traceability(serial_or_wip_unit):
@@ -341,7 +339,7 @@ def _mask_customer_fields(result):
 	"""Roadmap Section 21.7: customer/project identity is masked out for
 	any caller who lacks CUSTOMER_INFO_ROLES - a permission FILTER on the
 	result, not a second gate that blocks the whole call outright (a
-	Production Supervisor should still see the engineering/genealogy
+	an Engineering User still sees the engineering/genealogy
 	chain, just not customer identity)."""
 	if set(CUSTOMER_INFO_ROLES).intersection(frappe.get_roles()):
 		return result

@@ -11,9 +11,8 @@
  "report_name": "ECO Procurement Impact",
  "report_type": "Script Report",
  "roles": [
-  {"role": "System Manager"},
-  {"role": "ITAG Engineering Administrator"},
+  {"role": "Engineering User"},
   {"role": "Engineering Manager"},
-  {"role": "Purchase Manager"}
+  {"role": "Engineering Master Manager"}
  ]
 }

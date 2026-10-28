@@ -18,7 +18,7 @@ from itag_engineering.itag_engineering_management.compatibility import (
 	additional_rework_operations_compatible,
 )
 
-REWORK_ACTION_ROLES = ("Engineering Manager", "ITAG Engineering Administrator", "Production Manager")
+REWORK_ACTION_ROLES = ("Engineering User", "Engineering Manager")
 
 
 def create_rework_work_order(instruction_name):

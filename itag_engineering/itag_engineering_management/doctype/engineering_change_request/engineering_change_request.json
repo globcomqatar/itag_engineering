@@ -80,7 +80,6 @@
    "read_only": 1
   },
   {
-   "description": "Set by eco_service.create_eco_from_accepted_ecr() - not editable directly.",
    "fieldname": "originating_eco",
    "fieldtype": "Link",
    "label": "Originating ECO",
@@ -88,7 +87,6 @@
    "read_only": 1
   },
   {
-   "description": "Required disposition before a Rejected ECR can be Closed (ecr_service.close_ecr).",
    "fieldname": "rejection_reason",
    "fieldtype": "Small Text",
    "label": "Rejection Reason",
@@ -230,70 +228,25 @@
   {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "print": 1,
    "read": 1,
-   "role": "System Manager",
+   "report": 1,
+   "role": "Engineering User",
    "share": 1,
    "write": 1
   },
   {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
    "read": 1,
-   "role": "ITAG Engineering Administrator",
-   "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Engineering Requestor",
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Production Planner",
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Production Supervisor",
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Quality Engineer",
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Sales User",
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Procurement User",
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Stores User",
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Workshop Technician",
-   "write": 1
-  },
-  {
-   "read": 1,
+   "report": 1,
    "role": "Engineering Manager",
+   "share": 1,
    "write": 1
   }
  ],

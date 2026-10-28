@@ -45,7 +45,7 @@ from frappe.utils import now_datetime
 from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.bom_traversal_service import find_where_used
 
-IMPACT_ANALYSIS_ROLES = ("Engineering Manager", "ITAG Engineering Administrator")
+IMPACT_ANALYSIS_ROLES = ("Engineering Manager",)
 
 ANALYSIS_ALGORITHM_VERSION = 1
 

@@ -153,7 +153,7 @@ def get_custom_fields():
 				"fieldtype": "Section Break",
 				"label": "Traceability Policy",
 				"insert_after": "itag_obsolete_date",
-				"description": "Per Decision Log #6.",
+				"description": "",
 			},
 			{
 				"fieldname": "itag_serial_tracking_required",
@@ -244,7 +244,7 @@ def get_bom_fields():
 				"fieldtype": "Link",
 				"options": "Engineering Release",
 				"label": "Engineering Release",
-				"description": "Converted from a Data forward-reference placeholder to a real Link by patches.v0_5.convert_engineering_release_placeholder_fields now that Engineering Release (Build ITAG-0.5.0) exists. This getter must declare the CURRENT correct schema (Link) - the one-time patch only migrates data on already-provisioned sites; a fresh install/migrate never runs the patch's guard branch and must get the right fieldtype straight from here.",
+				"description": "",
 				"insert_after": "itag_release_section",
 			},
 			{
@@ -252,7 +252,7 @@ def get_bom_fields():
 				"fieldtype": "Link",
 				"options": "Engineering Change Order",
 				"label": "Applicable ECO",
-				"description": "Converted from a Data forward-reference placeholder to a real Link by patches.v0_6.convert_applicable_eco_placeholder_fields now that Engineering Change Order (Build ITAG-0.6.0) exists. See itag_engineering_release's own description above for why this getter declares Link directly rather than relying solely on the patch.",
+				"description": "",
 				"insert_after": "itag_engineering_release",
 			},
 			{
@@ -317,7 +317,7 @@ def get_bom_fields():
 				"options": "\nNot Ready\nReady\nException",
 				"default": "Not Ready",
 				"read_only": 1,
-				"description": "Set by Build ITAG-0.4.0 Task 5's release-readiness validation service. Not editable directly.",
+				"description": "",
 				"insert_after": "itag_obsolescence_status",
 			},
 		]
@@ -359,7 +359,7 @@ def get_routing_fields():
 				"fieldtype": "Link",
 				"options": "Engineering Release",
 				"label": "Engineering Release",
-				"description": "Converted from a Data forward-reference placeholder to a real Link by patches.v0_5.convert_engineering_release_placeholder_fields now that Engineering Release (Build ITAG-0.5.0) exists. This getter must declare the CURRENT correct schema (Link) - see BOM's own itag_engineering_release field for the full explanation.",
+				"description": "",
 				"insert_after": "itag_column_break_routing_1",
 			},
 			{
@@ -367,7 +367,7 @@ def get_routing_fields():
 				"fieldtype": "Link",
 				"options": "Engineering Change Order",
 				"label": "Applicable ECO",
-				"description": "Converted from a Data forward-reference placeholder to a real Link by patches.v0_6.convert_applicable_eco_placeholder_fields now that Engineering Change Order (Build ITAG-0.6.0) exists.",
+				"description": "",
 				"insert_after": "itag_engineering_release",
 			},
 			{
@@ -524,7 +524,7 @@ def get_work_order_baseline_fields():
 				"label": "Engineering Release",
 				"options": "Engineering Release",
 				"read_only": 1,
-				"description": "Frozen by Build ITAG-0.5.0 at submission (freeze_baseline_before_submit). Not editable.",
+				"description": "",
 				"insert_after": "itag_engineering_baseline_tab",
 			},
 			{
@@ -588,7 +588,7 @@ def get_work_order_continuation_fields():
 				"label": "Original Work Order",
 				"options": "Work Order",
 				"read_only": 1,
-				"description": "Set on a successor Work Order by continuation_service.create_successor_work_order() - the Work Order this one continues production from under a new Engineering Release.",
+				"description": "",
 				"insert_after": "itag_inspection_plan_revision",
 			},
 			{
@@ -597,7 +597,7 @@ def get_work_order_continuation_fields():
 				"label": "Successor Work Order",
 				"options": "Work Order",
 				"read_only": 1,
-				"description": "Set on the ORIGINAL Work Order once a Production Change Continuation creates its successor.",
+				"description": "",
 				"insert_after": "itag_original_work_order",
 			},
 		]
@@ -637,7 +637,7 @@ def get_wip_traceability_fields():
 				"fieldtype": "Link",
 				"label": "Engineering Release",
 				"options": "Engineering Release",
-				"description": "This serial's OWN baseline reference, independent of whatever Work Order produced it - a serial's identity can outlive the Work Order record's own convenience.",
+				"description": "",
 				"insert_after": "itag_engineering_baseline_tab",
 			},
 			{
@@ -684,7 +684,7 @@ def get_wip_traceability_fields():
 				"fieldname": "itag_heat_number",
 				"fieldtype": "Data",
 				"label": "Heat Number",
-				"description": "Heat-number tracking modeled as a Batch/Serial No extension field (Decision Log #6), not a separate DocType.",
+				"description": "",
 				"insert_after": "itag_engineering_baseline_tab",
 			},
 			{

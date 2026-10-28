@@ -19,7 +19,6 @@
    "reqd": 1
   },
   {
-   "description": "Fetched from the linked WIP Unit at insert, for display convenience only - not the source of truth for what item this row refers to.",
    "fieldname": "component_item",
    "fieldtype": "Data",
    "in_list_view": 1,

@@ -49,7 +49,6 @@
   },
   {
    "default": "50",
-   "description": "Lower priority number resolves first. Two active rules matching the same context with the same priority is ambiguous and is rejected by the resolver.",
    "fieldname": "priority",
    "fieldtype": "Int",
    "label": "Priority"
@@ -60,14 +59,12 @@
    "label": "Scope Conditions"
   },
   {
-   "description": "Leave blank to match any Company.",
    "fieldname": "company",
    "fieldtype": "Link",
    "label": "Company",
    "options": "Company"
   },
   {
-   "description": "Matches Item.itag_product_family. Leave blank to match any.",
    "fieldname": "product_family",
    "fieldtype": "Data",
    "label": "Product Family"
@@ -111,7 +108,6 @@
    "label": "Validity Window"
   },
   {
-   "description": "Leave blank for an always-valid rule.",
    "fieldname": "effective_from",
    "fieldtype": "Date",
    "label": "Effective From"
@@ -126,7 +122,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "description": "If the resolving context's cost impact exceeds this threshold, Requires Cost Review resolves true for this rule even if the flag below is unchecked.",
    "fieldname": "cost_impact_threshold",
    "fieldtype": "Currency",
    "label": "Cost Impact Threshold"
@@ -170,23 +165,33 @@
  "permissions": [
   {
    "create": 1,
-   "delete": 1,
+   "email": 1,
+   "print": 1,
    "read": 1,
-   "role": "System Manager",
+   "report": 1,
+   "role": "Engineering User",
    "share": 1,
    "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Engineering Manager"
   },
   {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
    "read": 1,
-   "role": "ITAG Engineering Administrator",
+   "report": 1,
+   "role": "Engineering Master Manager",
    "share": 1,
    "write": 1
-  },
-  {
-   "read": 1,
-   "role": "Engineering Manager"
   }
  ],
  "sort_field": "modified",

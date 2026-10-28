@@ -34,26 +34,34 @@ DEFAULT_PRODUCT_FAMILIES = [
 	("DPX", "Duplex/Special Alloy Valves"),
 ]
 
+# Same shape as Selling: User works the documents, Manager adds import/export
+# and settings, Master Manager owns the setup records. These are the only
+# roles this app grants on its own DocTypes.
 ROLES = [
+	"Engineering User",
+	"Engineering Manager",
+	"Engineering Master Manager",
+]
+
+# Roles this app used to create. Shared ERPNext / qcore roles that were only
+# referenced here (Production Manager, Quality Manager, Sales User) are not
+# in this list and are never deleted.
+RETIRED_ROLES = (
 	"Engineering Requestor",
 	"Engineering Creator",
 	"Engineering Checker",
 	"Engineering Approver",
-	"Engineering Manager",
 	"Production Planner",
-	"Production Manager",
 	"Production Supervisor",
 	"Workshop Technician",
 	"Quality Engineer",
-	"Quality Manager",
 	"Stores User",
 	"Procurement User",
-	"Sales User",
 	"Costing Reviewer",
 	"Internal Auditor",
 	"ITAG Engineering Administrator",
 	"ITAG Integration User",
-]
+)
 
 
 def after_install():
@@ -150,6 +158,57 @@ def create_roles():
 		frappe.get_doc({"doctype": "Role", "role_name": role_name, "desk_access": 1}).insert(
 			ignore_permissions=True
 		)
+
+
+def remove_retired_engineering_roles():
+	"""Delete roles this app no longer uses. A role that still has a permission
+	on a DocType outside ITAG Engineering Management is left in place."""
+	for role_name in RETIRED_ROLES:
+		if not frappe.db.exists("Role", role_name):
+			continue
+		external = frappe.db.sql(
+			"""
+			select dp.parent
+			from `tabDocPerm` dp
+			inner join `tabDocType` dt on dt.name = dp.parent
+			where dp.role = %s and ifnull(dt.module, '') != 'ITAG Engineering Management'
+			limit 1
+			""",
+			role_name,
+		)
+		if external:
+			continue
+		frappe.db.delete("Has Role", {"role": role_name})
+		frappe.db.delete("DocPerm", {"role": role_name})
+		if frappe.db.table_exists("Custom DocPerm"):
+			frappe.db.delete("Custom DocPerm", {"role": role_name})
+		frappe.delete_doc("Role", role_name, force=1, ignore_permissions=True)
+	# Custom DocPerm replaces the JSON permissions for a whole DocType.
+	# Clear any left on this module so the three-role rows apply.
+	if frappe.db.table_exists("Custom DocPerm"):
+		parents = frappe.get_all(
+			"DocType", filters={"module": "ITAG Engineering Management"}, pluck="name"
+		)
+		if parents:
+			frappe.db.delete("Custom DocPerm", {"parent": ["in", parents]})
+	frappe.clear_cache()
+
+
+ENGINEERING_WORKFLOWS = (
+	"Engineering Item Request Workflow",
+	"Engineering Drawing Workflow",
+	"Product Revision Workflow",
+	"Engineering Release Workflow",
+	"Engineering Change Request Workflow",
+	"Engineering Change Order Workflow",
+)
+
+
+def remove_engineering_workflows():
+	"""Delete the six workflows this app used to ship. Status fields stay."""
+	for name in ENGINEERING_WORKFLOWS:
+		if frappe.db.exists("Workflow", name):
+			frappe.delete_doc("Workflow", name, force=1, ignore_permissions=True)
 
 
 def create_default_valve_types():

@@ -11,9 +11,8 @@
  "report_name": "ECO Portfolio",
  "report_type": "Script Report",
  "roles": [
-  {"role": "System Manager"},
-  {"role": "ITAG Engineering Administrator"},
+  {"role": "Engineering User"},
   {"role": "Engineering Manager"},
-  {"role": "Engineering Approver"}
+  {"role": "Engineering Master Manager"}
  ]
 }

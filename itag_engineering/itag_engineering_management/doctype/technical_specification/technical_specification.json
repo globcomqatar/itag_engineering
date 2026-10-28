@@ -183,39 +183,32 @@
  "permissions": [
   {
    "create": 1,
-   "delete": 1,
+   "email": 1,
+   "print": 1,
    "read": 1,
-   "role": "System Manager",
+   "report": 1,
+   "role": "Engineering User",
    "share": 1,
    "write": 1
   },
   {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Engineering Manager"
+  },
+  {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
    "read": 1,
-   "role": "ITAG Engineering Administrator",
+   "report": 1,
+   "role": "Engineering Master Manager",
    "share": 1,
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Engineering Creator",
-   "write": 1
-  },
-  {
-   "read": 1,
-   "role": "Engineering Checker",
-   "write": 1
-  },
-  {
-   "read": 1,
-   "role": "Engineering Approver",
-   "write": 1
-  },
-  {
-   "read": 1,
-   "role": "Engineering Manager",
    "write": 1
   }
  ],

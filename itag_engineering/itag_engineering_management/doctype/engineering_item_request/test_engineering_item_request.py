@@ -29,13 +29,15 @@ class TestEngineeringItemRequest(FrappeTestCase):
 		self.assertEqual(eir.duplicate_check_status, "Not Checked")
 
 	def test_non_admin_engineering_role_can_create_eir(self):
-		# Engineering Requestor role should be able to create - server-side
-		# permission, not client-side button hiding (roadmap Section 4.5).
+		# Engineering User creates requests, same as Sales User on Sales Order.
+		# Engineering Master Manager owns setup records and does not.
 		user_roles_before = frappe.get_roles()
 		self.assertIn("Administrator", user_roles_before)  # sanity: test runs as admin
 		meta = frappe.get_meta("Engineering Item Request")
 		roles_with_create = [p.role for p in meta.permissions if p.create]
-		self.assertIn("Engineering Requestor", roles_with_create)
+		self.assertIn("Engineering User", roles_with_create)
+		self.assertIn("Engineering Manager", roles_with_create)
+		self.assertNotIn("Engineering Master Manager", roles_with_create)
 
 	def test_workflow_exists_with_expected_states(self):
 		workflow = frappe.get_doc("Workflow", "Engineering Item Request Workflow")

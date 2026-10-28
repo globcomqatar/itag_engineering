@@ -18,7 +18,7 @@ from itag_engineering.itag_engineering_management.doctype.production_engineering
 	ALL_HOLDABLE_ACTIONS,
 )
 
-HOLD_ACTION_ROLES = ("Engineering Manager", "ITAG Engineering Administrator", "Quality Manager")
+HOLD_ACTION_ROLES = ("Engineering Manager",)
 
 
 def is_reference_held(reference_doctype, reference_name, action):

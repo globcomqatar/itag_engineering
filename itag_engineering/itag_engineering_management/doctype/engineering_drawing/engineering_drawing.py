@@ -170,7 +170,7 @@ class EngineeringDrawing(Document):
 			frappe.throw(
 				_(
 					"The creator of this Engineering Drawing ({0}) cannot also release it - a "
-					"different Engineering Approver must perform the release."
+					"different Engineering Manager must perform the release."
 				).format(self.owner)
 			)
 

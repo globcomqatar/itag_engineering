@@ -17,7 +17,7 @@ from itag_engineering.itag_engineering_management.deviation_concession_service i
 	validate_deviation_usable,
 )
 
-DISPOSITION_ACTION_ROLES = ("Engineering Manager", "ITAG Engineering Administrator", "Quality Manager")
+DISPOSITION_ACTION_ROLES = ("Engineering Manager",)
 
 EXECUTED_STATE = "Executed"
 

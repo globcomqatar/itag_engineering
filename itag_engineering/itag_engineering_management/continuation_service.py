@@ -29,7 +29,7 @@ from itag_engineering.itag_engineering_management.release_service import (
 	retrieve_released_baseline,
 )
 
-CONTINUATION_ACTION_ROLES = ("Engineering Manager", "ITAG Engineering Administrator", "Production Manager")
+CONTINUATION_ACTION_ROLES = ("Engineering User", "Engineering Manager")
 
 # Engineering Change Order workflow_state values that mean "Approved or
 # later" (fixtures/workflow.json's own ECO Workflow: ... -> Approved ->

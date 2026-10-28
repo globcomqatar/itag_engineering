@@ -16,7 +16,6 @@
  ],
  "fields": [
   {
-   "description": "Short controlled code (e.g. GATE, BALL) - this is what Item Code Rule segments and generated Item Codes actually embed, so it must stay short and space-free.",
    "fieldname": "valve_type_code",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -43,7 +42,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "description": "Item codes for this Valve Type come from this Item Code Rule. Tag Plate uses rule 530, pattern 530-#####, so the first item is 530-00001.",
    "fieldname": "item_code_rule",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -65,35 +63,33 @@
  "permissions": [
   {
    "create": 1,
-   "delete": 1,
+   "email": 1,
+   "print": 1,
    "read": 1,
-   "role": "System Manager",
+   "report": 1,
+   "role": "Engineering User",
    "share": 1,
    "write": 1
   },
   {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Engineering Manager"
+  },
+  {
    "create": 1,
    "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
    "read": 1,
-   "role": "ITAG Engineering Administrator",
+   "report": 1,
+   "role": "Engineering Master Manager",
    "share": 1,
    "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Engineering Manager",
-   "write": 1
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Engineering Requestor"
-  },
-  {
-   "create": 1,
-   "read": 1,
-   "role": "Engineering Creator"
   }
  ],
  "sort_field": "modified",
