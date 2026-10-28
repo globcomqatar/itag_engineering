@@ -7,12 +7,15 @@ from frappe.tests.utils import FrappeTestCase
 from itag_engineering.itag_engineering_management.duplicate_service import (
 	find_possible_duplicates,
 )
-from itag_engineering.tests.factories import ensure_test_company
+from itag_engineering.itag_engineering_management.testing_support import item_product_type_fields
+from itag_engineering.tests.factories import ensure_classification_value, ensure_test_company
 
 
 class TestDuplicateService(FrappeTestCase):
 	def setUp(self):
 		frappe.db.delete("Item", {"item_code": ["like", "DUPTEST-%"]})
+		ensure_classification_value("Nominal Size", "6IN")
+		ensure_classification_value("Pressure Class", "CL300")
 		frappe.get_doc(
 			{
 				"doctype": "Item",
@@ -20,6 +23,7 @@ class TestDuplicateService(FrappeTestCase):
 				"item_name": "Test Gate Valve",
 				"item_group": "Products",
 				"stock_uom": "Nos",
+				**item_product_type_fields(),
 				"itag_product_family": "CS",
 				"itag_valve_type": "BALL",
 				"itag_nominal_size": "6IN",

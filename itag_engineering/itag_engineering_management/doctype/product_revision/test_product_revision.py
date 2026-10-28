@@ -4,6 +4,8 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
+from itag_engineering.itag_engineering_management.drawing_service import advance_drawing
+from itag_engineering.itag_engineering_management.testing_support import item_product_type_fields
 from itag_engineering.tests.factories import ensure_test_company
 
 
@@ -34,6 +36,7 @@ class TestProductRevision(FrappeTestCase):
 					"item_name": "PR Test Item",
 					"item_group": "Products",
 					"stock_uom": "Nos",
+					**item_product_type_fields(),
 				}
 			).insert()
 		self.drawing = frappe.get_doc(
@@ -121,9 +124,13 @@ class TestProductRevision(FrappeTestCase):
 		).insert()
 		self.assertEqual(revision.workflow_state, "Draft")
 
-	def test_workflow_exists_with_expected_states(self):
-		workflow = frappe.get_doc("Workflow", "Product Revision Workflow")
-		state_names = [s.state for s in workflow.states]
+	def test_workflow_state_keeps_every_state_without_a_workflow(self):
+		"""The Product Revision workflow was removed (see
+		install.remove_engineering_workflows). The state field keeps all of its
+		states and validate() still mirrors workflow_state into
+		revision_status."""
+		self.assertFalse(frappe.db.exists("Workflow", "Product Revision Workflow"))
+		options = frappe.get_meta("Product Revision").get_field("workflow_state").options.split("\n")
 		for expected in (
 			"Draft",
 			"Under Review",
@@ -133,7 +140,7 @@ class TestProductRevision(FrappeTestCase):
 			"Superseded",
 			"Obsolete",
 		):
-			self.assertIn(expected, state_names)
+			self.assertIn(expected, options)
 
 	def test_workflow_transition_syncs_revision_status_and_immutability_fires(self):
 		"""Reproduces Task 2's Engineering Drawing bug class for Product Revision:
@@ -263,13 +270,11 @@ class TestProductRevision(FrappeTestCase):
 		revision = self._create_released_revision_with_spec(spec.name)
 
 		# The underlying drawing is later superseded by a newer drawing
-		# revision - driven through the real workflow-transition mechanism,
-		# exactly as Engineering Drawing's own tests do it.
+		# revision - driven through advance_drawing(), the only supported way
+		# to change a drawing's status now that its workflow is removed (a plain
+		# save of release_status or workflow_state is rejected).
+		advance_drawing(self.drawing.name, "Superseded")
 		drawing = frappe.get_doc("Engineering Drawing", self.drawing.name)
-		drawing.set("workflow_state", "Superseded")
-		drawing.superseded_date = frappe.utils.today()
-		drawing.save()
-		drawing.reload()
 		self.assertEqual(drawing.release_status, "Superseded")
 
 		# PR-1's own supersession transition must still succeed - it has

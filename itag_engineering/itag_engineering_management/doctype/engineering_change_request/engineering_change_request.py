@@ -5,6 +5,8 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+from itag_engineering.itag_engineering_management.classification_service import apply_carried_fields
+
 CLOSED_STATE = "Closed"
 # Closed is a light "protect from accidental edits" guard, NOT the full
 # "immutable once Released" pattern Engineering Drawing/Product Revision/
@@ -17,6 +19,7 @@ CLOSED_ALLOWED_FIELDS = {"workflow_state", "modified", "modified_by"}
 
 class EngineeringChangeRequest(Document):
 	def validate(self):
+		apply_carried_fields(self, self.affected_item)
 		self.guard_accepted_for_eco_requires_real_eco()
 		self.validate_closed_is_protected()
 

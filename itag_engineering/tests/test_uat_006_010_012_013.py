@@ -162,6 +162,10 @@ class TestUAT012EngineeringHold(FrappeTestCase):
 				"wip_warehouse": warehouse,
 				"operation": "_Test Operation 1",
 				"workstation": "_Test Workstation 1",
+				# erpcloud_itagksa's Job Card validate hook requires a Serial
+				# Number before time logs unless this flag is set; this test
+				# is about the hold gate, not serial tracking.
+				"custom_serial_no_not_available": 1,
 			}
 		).insert(ignore_permissions=True)
 

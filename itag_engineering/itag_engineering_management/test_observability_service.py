@@ -47,6 +47,9 @@ class TestObservabilityService(FrappeTestCase):
 		self.assertIsNotNone(metrics["engineering_release"]["average_hours"])
 
 	def test_health_check_reports_all_workflows_active(self):
+		"""The app ships no workflows (they were removed), so nothing is expected,
+		nothing is missing and the check must not report a failure for the six
+		removed ones."""
 		result = health_check_api()
 
 		self.assertTrue(result["data"]["all_workflows_active"])

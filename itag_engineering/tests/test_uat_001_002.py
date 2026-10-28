@@ -5,7 +5,11 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 
 from itag_engineering.itag_engineering_management.eir_service import create_item_from_eir
-from itag_engineering.tests.factories import create_test_eir
+from itag_engineering.tests.factories import (
+	create_test_eir,
+	ensure_classification_value,
+	item_product_type_fields,
+)
 
 
 class TestUAT001NewManufacturedValveItem(FrappeTestCase):
@@ -65,6 +69,8 @@ class TestUAT002DuplicateItemPrevention(FrappeTestCase):
 	def test_uat_002_duplicate_item_prevention(self):
 		from itag_engineering.itag_engineering_management.eir_service import run_duplicate_check
 
+		ensure_classification_value("Nominal Size", "6IN")
+		ensure_classification_value("Pressure Class", "CL300")
 		frappe.get_doc(
 			{
 				"doctype": "Item",
@@ -72,6 +78,7 @@ class TestUAT002DuplicateItemPrevention(FrappeTestCase):
 				"item_name": "Existing Gate Valve",
 				"item_group": "Products",
 				"stock_uom": "Nos",
+				**item_product_type_fields(),
 				"itag_product_family": "CS",
 				"itag_valve_type": "BALL",
 				"itag_nominal_size": "6IN",

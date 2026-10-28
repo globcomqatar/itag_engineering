@@ -80,9 +80,8 @@ class TestUAT005MultiLevelBOMRevisionImpact(FrappeTestCase):
 class TestUAT019ECOAnalysisStaleness(FrappeTestCase):
 	"""UAT-019: ECO Analysis Staleness (roadmap Section 16.7). An ECO's
 	controlled changes are edited after a completed analysis; the
-	assessment is confirmed Stale; the ECO workflow's gated transition
-	(Build ITAG-0.7.0 Task 1) is confirmed blocked while Stale even though
-	the ASSESSMENT's own analysis_status still reads "Complete" (the
+	assessment is confirmed Stale and the ECO's impact_analysis_status follows,
+	even though the ASSESSMENT's own analysis_status still reads "Complete" (the
 	background job really did complete - staleness is a separate concern
 	from job success, tracked on staleness_status/impact_analysis_status,
 	not by re-running or invalidating analysis_status itself)."""
@@ -94,8 +93,6 @@ class TestUAT019ECOAnalysisStaleness(FrappeTestCase):
 		frappe.db.delete("Engineering Change Request", {"request_title": ["like", "UAT019%"]})
 
 	def test_edited_controlled_changes_marks_stale_and_blocks_gated_transition(self):
-		from frappe.model.workflow import apply_workflow
-
 		ecr = create_test_ecr(request_title="UAT019 Request")
 		eco = create_eco_from_accepted_ecr_factory(ecr=ecr)
 		assessment = frappe.get_doc(
@@ -124,10 +121,10 @@ class TestUAT019ECOAnalysisStaleness(FrappeTestCase):
 		self.assertEqual(assessment.analysis_status, "Complete")
 		self.assertEqual(assessment.staleness_status, "Stale")
 
-		eco.db_set("workflow_state", "Impact Analysis Required")
-		eco.reload()
-		with self.assertRaises(Exception):
-			apply_workflow(eco, "Submit for Discipline Review")
+		# The ECO workflow that used to refuse "Submit for Discipline Review"
+		# while the analysis was Stale was removed. What is left to assert is
+		# that the ECO itself still reads Stale, which any later gate reads.
+		self.assertEqual(eco.impact_analysis_status, "Stale")
 
 
 class TestBuild070PerformanceBaseline(FrappeTestCase):

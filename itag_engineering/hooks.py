@@ -15,6 +15,10 @@ required_apps = ["erpnext"]
 # a client-side button to it without ever touching core files.
 doctype_js = {"BOM": "public/js/bom.js"}
 
+# Shows the Item classification on later forms, and the family product chart
+# on the request. Plain file under public/, served through the assets link.
+app_include_js = "/assets/itag_engineering/js/carry_forward.js"
+
 # Installation
 # ------------
 
@@ -38,6 +42,8 @@ after_migrate = [
 	"itag_engineering.install.create_default_code_series",
 	"itag_engineering.install.create_valve_types_for_code_series",
 	"itag_engineering.setup.custom_fields.sync_custom_fields",
+	"itag_engineering.install.link_family_valve_types_from_items",
+	"itag_engineering.install.carry_request_classification_forward",
 ]
 
 # Testing
@@ -120,7 +126,14 @@ permission_query_conditions = {
 
 doc_events = {
 	"Work Order": {
+		"validate": "itag_engineering.itag_engineering_management.classification_service.carry_into_document",
 		"before_submit": "itag_engineering.itag_engineering_management.work_order_baseline.freeze_baseline_before_submit",
+	},
+	"BOM": {
+		"validate": "itag_engineering.itag_engineering_management.classification_service.carry_into_document",
+	},
+	"Material Disposition": {
+		"validate": "itag_engineering.itag_engineering_management.classification_service.carry_into_document",
 	},
 	"Job Card": {
 		# Job Card's "start"/"complete" actions are status transitions, not

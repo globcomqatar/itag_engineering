@@ -5,6 +5,11 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+from itag_engineering.itag_engineering_management.classification_service import (
+	apply_carried_fields,
+	remember_released_product_revision,
+)
+
 RELEASED_STATES = ("Released", "Superseded", "Obsolete")
 
 # Fields a transition INTO Superseded/Obsolete is allowed to change, on top of
@@ -21,9 +26,13 @@ POST_RELEASE_ALLOWED_FIELDS = {
 
 class ProductRevision(Document):
 	def validate(self):
+		# Fill the drawing link before the released-drawing check. An already
+		# released revision is skipped inside apply_carried_fields.
+		apply_carried_fields(self, self.item)
 		self.sync_revision_status_from_workflow_state()
 		self.validate_drawing_is_released()
 		self.validate_immutable_once_released()
+		remember_released_product_revision(self)
 
 	def sync_revision_status_from_workflow_state(self):
 		"""revision_status is meant to be a denormalized mirror of

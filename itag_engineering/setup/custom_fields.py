@@ -40,19 +40,22 @@ def get_custom_fields():
 			{
 				"fieldname": "itag_nominal_size",
 				"label": "Nominal Size",
-				"fieldtype": "Data",
+				"fieldtype": "Link",
+				"options": "Nominal Size",
 				"insert_after": "itag_column_break_1",
 			},
 			{
 				"fieldname": "itag_pressure_class",
 				"label": "Pressure Class",
-				"fieldtype": "Data",
+				"fieldtype": "Link",
+				"options": "Pressure Class",
 				"insert_after": "itag_nominal_size",
 			},
 			{
 				"fieldname": "itag_body_material",
 				"label": "Body Material",
-				"fieldtype": "Data",
+				"fieldtype": "Link",
+				"options": "Body Material",
 				"insert_after": "itag_pressure_class",
 			},
 			{
@@ -68,10 +71,16 @@ def get_custom_fields():
 				"insert_after": "itag_trim_material",
 			},
 			{
+				"fieldname": "itag_manufacturer_part_number",
+				"label": "Manufacturer Part Number",
+				"fieldtype": "Data",
+				"insert_after": "itag_end_connection",
+			},
+			{
 				"fieldname": "itag_engineering_section_2",
 				"fieldtype": "Section Break",
 				"label": "Design & Drawing",
-				"insert_after": "itag_end_connection",
+				"insert_after": "itag_manufacturer_part_number",
 			},
 			{
 				"fieldname": "itag_design_standard",

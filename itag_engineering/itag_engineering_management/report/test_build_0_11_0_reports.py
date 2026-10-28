@@ -85,6 +85,11 @@ class TestBuild0110ReportsAgainstRealData(FrappeTestCase):
 		itself makes this unreachable through a real submit() call."""
 		item = create_fresh_stock_item("B11R-TEST-ITEM").name
 		work_order = create_test_work_order(item=item)
+		# classification_service.carry_into_document() now stamps the Item's
+		# current Engineering Release onto the Work Order at validate/insert
+		# whenever a Released release exists for the Company, so the bypass
+		# scenario has to clear that pointer explicitly.
+		frappe.db.set_value("Work Order", work_order.name, "itag_engineering_release", None, update_modified=False)
 		frappe.db.set_value("Work Order", work_order.name, "docstatus", 1, update_modified=False)
 
 		_columns, missing_data = _report_module("Missing Engineering Baseline").execute(filters=None)

@@ -94,36 +94,16 @@ class TestEngineeringChangeOrder(FrappeTestCase):
 		self.assertEqual(df.fieldtype, "Link")
 		self.assertEqual(df.options, "Change Impact Assessment")
 
-	def test_workflow_condition_blocks_transition_when_impact_analysis_not_complete(self):
-		# Build ITAG-0.7.0 Task 1: makes the ECO workflow's own explicit
-		# deferral (Build 0.6.0) real - "Impact Analysis Required" ->
-		# "Discipline Review" is now genuinely gated on
-		# impact_analysis_status == "Complete", enforced by the real
-		# Workflow engine (frappe.model.workflow.apply_workflow), not just
-		# present as inert fixture JSON.
-		#
-		# The exact exception class Frappe's workflow engine raises for "no
-		# transition matches this action for the current doc state" was not
-		# verified against a live bench in this environment - broadened to
-		# Exception here rather than guessing a specific class name; narrow
-		# this to the real class once confirmed live.
-		from frappe.model.workflow import apply_workflow
-
-		eco = self._make_eco()
-		eco.db_set("workflow_state", "Impact Analysis Required")
-		eco.reload()
-		self.assertNotEqual(eco.impact_analysis_status, "Complete")
-
-		with self.assertRaises(Exception):
-			apply_workflow(eco, "Submit for Discipline Review")
-
-	def test_workflow_condition_allows_transition_when_impact_analysis_complete(self):
-		from frappe.model.workflow import apply_workflow
-
-		eco = self._make_eco()
-		eco.db_set({"workflow_state": "Impact Analysis Required", "impact_analysis_status": "Complete"})
-		eco.reload()
-
-		apply_workflow(eco, "Submit for Discipline Review")
-		eco.reload()
-		self.assertEqual(eco.workflow_state, "Discipline Review")
+	def test_workflow_state_keeps_every_state_without_a_workflow(self):
+		"""The Engineering Change Order workflow, including its gate on
+		impact_analysis_status == "Complete" before Discipline Review, was
+		removed (see install.remove_engineering_workflows). The state field
+		keeps all of its states and impact_analysis_status still tracks
+		analysis progress. Nothing in this app gates the move to Discipline
+		Review any more."""
+		self.assertFalse(frappe.db.exists("Workflow", "Engineering Change Order Workflow"))
+		meta = frappe.get_meta("Engineering Change Order")
+		options = meta.get_field("workflow_state").options.split("\n")
+		for expected in ("Draft", "Impact Analysis Required", "Discipline Review", "Approved", "Closed"):
+			self.assertIn(expected, options)
+		self.assertIn("Complete", meta.get_field("impact_analysis_status").options.split("\n"))

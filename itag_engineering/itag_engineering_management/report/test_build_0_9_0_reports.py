@@ -5,6 +5,9 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 
 from itag_engineering.itag_engineering_management.continuation_service import create_successor_work_order
+from itag_engineering.itag_engineering_management.testing_support import (
+	align_default_company_with_test_company,
+)
 from itag_engineering.tests.factories import (
 	create_eco_from_accepted_ecr_factory,
 	create_fresh_stock_item,
@@ -43,6 +46,7 @@ class TestBuild090Reports(FrappeTestCase):
 
 class TestBuild090ReportsAgainstRealData(FrappeTestCase):
 	def setUp(self):
+		align_default_company_with_test_company(self)
 		frappe.db.delete("Item", {"item_code": ["like", "B9R-TEST%"]})
 		frappe.db.delete("Engineering Change Request", {"request_title": ["like", "B9R-TEST%"]})
 

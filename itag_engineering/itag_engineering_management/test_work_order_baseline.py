@@ -8,6 +8,9 @@ from itag_engineering.itag_engineering_management.work_order_baseline import (
 	BASELINE_FIELD_MAP,
 	get_job_card_baseline,
 )
+from itag_engineering.itag_engineering_management.testing_support import (
+	align_default_company_with_test_company,
+)
 from itag_engineering.tests.factories import (
 	create_fresh_stock_item,
 	create_fully_approved_engineering_release,
@@ -19,6 +22,7 @@ from itag_engineering.tests.factories import (
 
 class TestWorkOrderBaseline(FrappeTestCase):
 	def setUp(self):
+		align_default_company_with_test_company(self)
 		frappe.db.delete("Work Order", {"production_item": ["like", "WOB-TEST-ITEM%"]})
 
 	def tearDown(self):

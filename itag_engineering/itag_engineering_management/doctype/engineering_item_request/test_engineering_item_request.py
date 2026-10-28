@@ -4,6 +4,8 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
+from itag_engineering.itag_engineering_management.testing_support import item_product_type_fields
+
 
 class TestEngineeringItemRequest(FrappeTestCase):
 	def setUp(self):
@@ -39,9 +41,13 @@ class TestEngineeringItemRequest(FrappeTestCase):
 		self.assertIn("Engineering Manager", roles_with_create)
 		self.assertNotIn("Engineering Master Manager", roles_with_create)
 
-	def test_workflow_exists_with_expected_states(self):
-		workflow = frappe.get_doc("Workflow", "Engineering Item Request Workflow")
-		state_names = [s.state for s in workflow.states]
+	def test_workflow_state_keeps_every_state_without_a_workflow(self):
+		"""The Engineering Item Request workflow was removed (see
+		install.remove_engineering_workflows). The state field keeps all of its
+		states, because eir_service.approve_eir()/reject_eir() and
+		create_item_from_eir() still move the request through them."""
+		self.assertFalse(frappe.db.exists("Workflow", "Engineering Item Request Workflow"))
+		options = frappe.get_meta("Engineering Item Request").get_field("workflow_state").options.split("\n")
 		for expected in (
 			"Draft",
 			"Duplicate Review",
@@ -53,7 +59,24 @@ class TestEngineeringItemRequest(FrappeTestCase):
 			"Rejected",
 			"Cancelled",
 		):
-			self.assertIn(expected, state_names, f"{expected} missing from workflow states")
+			self.assertIn(expected, options, f"{expected} missing from workflow_state options")
+
+	def test_item_type_is_required_and_defaults_to_general(self):
+		meta = frappe.get_meta("Engineering Item Request")
+		field = meta.get_field("item_type")
+		self.assertEqual(field.reqd, 1)
+		self.assertEqual(field.default, "General")
+		eir = frappe.get_doc(
+			{
+				"doctype": "Engineering Item Request",
+				"request_title": "EIR Test Item Type Default",
+				"item_category": "Manufactured",
+				"product_family": "CS",
+				"valve_type": "BALL",
+				"is_new_item_code": 1,
+			}
+		).insert()
+		self.assertEqual(eir.item_type, "General")
 
 	def test_workflow_create_item_without_a_series_explains_valve_type(self):
 		"""Valve Type BALL has no series. The workflow Create Item save must
@@ -129,9 +152,8 @@ class TestEngineeringItemRequest(FrappeTestCase):
 			"item_name": "EIR Test Dummy Item",
 			"item_group": "Products",
 			"stock_uom": "Nos",
+			**item_product_type_fields(),
 		}
-		if frappe.get_meta("Item").has_field("custom_product_type"):
-			item_values["custom_product_type"] = "General"
 		item = frappe.get_doc(item_values).insert(ignore_permissions=True)
 
 		eir = frappe.get_doc(

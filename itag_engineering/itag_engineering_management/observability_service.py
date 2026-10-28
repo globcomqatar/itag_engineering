@@ -35,14 +35,12 @@ RESTRICTED_ROLES = ("System Manager",)
 
 DEFAULT_METRIC_SAMPLE_SIZE = 50
 
-WORKFLOW_NAMES = (
-	"Engineering Item Request Workflow",
-	"Engineering Drawing Workflow",
-	"Product Revision Workflow",
-	"Engineering Release Workflow",
-	"Engineering Change Request Workflow",
-	"Engineering Change Order Workflow",
-)
+# Workflows the health check expects to find active. The six workflows this app
+# used to ship were removed on purpose (install.remove_engineering_workflows),
+# so none are expected any more. Listing them here made the check report all six
+# as missing and all_workflows_active False on every site. Add a name back here
+# only if the app ships a workflow again.
+WORKFLOW_NAMES = ()
 
 
 def get_background_job_status(queue=None):

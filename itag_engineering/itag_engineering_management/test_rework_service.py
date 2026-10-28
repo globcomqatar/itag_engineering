@@ -8,6 +8,9 @@ from itag_engineering.itag_engineering_management.rework_service import (
 	complete_rework,
 	create_rework_work_order,
 )
+from itag_engineering.itag_engineering_management.testing_support import (
+	align_default_company_with_test_company,
+)
 from itag_engineering.tests.factories import (
 	create_fresh_stock_item,
 	create_fully_approved_engineering_release,
@@ -18,6 +21,7 @@ from itag_engineering.tests.factories import (
 
 class TestReworkService(FrappeTestCase):
 	def setUp(self):
+		align_default_company_with_test_company(self)
 		frappe.db.delete("Item", {"item_code": ["like", "RWSVC-TEST%"]})
 
 	def tearDown(self):

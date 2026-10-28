@@ -5,6 +5,7 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 
 from itag_engineering.itag_engineering_management.bom_comparison_service import compare_bom_revisions
+from itag_engineering.itag_engineering_management.testing_support import item_product_type_fields
 from itag_engineering.tests.factories import create_fresh_stock_item
 
 
@@ -91,6 +92,7 @@ class TestBomComparisonService(FrappeTestCase):
 				"item_name": "BCS Test New Component",
 				"item_group": "Products",
 				"stock_uom": "Nos",
+				**item_product_type_fields(),
 				"is_stock_item": 1,
 			}
 		).insert()
@@ -212,6 +214,7 @@ class TestBomComparisonService(FrappeTestCase):
 				"item_name": "BCS Test Cost Assembly",
 				"item_group": "Products",
 				"stock_uom": "Nos",
+				**item_product_type_fields(),
 				"is_stock_item": 1,
 			}
 		).insert()
@@ -222,6 +225,7 @@ class TestBomComparisonService(FrappeTestCase):
 				"item_name": "BCS Test Cost Component",
 				"item_group": "Products",
 				"stock_uom": "Nos",
+				**item_product_type_fields(),
 				"is_stock_item": 1,
 			}
 		).insert()
@@ -262,6 +266,7 @@ class TestBomComparisonService(FrappeTestCase):
 				"item_name": item_code,
 				"item_group": "Products",
 				"stock_uom": "Nos",
+				**item_product_type_fields(),
 				"is_stock_item": 1,
 			}
 		).insert()

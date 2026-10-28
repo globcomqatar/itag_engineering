@@ -133,6 +133,14 @@ class TestUAT015FullFinishedValveTraceability(FrappeTestCase):
 				"doctype": "Delivery Note",
 				"customer": customer,
 				"company": company,
+				# Pin the document and price-list currency to the Company's own
+				# currency so ERPNext does not demand a Currency Exchange record
+				# between the site's default selling price list currency and the
+				# test Company's currency (not what this traceability test covers).
+				"currency": frappe.get_cached_value("Company", company, "default_currency"),
+				"conversion_rate": 1,
+				"price_list_currency": frappe.get_cached_value("Company", company, "default_currency"),
+				"plc_conversion_rate": 1,
 				"items": [{"item_code": finished_wo.production_item, "qty": 1, "warehouse": warehouse}],
 			}
 		).insert(ignore_permissions=True)
@@ -187,6 +195,14 @@ class TestUAT016ForwardHeatTraceability(FrappeTestCase):
 				"doctype": "Delivery Note",
 				"customer": customer,
 				"company": company,
+				# Pin the document and price-list currency to the Company's own
+				# currency so ERPNext does not demand a Currency Exchange record
+				# between the site's default selling price list currency and the
+				# test Company's currency (not what this traceability test covers).
+				"currency": frappe.get_cached_value("Company", company, "default_currency"),
+				"conversion_rate": 1,
+				"price_list_currency": frappe.get_cached_value("Company", company, "default_currency"),
+				"plc_conversion_rate": 1,
 				"items": [{"item_code": finished_wo.production_item, "qty": 1, "warehouse": warehouse}],
 			}
 		).insert(ignore_permissions=True)

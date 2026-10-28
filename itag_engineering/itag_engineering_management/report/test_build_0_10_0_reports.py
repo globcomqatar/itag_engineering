@@ -7,6 +7,9 @@ from frappe.utils import today
 
 from itag_engineering.itag_engineering_management.hold_service import place_hold
 from itag_engineering.itag_engineering_management.wip_service import link_component_to_assembly
+from itag_engineering.itag_engineering_management.testing_support import (
+	align_default_company_with_test_company,
+)
 from itag_engineering.tests.factories import (
 	create_fresh_stock_item,
 	create_test_wip_unit,
@@ -45,6 +48,7 @@ class TestBuild0100Reports(FrappeTestCase):
 
 class TestBuild0100ReportsAgainstRealData(FrappeTestCase):
 	def setUp(self):
+		align_default_company_with_test_company(self)
 		frappe.db.delete("Item", {"item_code": ["like", "B10R-TEST%"]})
 		frappe.db.delete("Production Engineering Hold", {"hold_reason": ["like", "B10R-TEST%"]})
 

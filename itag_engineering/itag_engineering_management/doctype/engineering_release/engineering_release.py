@@ -5,6 +5,11 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+from itag_engineering.itag_engineering_management.classification_service import (
+	apply_carried_fields,
+	remember_released_engineering_release,
+)
+
 # release_status is THE workflow-state field itself (workflow_state_field =
 # "release_status" in the Engineering Release Workflow fixture) - there is no
 # separate workflow_state mirror field on this doctype at all, deliberately,
@@ -21,12 +26,27 @@ RELEASED_STATES = ("Released for Production", "Suspended", "Withdrawn", "Superse
 # frozen once Released for Production.
 POST_RELEASE_ALLOWED_FIELDS = {"release_status", "modified", "modified_by"}
 
+# release_status values a release may move to once it has left the review
+# steps, taken from the removed Engineering Release workflow. Released for
+# Production can be Suspended, Withdrawn, Superseded or Obsolete. Nothing
+# comes back out of those four, and nothing goes back to Draft or to a review
+# step. Superseded by submit_engineering_release() is one of these edges.
+POST_RELEASE_TRANSITIONS = {
+	"Released for Production": ("Suspended", "Withdrawn", "Superseded", "Obsolete"),
+	"Suspended": (),
+	"Withdrawn": (),
+	"Superseded": (),
+	"Obsolete": (),
+}
+
 
 class EngineeringRelease(Document):
 	def validate(self):
 		self.apply_default_company()
+		apply_carried_fields(self, self.item)
 		self.guard_released_for_production_requires_checksum()
 		self.validate_immutable_once_released()
+		remember_released_engineering_release(self)
 
 	def apply_default_company(self):
 		"""Decision Log #2 single-company scope: company is read_only:1 in
@@ -92,6 +112,19 @@ class EngineeringRelease(Document):
 		before = self.get_doc_before_save()
 		if not before or before.release_status not in RELEASED_STATES:
 			return
+
+		# release_status is in POST_RELEASE_ALLOWED_FIELDS, so the loop below
+		# lets it change. Without this check a saved Released for Production
+		# release could be set back to Draft, or to any other status, by a
+		# plain save.
+		if self.release_status != before.release_status and self.release_status not in (
+			POST_RELEASE_TRANSITIONS.get(before.release_status, ())
+		):
+			frappe.throw(
+				_("An Engineering Release at {0} cannot be changed to {1}.").format(
+					before.release_status, self.release_status
+				)
+			)
 
 		for fieldname in self.meta.get_valid_columns():
 			if fieldname in POST_RELEASE_ALLOWED_FIELDS:

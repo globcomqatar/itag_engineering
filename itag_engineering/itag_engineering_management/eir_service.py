@@ -10,6 +10,9 @@ from itag_engineering.itag_engineering_management.audit_service import log_audit
 from itag_engineering.itag_engineering_management.duplicate_service import (
 	find_possible_duplicates,
 )
+from itag_engineering.itag_engineering_management.classification_service import (
+	apply_request_to_item_fields,
+)
 from itag_engineering.itag_engineering_management.item_code_service import reserve_item_code
 from itag_engineering.itag_engineering_management.response import success
 
@@ -28,6 +31,15 @@ CREATE_ITEM_ROLES = (
 	"Engineering User",
 	"Engineering Manager",
 )
+
+# The Engineering Item Request workflow was removed, so nothing moves a
+# request to Approved or Rejected except the services below. Engineering User
+# raises the request, Engineering Manager decides it.
+REVIEW_ROLES = ("Engineering Manager",)
+
+# States a request can still be decided from. Approved, Item Created, Closed,
+# Rejected and Cancelled are final for these two services.
+OPEN_REVIEW_STATES = ("Draft", "Duplicate Review", "Engineering Review", "Returned for Correction")
 
 
 def run_duplicate_check(eir_name):
@@ -63,6 +75,83 @@ def _check_eir_action_permission():
 			),
 			frappe.PermissionError,
 		)
+
+
+def _check_review_permission(action_description):
+	if not set(REVIEW_ROLES).intersection(frappe.get_roles()):
+		frappe.throw(
+			_("Only {0} may {1}.").format(_(" or ").join(REVIEW_ROLES), action_description),
+			frappe.PermissionError,
+		)
+
+
+def _set_review_state(eir, to_state, comment, audit_details):
+	"""Write the decision. ignore_permissions because the role gate is the
+	service's own check, as in ecr_service. Leaves a Comment and an audit
+	event, which is the trail the workflow used to keep."""
+	from_state = eir.workflow_state
+	eir.workflow_state = to_state
+	eir.flags.ignore_permissions = True
+	eir.save()
+	eir.add_comment("Comment", comment)
+	log_audit_event(
+		"EIR Transition",
+		"Engineering Item Request",
+		eir.name,
+		{"from_state": from_state, "to_state": to_state, **audit_details},
+	)
+
+
+def _load_open_eir(eir_name, action):
+	eir = frappe.get_doc("Engineering Item Request", eir_name)
+	if eir.workflow_state not in OPEN_REVIEW_STATES:
+		frappe.throw(
+			_("An Engineering Item Request in {0} cannot be {1}. Only {2} requests can.").format(
+				eir.workflow_state, action, ", ".join(OPEN_REVIEW_STATES)
+			)
+		)
+	return eir
+
+
+def approve_eir(eir_name):
+	"""Move an open request to Approved so create_item_from_eir() accepts it.
+
+	Runs the duplicate check first when it has not run yet, and refuses while
+	possible duplicates are unresolved (the same rule create_item_from_eir
+	enforces, caught earlier here).
+	"""
+	_check_review_permission("approve an Engineering Item Request")
+	eir = _load_open_eir(eir_name, _("approved"))
+	if not eir.duplicate_check_status or eir.duplicate_check_status == "Not Checked":
+		run_duplicate_check(eir_name)
+		eir.reload()
+	if eir.duplicate_check_status == "Possible Duplicates Found":
+		frappe.throw(
+			_("Possible duplicates must be resolved before an Engineering Item Request can be approved.")
+		)
+	_set_review_state(
+		eir,
+		"Approved",
+		_("Approved by {0}.").format(frappe.session.user),
+		{"duplicate_check_status": eir.duplicate_check_status},
+	)
+	return eir.name
+
+
+def reject_eir(eir_name, reason):
+	"""Move an open request to Rejected. A reason is required and is kept as a
+	Comment and in the audit event."""
+	_check_review_permission("reject an Engineering Item Request")
+	if not (reason or "").strip():
+		frappe.throw(_("A reason is required to reject an Engineering Item Request."))
+	eir = _load_open_eir(eir_name, _("rejected"))
+	_set_review_state(
+		eir,
+		"Rejected",
+		_("Rejected by {0}: {1}").format(frappe.session.user, reason),
+		{"reason": reason},
+	)
+	return eir.name
 
 
 def create_item_from_eir(eir_name, eir=None, persist_request=True):
@@ -119,12 +208,12 @@ def create_item_from_eir(eir_name, eir=None, persist_request=True):
 		"itag_engineering_status": "Approved",
 		"description": eir.item_description,
 	}
-	# erpcloud_itagksa makes Item Type mandatory on Item. Copy the request's
-	# choice when that field exists, so creation does not die on a blank value.
-	if frappe.get_meta("Item").has_field("custom_product_type"):
-		item_fields["custom_product_type"] = eir.get("item_type") or "General"
+	# erpcloud_itagksa makes Item Type (custom_product_type) mandatory on Item.
+	# The request's Item Type is validated against that field's own options
+	# and copied by apply_request_to_item_fields() below.
 	for itag_field, eir_field in ITEM_FIELD_MAP.items():
 		item_fields[itag_field] = eir.get(eir_field)
+	apply_request_to_item_fields(eir, item_fields)
 
 	item = frappe.get_doc(item_fields)
 	item.insert(ignore_permissions=True)
@@ -160,3 +249,13 @@ def run_duplicate_check_api(eir_name):
 @frappe.whitelist()
 def create_item_from_eir_api(eir_name):
 	return success(data={"item_code": create_item_from_eir(eir_name)})
+
+
+@frappe.whitelist()
+def approve_eir_api(eir_name):
+	return success(data={"name": approve_eir(eir_name)})
+
+
+@frappe.whitelist()
+def reject_eir_api(eir_name, reason):
+	return success(data={"name": reject_eir(eir_name, reason)})

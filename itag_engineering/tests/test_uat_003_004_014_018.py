@@ -6,6 +6,9 @@ from frappe.tests.utils import FrappeTestCase
 from frappe.utils import now_datetime
 
 from itag_engineering.itag_engineering_management.release_service import resolve_effective_release
+from itag_engineering.itag_engineering_management.testing_support import (
+	align_default_company_with_test_company,
+)
 from itag_engineering.tests.factories import (
 	create_fresh_stock_item,
 	create_fully_approved_engineering_release,
@@ -94,6 +97,7 @@ class TestUAT014CustomerSpecificRelease(FrappeTestCase):
 	"""
 
 	def setUp(self):
+		align_default_company_with_test_company(self)
 		frappe.db.delete("Engineering Release", {"item": ["like", "UAT014ER-%"]})
 
 	def tearDown(self):
@@ -155,6 +159,7 @@ class TestWorkOrderBaselineCustomerAndProjectContext(FrappeTestCase):
 	sales_order.customer and passing doc.project through directly."""
 
 	def setUp(self):
+		align_default_company_with_test_company(self)
 		frappe.db.delete("Engineering Release", {"item": ["like", "UATWOBC-%"]})
 		frappe.db.delete("Work Order", {"production_item": ["like", "UATWOBC-%"]})
 

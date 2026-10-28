@@ -4,10 +4,17 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
+from itag_engineering.itag_engineering_management.classification_service import (
+	product_type_options,
+	resolve_product_type,
+)
 from itag_engineering.itag_engineering_management.eir_service import (
+	approve_eir,
 	create_item_from_eir,
+	reject_eir,
 	run_duplicate_check,
 )
+from itag_engineering.tests.factories import ensure_classification_value
 
 
 def _insert_series(rule_name, prefix, series_name):
@@ -65,6 +72,8 @@ class TestEirService(FrappeTestCase):
 			}
 		).insert()
 
+		ensure_classification_value("Nominal Size", "6IN")
+		ensure_classification_value("Pressure Class", "CL300")
 		self.eir = frappe.get_doc(
 			{
 				"doctype": "Engineering Item Request",
@@ -101,8 +110,8 @@ class TestEirService(FrappeTestCase):
 			frappe.set_user("Administrator")
 
 	def test_privileged_user_can_run_duplicate_check(self):
-		# Administrator (the default test user) has System Manager, one of
-		# CREATE_ITEM_ROLES, so this must still succeed.
+		# Administrator (the default test user) holds every role, including the
+		# Engineering roles in CREATE_ITEM_ROLES, so this must still succeed.
 		results = run_duplicate_check(self.eir.name)
 		self.eir.reload()
 		self.assertEqual(results, [])
@@ -190,3 +199,100 @@ class TestEirService(FrappeTestCase):
 		second_code = create_item_from_eir(self.eir.name)
 		self.assertEqual(first_code, second_code)
 		self.assertEqual(frappe.db.count("Item", {"item_code": first_code}), 1)
+
+	def test_approve_eir_makes_the_request_approved_and_item_creatable(self):
+		self.assertEqual(self.eir.workflow_state, "Draft")
+		approve_eir(self.eir.name)
+		self.eir.reload()
+		self.assertEqual(self.eir.workflow_state, "Approved")
+		# The duplicate check ran as part of the approval.
+		self.assertEqual(self.eir.duplicate_check_status, "No Duplicates Found")
+		self.assertTrue(
+			frappe.db.exists(
+				"Comment",
+				{
+					"reference_doctype": "Engineering Item Request",
+					"reference_name": self.eir.name,
+					"comment_type": "Comment",
+					"content": ["like", "%Approved by%"],
+				},
+			)
+		)
+		# Needs the "EIR Transition" option on Engineering Audit Log.event_type,
+		# which arrives with the doctype sync (bench migrate).
+		self.assertTrue(
+			frappe.db.exists(
+				"Engineering Audit Log", {"event_type": "EIR Transition", "reference_name": self.eir.name}
+			)
+		)
+		item_code = create_item_from_eir(self.eir.name)
+		self.assertTrue(frappe.db.exists("Item", item_code))
+		self.eir.reload()
+		self.assertEqual(self.eir.workflow_state, "Item Created")
+
+	def test_approve_eir_is_blocked_while_possible_duplicates_are_unresolved(self):
+		frappe.db.set_value(
+			"Engineering Item Request",
+			self.eir.name,
+			"duplicate_check_status",
+			"Possible Duplicates Found",
+		)
+		with self.assertRaises(frappe.ValidationError):
+			approve_eir(self.eir.name)
+		self.assertEqual(frappe.db.get_value("Engineering Item Request", self.eir.name, "workflow_state"), "Draft")
+
+	def test_approve_eir_requires_engineering_manager(self):
+		frappe.set_user("Guest")
+		try:
+			with self.assertRaises(frappe.PermissionError):
+				approve_eir(self.eir.name)
+			with self.assertRaises(frappe.PermissionError):
+				reject_eir(self.eir.name, "Not needed")
+		finally:
+			frappe.set_user("Administrator")
+		self.assertEqual(frappe.db.get_value("Engineering Item Request", self.eir.name, "workflow_state"), "Draft")
+
+	def test_approve_eir_only_from_open_states(self):
+		for state in ("Approved", "Item Created", "Rejected", "Closed", "Cancelled"):
+			frappe.db.set_value("Engineering Item Request", self.eir.name, "workflow_state", state)
+			with self.assertRaises(frappe.ValidationError, msg=f"approve from {state}"):
+				approve_eir(self.eir.name)
+
+	def test_reject_eir_needs_a_reason_and_is_final(self):
+		with self.assertRaises(frappe.ValidationError):
+			reject_eir(self.eir.name, "  ")
+		reject_eir(self.eir.name, "Duplicate of an existing catalogue item")
+		self.eir.reload()
+		self.assertEqual(self.eir.workflow_state, "Rejected")
+		self.assertTrue(
+			frappe.db.exists(
+				"Comment",
+				{
+					"reference_doctype": "Engineering Item Request",
+					"reference_name": self.eir.name,
+					"content": ["like", "%Rejected by%Duplicate of an existing catalogue item%"],
+				},
+			)
+		)
+		with self.assertRaises(frappe.ValidationError):
+			approve_eir(self.eir.name)
+		with self.assertRaises(frappe.ValidationError):
+			create_item_from_eir(self.eir.name)
+
+	def test_item_type_of_the_request_becomes_the_items_product_type(self):
+		if not product_type_options():
+			self.skipTest("Item has no custom_product_type field on this site.")
+		frappe.db.set_value("Engineering Item Request", self.eir.name, "item_type", "Critical")
+		approve_eir(self.eir.name)
+		item_code = create_item_from_eir(self.eir.name)
+		self.assertEqual(frappe.db.get_value("Item", item_code, "custom_product_type"), "Critical")
+
+	def test_resolve_product_type_defaults_and_rejects_unknown_values(self):
+		options = product_type_options()
+		if not options:
+			self.assertIsNone(resolve_product_type("Critical"))
+			return
+		self.assertEqual(resolve_product_type(None), "General")
+		self.assertEqual(resolve_product_type("Non-Critical"), "Non-Critical")
+		with self.assertRaises(frappe.ValidationError):
+			resolve_product_type("Not A Product Type")
