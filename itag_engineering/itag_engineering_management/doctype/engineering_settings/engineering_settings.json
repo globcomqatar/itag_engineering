@@ -21,6 +21,7 @@
   "work_order_baseline_enforcement",
   "column_break_enforcement_1",
   "traceability_enabled",
+  "eco_auto_hold_enabled",
   "storage_tab",
   "storage_section",
   "default_drawing_storage_mode",
@@ -125,6 +126,13 @@
    "label": "Traceability Enabled"
   },
   {
+   "default": "0",
+   "fieldname": "eco_auto_hold_enabled",
+   "fieldtype": "Check",
+   "label": "ECO Auto-Hold",
+   "description": "When on, raising an Engineering Change Order puts its affected Items and BOMs on hold, and closing it releases them. Every hold and release is logged. Off by default."
+  },
+  {
    "fieldname": "storage_tab",
    "fieldtype": "Tab Break",
    "label": "Storage & Notifications"
@@ -198,7 +206,7 @@
  "icon": "fa fa-cog",
  "issingle": 1,
  "links": [],
- "modified": "2026-07-19 00:00:00.000000",
+ "modified": "2026-10-28 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "Engineering Settings",

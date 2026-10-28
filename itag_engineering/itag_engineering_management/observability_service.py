@@ -36,12 +36,10 @@ RESTRICTED_ROLES = ("System Manager",)
 DEFAULT_METRIC_SAMPLE_SIZE = 50
 
 WORKFLOW_NAMES = (
-	"Engineering Item Request Workflow",
-	"Engineering Drawing Workflow",
-	"Product Revision Workflow",
-	"Engineering Release Workflow",
-	"Engineering Change Request Workflow",
-	"Engineering Change Order Workflow",
+	# 15.5.5 removed the six document workflows; 15.5.6 adds these three.
+	"ITAG BOM Workflow",
+	"ITAG BOM Creator Workflow",
+	"ITAG Engineering Release Workflow",
 )
 
 

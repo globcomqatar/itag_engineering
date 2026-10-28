@@ -38,6 +38,8 @@ after_migrate = [
 	"itag_engineering.install.create_default_code_series",
 	"itag_engineering.install.create_valve_types_for_code_series",
 	"itag_engineering.setup.custom_fields.sync_custom_fields",
+	"itag_engineering.install.grant_engineering_bom_permissions",
+	"itag_engineering.install.sync_report_roles",
 ]
 
 # Testing
@@ -49,6 +51,21 @@ before_tests = "itag_engineering.install.before_tests"
 # --------
 
 fixtures = [
+	# 15.5.6: approval only on BOM (and BOM Creator, which generates BOMs)
+	# and Engineering Release. Draft (Engineering User) -> Approved
+	# (Engineering Manager) -> Released (Engineering Master Manager).
+	{"doctype": "Workflow State", "filters": [["name", "in", ["Draft", "Approved", "Released"]]]},
+	{"doctype": "Workflow Action Master", "filters": [["name", "in", ["Approve", "Reject", "Release"]]]},
+	{
+		"doctype": "Workflow",
+		"filters": [
+			[
+				"name",
+				"in",
+				["ITAG BOM Workflow", "ITAG BOM Creator Workflow", "ITAG Engineering Release Workflow"],
+			]
+		],
+	},
 	{
 		# Referenced by the ITAG Engineering workspace's "chart" content block
 		# and by the "ITAG Engineering" Dashboard's charts table - without this
@@ -119,6 +136,24 @@ permission_query_conditions = {
 # ----------
 
 doc_events = {
+	"BOM": {
+		"before_insert": "itag_engineering.itag_engineering_management.release_control.inherit_from_bom_creator",
+		"validate": "itag_engineering.itag_engineering_management.release_control.validate_release_control",
+		"before_submit": "itag_engineering.itag_engineering_management.release_control.guard_bom_submit",
+	},
+	"BOM Creator": {
+		"validate": "itag_engineering.itag_engineering_management.release_control.validate_release_control",
+		"before_submit": "itag_engineering.itag_engineering_management.release_control.guard_bom_creator_submit",
+	},
+	"Engineering Release": {
+		"validate": [
+			"itag_engineering.itag_engineering_management.release_control.validate_release_control",
+			"itag_engineering.itag_engineering_management.release_control.guard_release_for_production",
+		],
+	},
+	"Engineering Change Order": {
+		"on_update": "itag_engineering.itag_engineering_management.eco_auto_hold_service.on_eco_update",
+	},
 	"Work Order": {
 		"before_submit": "itag_engineering.itag_engineering_management.work_order_baseline.freeze_baseline_before_submit",
 	},

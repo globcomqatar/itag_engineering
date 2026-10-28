@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Globcom Qatar and contributors
 # For license information, please see license.txt
 
+import unittest
+
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
@@ -39,6 +41,7 @@ class TestEngineeringItemRequest(FrappeTestCase):
 		self.assertIn("Engineering Manager", roles_with_create)
 		self.assertNotIn("Engineering Master Manager", roles_with_create)
 
+	@unittest.skip("Retired in 15.5.5: this workflow/role was removed by decision (approval only on BOM and Engineering Release from 15.5.6, see tests/test_release_control.py).")
 	def test_workflow_exists_with_expected_states(self):
 		workflow = frappe.get_doc("Workflow", "Engineering Item Request Workflow")
 		state_names = [s.state for s in workflow.states]

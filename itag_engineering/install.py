@@ -205,7 +205,9 @@ ENGINEERING_WORKFLOWS = (
 
 
 def remove_engineering_workflows():
-	"""Delete the six workflows this app used to ship. Status fields stay."""
+	"""Delete the six workflows this app used to ship. Status fields stay.
+	The two workflows added in 15.5.6 ("ITAG BOM Workflow" and
+	"ITAG Engineering Release Workflow") have different names and are kept."""
 	for name in ENGINEERING_WORKFLOWS:
 		if frappe.db.exists("Workflow", name):
 			frappe.delete_doc("Workflow", name, force=1, ignore_permissions=True)
@@ -247,4 +249,111 @@ def create_default_product_families():
 
 
 def before_tests():
+	"""Prepare a fresh test site so the full `run-tests --app itag_engineering`
+	run can start: finish ERPNext's setup wizard, then add the ERPNext test
+	records these tests rely on. Every step only creates what is missing."""
+	frappe.clear_cache()
+	from erpnext.setup.utils import before_tests as erpnext_before_tests
+
+	erpnext_before_tests()
+	_ensure_test_holiday_list()
+	_ensure_test_operation_and_workstation()
+	frappe.db.commit()
+
+
+def _ensure_test_holiday_list():
+	# ERPNext's Company test records point at this list; on a fresh site the
+	# record-bootstrap chain fails before any test runs if it is missing.
+	if frappe.db.exists("Holiday List", "_Test Holiday List"):
+		return
+	year = frappe.utils.now_datetime().year
+	frappe.get_doc(
+		{
+			"doctype": "Holiday List",
+			"holiday_list_name": "_Test Holiday List",
+			"from_date": f"{year - 1}-01-01",
+			"to_date": f"{year + 1}-12-31",
+			"holidays": [{"holiday_date": f"{year}-01-01", "description": "New Year"}],
+		}
+	).insert(ignore_permissions=True)
+
+
+def _ensure_test_operation_and_workstation():
+	if not frappe.db.exists("Workstation", "_Test Workstation 1"):
+		frappe.get_doc(
+			{
+				"doctype": "Workstation",
+				"workstation_name": "_Test Workstation 1",
+				"production_capacity": 1,
+				"hour_rate_electricity": 0,
+			}
+		).insert(ignore_permissions=True)
+	if not frappe.db.exists("Operation", "_Test Operation 1"):
+		frappe.get_doc(
+			{
+				"doctype": "Operation",
+				"name": "_Test Operation 1",
+				"workstation": "_Test Workstation 1",
+			}
+		).insert(ignore_permissions=True)
+
+
+# 15.5.6: the BOM and BOM Creator workflows need the three engineering roles
+# to have access to those standard ERPNext DocTypes. Added as Custom DocPerm
+# rows through Frappe's own permission API (the standard rows are copied
+# first, so existing ERPNext access is unchanged). Only missing rights are
+# added; nothing is ever removed.
+ENGINEERING_BOM_PERMISSIONS = {
+	"Engineering User": ("read", "write", "create", "print", "export", "report"),
+	"Engineering Manager": ("read", "write", "print", "export", "report"),
+	"Engineering Master Manager": ("read", "write", "submit", "cancel", "amend", "print", "export", "report"),
+}
+
+
+def grant_engineering_bom_permissions():
+	from frappe.permissions import add_permission, update_permission_property
+
+	for doctype in ("BOM", "BOM Creator"):
+		for role, rights in ENGINEERING_BOM_PERMISSIONS.items():
+			if not frappe.db.exists("Role", role):
+				continue
+			add_permission(doctype, role, 0)
+			row = frappe.db.get_value(
+				"Custom DocPerm", {"parent": doctype, "role": role, "permlevel": 0}, list(rights), as_dict=True
+			)
+			for right in rights:
+				if not (row and row.get(right)):
+					update_permission_property(doctype, role, 0, right, 1, validate=False)
+	frappe.clear_cache()
+
+
+def sync_report_roles():
+	"""Make each of this app's standard reports carry exactly the roles in its
+	JSON file. Report JSONs have no `modified` stamp, so a plain migrate does
+	not re-import changed roles; this keeps the site in step with the code
+	(15.5.6 restores System Manager on every report)."""
+	import json
+	import os
+
+	report_dir = frappe.get_app_path("itag_engineering", "itag_engineering_management", "report")
+	for folder in sorted(os.listdir(report_dir)):
+		path = os.path.join(report_dir, folder, f"{folder}.json")
+		if not os.path.exists(path):
+			continue
+		with open(path) as f:
+			data = json.load(f)
+		name = data.get("name")
+		if data.get("doctype") != "Report" or not frappe.db.exists("Report", name):
+			continue
+		wanted = [r["role"] for r in data.get("roles", []) if frappe.db.exists("Role", r["role"])]
+		current = frappe.get_all(
+			"Has Role", filters={"parent": name, "parenttype": "Report"}, pluck="role", order_by="idx"
+		)
+		if sorted(current) == sorted(wanted):
+			continue
+		frappe.db.delete("Has Role", {"parent": name, "parenttype": "Report"})
+		report = frappe.get_doc("Report", name)
+		report.set("roles", [])
+		for role in wanted:
+			report.append("roles", {"role": role}).db_insert()
 	frappe.clear_cache()

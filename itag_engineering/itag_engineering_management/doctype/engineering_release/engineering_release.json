@@ -7,6 +7,8 @@
  "field_order": [
   "naming_series",
   "release_status",
+  "workflow_state",
+  "approved_by",
   "column_break_header",
   "release_classification",
   "release_checksum",
@@ -57,6 +59,23 @@
    "label": "Release Status",
    "options": "Draft\nEngineering Review\nEngineering Checked\nQuality Review\nManufacturing Review\nCost Review\nCustomer Review\nEngineering Approved\nReleased for Production\nSuspended\nWithdrawn\nSuperseded\nObsolete",
    "read_only": 1
+  },
+  {
+   "fieldname": "workflow_state",
+   "fieldtype": "Link",
+   "label": "Workflow State",
+   "options": "Workflow State",
+   "read_only": 1,
+   "no_copy": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User",
+   "read_only": 1,
+   "no_copy": 1
   },
   {
    "fieldname": "column_break_header",
@@ -252,7 +271,7 @@
   }
  ],
  "links": [],
- "modified": "2026-07-20 00:00:00.000000",
+ "modified": "2026-10-28 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "Engineering Release",
@@ -281,6 +300,16 @@
    "role": "Engineering Manager",
    "share": 1,
    "write": 1
+  },
+  {
+   "role": "Engineering Master Manager",
+   "read": 1,
+   "write": 1,
+   "print": 1,
+   "export": 1,
+   "report": 1,
+   "email": 1,
+   "share": 1
   }
  ],
  "sort_field": "modified",

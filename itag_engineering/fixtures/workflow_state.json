@@ -1,0 +1,29 @@
+[
+ {
+  "doctype": "Workflow State",
+  "name": "Draft",
+  "docstatus": 0,
+  "modified": "2026-10-28 12:00:00.000000",
+  "workflow_state_name": "Draft",
+  "style": "",
+  "icon": ""
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Approved",
+  "docstatus": 0,
+  "modified": "2026-10-28 12:00:00.000000",
+  "workflow_state_name": "Approved",
+  "style": "Success",
+  "icon": ""
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Released",
+  "docstatus": 0,
+  "modified": "2026-10-28 12:00:00.000000",
+  "workflow_state_name": "Released",
+  "style": "Primary",
+  "icon": ""
+ }
+]

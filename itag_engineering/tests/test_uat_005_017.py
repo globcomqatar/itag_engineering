@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Globcom Qatar and contributors
 # For license information, please see license.txt
 
+import unittest
+
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
@@ -113,6 +115,7 @@ class TestUAT017UnauthorizedApproval(FrappeTestCase):
 			user.add_roles(*roles)
 		return email
 
+	@unittest.skip("Retired in 15.5.5: this workflow/role was removed by decision (approval only on BOM and Engineering Release from 15.5.6, see tests/test_release_control.py).")
 	def test_requestor_cannot_approve_the_eco(self):
 		# Blocked by the top-level action-role gate (eco_service.ECO_ACTION_ROLES):
 		# a plain Requestor holds neither "Engineering Manager" nor "ITAG

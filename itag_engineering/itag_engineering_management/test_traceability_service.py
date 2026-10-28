@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Globcom Qatar and contributors
 # For license information, please see license.txt
 
+import unittest
+
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
@@ -138,6 +140,7 @@ class TestTraceabilityService(FrappeTestCase):
 		self.assertEqual(result["components"][0]["wip_unit"], unit_b)
 		self.assertIn("Genealogy cycle detected", result["components"][0]["components"][0].get("note", ""))
 
+	@unittest.skip("Retired in 15.5.5: this workflow/role was removed by decision (approval only on BOM and Engineering Release from 15.5.6, see tests/test_release_control.py).")
 	def test_user_without_customer_info_role_gets_masked_customer_data(self):
 		chain = self._build_three_level_chain_with_delivery()
 		email = self._ensure_user(

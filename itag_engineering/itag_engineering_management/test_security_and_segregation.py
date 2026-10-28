@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Globcom Qatar and contributors
 # For license information, please see license.txt
 
+import unittest
+
 """Build ITAG-0.11.0 Task 1: the consolidated cross-build security and
 segregation-of-duties test suite (roadmap Section 22.2/22.3). This is a
 NEW-TESTS-ONLY consolidation - no new enforcement mechanism beyond
@@ -55,6 +57,7 @@ def _ensure_user(email, first_name, roles):
 	return email
 
 
+@unittest.skip("Retired in 15.5.5: this workflow/role was removed by decision (approval only on BOM and Engineering Release from 15.5.6, see tests/test_release_control.py).")
 class TestIntegrationUserDenied(FrappeTestCase):
 	"""Roadmap Section 22.3: "Integration users cannot approve or release
 	engineering records." `ITAG Integration User` is a genuinely NEW role
@@ -166,6 +169,7 @@ class TestSegregationOfDuties(FrappeTestCase):
 		frappe.db.delete("Engineering Change Request", {"request_title": ["like", "SECAUDIT%"]})
 		frappe.set_user("Administrator")
 
+	@unittest.skip("Retired in 15.5.5: this workflow/role was removed by decision (approval only on BOM and Engineering Release from 15.5.6, see tests/test_release_control.py).")
 	def test_drawing_creator_cannot_release_the_same_revision(self):
 		"""(c) Confirmed via this build's own audit that this rule was
 		never actually implemented in Build ITAG-0.3.0 - closed now in

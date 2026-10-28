@@ -731,8 +731,57 @@ def get_wip_traceability_fields():
 	}
 
 
+def get_release_control_fields():
+	"""15.5.6: workflow state and approver fields for the BOM and BOM Creator
+	workflows, plus drawing and product revision links on BOM Creator."""
+	state = {
+		"fieldname": "itag_workflow_state",
+		"fieldtype": "Link",
+		"label": "Workflow State",
+		"options": "Workflow State",
+		"read_only": 1,
+		"allow_on_submit": 1,
+		"no_copy": 1,
+		"in_standard_filter": 1,
+	}
+	approved_by = {
+		"fieldname": "itag_approved_by",
+		"fieldtype": "Link",
+		"label": "Approved By",
+		"options": "User",
+		"read_only": 1,
+		"allow_on_submit": 1,
+		"no_copy": 1,
+	}
+	return {
+		"BOM": [
+			dict(state, insert_after="itag_engineering_status"),
+			dict(approved_by, insert_after="itag_workflow_state"),
+		],
+		"BOM Creator": [
+			dict(state, insert_after="project"),
+			dict(approved_by, insert_after="itag_workflow_state"),
+			{
+				"fieldname": "itag_drawing_revision",
+				"fieldtype": "Link",
+				"label": "Drawing Revision",
+				"options": "Engineering Drawing",
+				"insert_after": "itag_approved_by",
+			},
+			{
+				"fieldname": "itag_product_revision",
+				"fieldtype": "Link",
+				"label": "Product Revision",
+				"options": "Product Revision",
+				"insert_after": "itag_drawing_revision",
+			},
+		],
+	}
+
+
 def sync_custom_fields():
 	create_custom_fields(get_custom_fields(), update=True)
+	create_custom_fields(get_release_control_fields(), update=True)
 	create_custom_fields(get_bom_fields(), update=True)
 	create_custom_fields(get_routing_fields(), update=True)
 	create_custom_fields(get_bom_operation_fields(), update=True)
