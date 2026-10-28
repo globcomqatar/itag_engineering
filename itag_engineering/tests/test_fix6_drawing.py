@@ -99,5 +99,20 @@ class TestFix6DrawingSubmittable(FrappeTestCase):
 	def test_former_released_submit_cancel_amend_master(self):
 		self._submit_cancel_amend(_drawing("F6-DRW-R", "Released"), "master")
 
+	def test_user_cannot_release_by_setting_status(self):
+		name = _drawing("F6-DRW-X")
+		frappe.set_user(_user("user"))
+		doc = frappe.get_doc("Engineering Drawing", name)
+		doc.release_status = "Released"
+		self.assertRaises(frappe.ValidationError, doc.save)
+
+	def test_legacy_released_draft_can_still_be_edited_to_superseded(self):
+		name = _drawing("F6-DRW-L", "Released")
+		frappe.set_user(_user("user"))
+		doc = frappe.get_doc("Engineering Drawing", name)
+		doc.release_status = "Superseded"
+		doc.save()
+		self.assertEqual(doc.docstatus, 0)
+
 	def test_next_revision(self):
 		self.assertEqual([next_revision(r) for r in ("A", "Z", "AZ", "1", "09", "")], ["B", "AA", "BA", "2", "10", "A"])

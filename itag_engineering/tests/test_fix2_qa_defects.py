@@ -5,6 +5,8 @@ Ahmed (CTO) 28-Oct-2026. Drawings: no workflow, status set directly; ECR Draft -
 for Review -> Approved / Rejected; ECO Draft -> Approved -> Implemented ->
 Closed; read-only support permissions; audit log for ECR/ECO actions."""
 
+import unittest
+
 import frappe
 from frappe.model.workflow import apply_workflow
 from frappe.tests.utils import FrappeTestCase
@@ -111,7 +113,8 @@ class TestWorkflowFixtures(TestFix2Base):
 		self.assertTrue(frappe.db.exists("Workflow", name))
 		self.assertEqual(frappe.db.get_value("Workflow", name, "is_active"), 0)
 		self.assertIsNone(get_workflow_name("Engineering Drawing"))
-		# The inactive workflow doesn't drive state: a user sets Released directly.
+		# The inactive workflow doesn't drive state. fix6: a drawing is
+		# released by Submit (Engineering Manager / Master Manager).
 		frappe.set_user(_user("user"))
 		dwg = frappe.get_doc(
 			{
@@ -123,8 +126,8 @@ class TestWorkflowFixtures(TestFix2Base):
 				"file_checksum": "f4-test-checksum",
 			}
 		).insert()
-		dwg.release_status = "Released"
-		dwg.save()
+		frappe.set_user("Administrator")
+		frappe.get_doc("Engineering Drawing", dwg.name).submit()
 		self.assertEqual(frappe.db.get_value("Engineering Drawing", dwg.name, "workflow_state"), "Released")
 
 	def test_no_new_roles(self):
@@ -149,6 +152,7 @@ class TestD3DrawingStatus(TestFix2Base):
 		).insert()
 		return doc
 
+	@unittest.skip("fix6 (Waheed, 28-Oct-2026): drawings are released by Submit, not by setting the status. Covered by tests/test_fix6_drawing.py")
 	def test_creator_sets_released_directly_and_it_is_audited(self):
 		dwg = self._drawing()
 		dwg.release_status = "Released"
@@ -176,6 +180,7 @@ class TestD3DrawingStatus(TestFix2Base):
 		with self.assertRaises(frappe.ValidationError):
 			dwg.save()
 
+	@unittest.skip("fix6 (Waheed, 28-Oct-2026): drawings are released by Submit, not by setting the status. Covered by tests/test_fix6_drawing.py")
 	def test_released_drawing_unblocks_product_revision_check(self):
 		dwg = self._drawing()
 		dwg.release_status = "Released"

@@ -33,6 +33,7 @@ class EngineeringDrawing(Document):
 		self.prepare_amended_revision()
 		self.release_on_submit()
 		self.sync_release_status_from_workflow_state()
+		self.validate_release_only_by_submit()
 		self.sync_file_checksum()
 		self.validate_release_requires_checksum()
 		self.validate_immutable_once_released()
@@ -187,6 +188,22 @@ class EngineeringDrawing(Document):
 		Master Manager). The usual release guards (checksum) still apply."""
 		if getattr(self, "_action", None) == "submit" and self.release_status not in RELEASED_STATES:
 			self.release_status = self.workflow_state = "Released"
+
+	def validate_release_only_by_submit(self):
+		"""fix6: a draft drawing becomes Released only by Submit, which needs
+		the Engineering Manager / Master Manager submit right. A drawing that
+		was already Released before fix6 keeps that status as a draft."""
+		if self.docstatus != 0 or getattr(self, "_action", None) == "submit":
+			return
+		if self.release_status != "Released":
+			return
+		before = None if self.is_new() else self.get_doc_before_save()
+		if not before or before.release_status != "Released":
+			frappe.throw(
+				_("A drawing is released by submitting it. Ask an Engineering Manager to submit {0}.").format(
+					self.name or _("this drawing")
+				)
+			)
 
 	def on_cancel(self):
 		"""fix6: a cancelled drawing revision is marked Superseded (it stays
