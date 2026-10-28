@@ -732,8 +732,9 @@ def get_wip_traceability_fields():
 
 
 def get_release_control_fields():
-	"""15.5.6: workflow state and approver fields for the BOM and BOM Creator
-	workflows, plus drawing and product revision links on BOM Creator."""
+	"""15.5.6: workflow state and approver fields for the BOM workflow, plus
+	drawing and product revision links on BOM Creator (the Multi-level BOM
+	Builder has no workflow of its own; its BOMs use the BOM workflow)."""
 	state = {
 		"fieldname": "itag_workflow_state",
 		"fieldtype": "Link",
@@ -759,14 +760,12 @@ def get_release_control_fields():
 			dict(approved_by, insert_after="itag_workflow_state"),
 		],
 		"BOM Creator": [
-			dict(state, insert_after="project"),
-			dict(approved_by, insert_after="itag_workflow_state"),
 			{
 				"fieldname": "itag_drawing_revision",
 				"fieldtype": "Link",
 				"label": "Drawing Revision",
 				"options": "Engineering Drawing",
-				"insert_after": "itag_approved_by",
+				"insert_after": "project",
 			},
 			{
 				"fieldname": "itag_product_revision",

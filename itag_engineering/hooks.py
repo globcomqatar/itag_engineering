@@ -51,8 +51,8 @@ before_tests = "itag_engineering.install.before_tests"
 # --------
 
 fixtures = [
-	# 15.5.6: approval only on BOM (and BOM Creator, which generates BOMs)
-	# and Engineering Release. Draft (Engineering User) -> Approved
+	# 15.5.6: approval only on BOM and Engineering Release. BOMs made in the
+	# Multi-level BOM Builder (BOM Creator) go into the ITAG BOM Workflow. Draft (Engineering User) -> Approved
 	# (Engineering Manager) -> Released (Engineering Master Manager).
 	{"doctype": "Workflow State", "filters": [["name", "in", ["Draft", "Approved", "Released"]]]},
 	{"doctype": "Workflow Action Master", "filters": [["name", "in", ["Approve", "Reject", "Release"]]]},
@@ -62,7 +62,7 @@ fixtures = [
 			[
 				"name",
 				"in",
-				["ITAG BOM Workflow", "ITAG BOM Creator Workflow", "ITAG Engineering Release Workflow"],
+				["ITAG BOM Workflow", "ITAG Engineering Release Workflow"],
 			]
 		],
 	},
@@ -135,15 +135,17 @@ permission_query_conditions = {
 # Doc Events
 # ----------
 
+# BOMs made by the Multi-level BOM Builder are saved as Draft (not submitted)
+# so they go through the ITAG BOM Workflow like any other BOM.
+override_doctype_class = {
+	"BOM Creator": "itag_engineering.itag_engineering_management.bom_creator_override.ITAGBOMCreator",
+}
+
 doc_events = {
 	"BOM": {
-		"before_insert": "itag_engineering.itag_engineering_management.release_control.inherit_from_bom_creator",
+		"before_insert": "itag_engineering.itag_engineering_management.release_control.prepare_bom_from_bom_creator",
 		"validate": "itag_engineering.itag_engineering_management.release_control.validate_release_control",
 		"before_submit": "itag_engineering.itag_engineering_management.release_control.guard_bom_submit",
-	},
-	"BOM Creator": {
-		"validate": "itag_engineering.itag_engineering_management.release_control.validate_release_control",
-		"before_submit": "itag_engineering.itag_engineering_management.release_control.guard_bom_creator_submit",
 	},
 	"Engineering Release": {
 		"validate": [

@@ -1,4 +1,5 @@
-"""15.5.6 release control: BOM, BOM Creator and Engineering Release workflows,
+"""15.5.6 release control: BOM and Engineering Release workflows (BOMs from the
+Multi-level BOM Builder use the BOM workflow),
 ECO auto-hold, report roles and the Multi-level BOM Builder link."""
 
 import frappe
@@ -17,7 +18,7 @@ USERS = {
 	"dual": ("itag.rc.dual@example.com", ["Engineering Manager", "Engineering Master Manager"]),
 	"user_mgr": ("itag.rc.usermgr@example.com", ["Engineering User", "Engineering Manager"]),
 }
-WORKFLOWS = ("ITAG BOM Workflow", "ITAG BOM Creator Workflow", "ITAG Engineering Release Workflow")
+WORKFLOWS = ("ITAG BOM Workflow", "ITAG Engineering Release Workflow")
 
 
 def _user(key):
@@ -162,7 +163,7 @@ class TestReleaseControl(FrappeTestCase):
 			er.save(ignore_permissions=True)
 
 
-class TestBomCreatorWorkflow(FrappeTestCase):
+class TestBomBuilderUsesBomWorkflow(FrappeTestCase):
 	def setUp(self):
 		frappe.flags.itag_enforce_release_control = True
 		for key in USERS:
@@ -172,7 +173,11 @@ class TestBomCreatorWorkflow(FrappeTestCase):
 		frappe.flags.itag_enforce_release_control = False
 		frappe.set_user("Administrator")
 
-	def test_bom_creator_boms_follow_workflow(self):
+	def test_no_bom_creator_workflow(self):
+		self.assertFalse(frappe.db.exists("Workflow", "ITAG BOM Creator Workflow"))
+		self.assertFalse(frappe.get_meta("BOM Creator").get_workflow())
+
+	def test_builder_boms_enter_the_bom_workflow_as_draft(self):
 		company = ensure_test_company()
 		fg = create_fresh_stock_item(prefix="RC-BC-FG").name
 		rm = create_fresh_stock_item(prefix="RC-BC-RM").name
@@ -187,23 +192,47 @@ class TestBomCreatorWorkflow(FrappeTestCase):
 				"items": [{"item_code": rm, "qty": 1, "uom": "Nos", "fg_item": fg}],
 			}
 		).insert(ignore_permissions=True)
-		self.assertEqual(creator.itag_workflow_state, "Draft")
-
-		frappe.set_user(_user("master"))
-		with self.assertRaises(ReleaseControlError):
-			frappe.get_doc("BOM Creator", creator.name).submit()
-
-		frappe.set_user(_user("manager"))
-		creator = apply_workflow(frappe.get_doc("BOM Creator", creator.name), "Approve")
-		frappe.set_user(_user("master"))
-		creator = apply_workflow(frappe.get_doc("BOM Creator", creator.name), "Release")
-		self.assertEqual(creator.docstatus, 1)
-
+		frappe.set_user("Administrator")
+		creator = frappe.get_doc("BOM Creator", creator.name)
+		creator.flags.ignore_permissions = True
+		creator.submit()
 		creator.create_boms()
+
 		bom = frappe.get_doc("BOM", {"bom_creator": creator.name, "item": fg})
+		self.assertEqual(bom.docstatus, 0)
+		self.assertEqual(bom.itag_workflow_state, "Draft")
+		self.assertFalse(bom.itag_approved_by)
+
+		# Normal path: Engineering Manager approves, a different Master
+		# Manager releases.
+		frappe.set_user(_user("manager"))
+		bom = apply_workflow(frappe.get_doc("BOM", bom.name), "Approve")
+		self.assertEqual(bom.itag_approved_by, _user("manager"))
+		frappe.set_user(_user("master"))
+		bom = apply_workflow(frappe.get_doc("BOM", bom.name), "Release")
 		self.assertEqual(bom.docstatus, 1)
 		self.assertEqual(bom.itag_workflow_state, "Released")
-		self.assertEqual(bom.itag_approved_by, _user("manager"))
+
+	def test_builder_bom_cannot_be_submitted_directly(self):
+		company = ensure_test_company()
+		fg = create_fresh_stock_item(prefix="RC-BC-FG").name
+		rm = create_fresh_stock_item(prefix="RC-BC-RM").name
+		creator = frappe.get_doc(
+			{
+				"doctype": "BOM Creator",
+				"name": f"RC-BC-{frappe.generate_hash(length=6)}",
+				"item_code": fg,
+				"qty": 1,
+				"company": company,
+				"items": [{"item_code": rm, "qty": 1, "uom": "Nos", "fg_item": fg}],
+			}
+		).insert(ignore_permissions=True)
+		creator.submit()
+		creator.create_boms()
+		bom = frappe.get_doc("BOM", {"bom_creator": creator.name, "item": fg})
+		frappe.set_user(_user("master"))
+		with self.assertRaises(ReleaseControlError):
+			frappe.get_doc("BOM", bom.name).submit()
 
 
 class TestEcoAutoHold(FrappeTestCase):

@@ -298,8 +298,9 @@ def _ensure_test_operation_and_workstation():
 		).insert(ignore_permissions=True)
 
 
-# 15.5.6: the BOM and BOM Creator workflows need the three engineering roles
-# to have access to those standard ERPNext DocTypes. Added as Custom DocPerm
+# 15.5.6: the BOM workflow and the Multi-level BOM Builder (BOM Creator,
+# whose BOMs go into the BOM workflow) need the three engineering roles to
+# have access to those standard ERPNext DocTypes. Added as Custom DocPerm
 # rows through Frappe's own permission API (the standard rows are copied
 # first, so existing ERPNext access is unchanged). Only missing rights are
 # added; nothing is ever removed.

@@ -15,7 +15,7 @@ and Engineering Drawing's "creator cannot release" rule (roadmap Section
 Not exhaustive against a live bench: this environment has no live bench in
 this session, so every check here is either a structural/data-driven
 assertion against the real fixture data (comprehensive by construction,
-e.g. the ITAG Integration User workflow-transition sweep) or a live
+e.g. the role-agnostic workflow-transition sweep) or a live
 functional check against a representative sample rather than literally
 every one of the ~50 transitions across all 6 workflows individually -
 confirm the full matrix on a live bench before treating this build's
@@ -36,15 +36,14 @@ from itag_engineering.tests.factories import (
 	create_test_material_disposition,
 	create_test_wip_unit,
 	create_test_work_order_with_wip_tracking,
+	ensure_test_company,
 )
 
+# 15.5.5 removed the six document workflows; from 15.5.6 approval runs only
+# through these two.
 ALL_WORKFLOWS = (
-	"Engineering Item Request Workflow",
-	"Engineering Drawing Workflow",
-	"Product Revision Workflow",
-	"Engineering Release Workflow",
-	"Engineering Change Request Workflow",
-	"Engineering Change Order Workflow",
+	"ITAG BOM Workflow",
+	"ITAG Engineering Release Workflow",
 )
 
 
@@ -57,71 +56,103 @@ def _ensure_user(email, first_name, roles):
 	return email
 
 
-@unittest.skip("Retired in 15.5.5: this workflow/role was removed by decision (approval only on BOM and Engineering Release from 15.5.6, see tests/test_release_control.py).")
 class TestIntegrationUserDenied(FrappeTestCase):
 	"""Roadmap Section 22.3: "Integration users cannot approve or release
-	engineering records." `ITAG Integration User` is a genuinely NEW role
-	(this task's own fixture, via install.py's ROLES list) that exists
-	SPECIFICALLY to prove this negative case."""
+	engineering records."
+
+	Role-agnostic since 15.5.6 (Ahmed, CTO, 28 Oct 2026): the dedicated
+	`ITAG Integration User` role was retired in commit 30b2431 (15.5.5,
+	three engineering roles only), so this control is now asserted
+	positively: on the ITAG BOM and Engineering Release workflows ONLY
+	Engineering Manager may Approve/Reject and ONLY Engineering Master
+	Manager may Release. Every other role - Engineering User, System
+	Manager, or a plain API/integration-style user with no engineering
+	role - is refused. No role or permission is added by this test."""
+
+	APPROVE_ROLE = "Engineering Manager"
+	RELEASE_ROLE = "Engineering Master Manager"
 
 	def tearDown(self):
 		frappe.set_user("Administrator")
+		frappe.flags.itag_enforce_release_control = False
 
-	def test_role_exists(self):
-		self.assertTrue(frappe.db.exists("Role", "ITAG Integration User"))
-
-	def test_integration_user_role_is_never_an_allowed_actor_on_any_workflow_transition(self):
-		"""Comprehensive by construction - every single transition row
-		across all 6 workflows, not a representative sample."""
-		for workflow_name in ALL_WORKFLOWS:
-			allowed_roles = frappe.get_all(
-				"Workflow Transition",
-				filters={"parent": workflow_name, "parenttype": "Workflow"},
-				pluck="allowed",
-			)
-			self.assertNotIn(
-				"ITAG Integration User",
-				allowed_roles,
-				f"{workflow_name} lists ITAG Integration User as an allowed transition actor",
-			)
-
-	def test_integration_user_cannot_drive_a_real_eir_transition(self):
-		from itag_engineering.tests.factories import create_test_eir
-
-		eir = create_test_eir(request_title="SECAUDIT Integration User EIR")
-		# Reload as a fresh Document instance rather than reusing the object
-		# the factory returned. `create_test_eir()` calls `.insert(
-		# ignore_permissions=True)`, which sets `flags.ignore_permissions =
-		# True` on that Python object - and `frappe.model.document.get_doc()`
-		# returns the SAME object unchanged when it is already a Document
-		# instance (`if isinstance(args[0], BaseDocument): return args[0]`),
-		# which is exactly what `apply_workflow()` calls internally. Reusing
-		# the factory's object here would silently carry that stale
-		# ignore_permissions flag into apply_workflow()'s internal
-		# `doc.check_permission("read")` call, bypassing the real permission
-		# check entirely and masking the PermissionError this test exists to
-		# prove - a fresh `frappe.get_doc()` call has no such flag set.
-		eir = frappe.get_doc("Engineering Item Request", eir.name)
-		email = _ensure_user(
-			"secaudit-integration@example.com", "SECAUDIT Integration", ["ITAG Integration User"]
+	def _transitions(self, workflow_name):
+		self.assertTrue(frappe.db.exists("Workflow", workflow_name), workflow_name)
+		rows = frappe.get_all(
+			"Workflow Transition",
+			filters={"parent": workflow_name, "parenttype": "Workflow"},
+			fields=["action", "allowed"],
 		)
+		self.assertTrue(rows, workflow_name)
+		return rows
+
+	def test_only_engineering_manager_approves_and_only_master_manager_releases(self):
+		"""Every transition row of every current workflow, not a sample."""
+		expected = {"Approve": self.APPROVE_ROLE, "Reject": self.APPROVE_ROLE, "Release": self.RELEASE_ROLE}
+		for workflow_name in ALL_WORKFLOWS:
+			rows = self._transitions(workflow_name)
+			self.assertEqual({r.action for r in rows}, set(expected), workflow_name)
+			for r in rows:
+				self.assertEqual(
+					r.allowed, expected[r.action], f"{workflow_name}: {r.action} allowed for {r.allowed}"
+				)
+
+	def test_no_other_role_is_an_allowed_actor(self):
+		allowed_set = {self.APPROVE_ROLE, self.RELEASE_ROLE}
+		for workflow_name in ALL_WORKFLOWS:
+			for r in self._transitions(workflow_name):
+				self.assertIn(r.allowed, allowed_set, workflow_name)
+				for other in ("Engineering User", "System Manager", "All", "Guest"):
+					self.assertNotEqual(r.allowed, other, workflow_name)
+
+	def _new_bom(self):
+		item = create_fresh_stock_item(prefix="SECAUDIT-FG").name
+		component = create_fresh_stock_item(prefix="SECAUDIT-RM").name
+		return frappe.get_doc(
+			{
+				"doctype": "BOM",
+				"item": item,
+				"quantity": 1,
+				"company": ensure_test_company(),
+				"items": [{"item_code": component, "qty": 1, "uom": "Nos"}],
+			}
+		).insert(ignore_permissions=True)
+
+	def _assert_refused(self, docname, action, email):
+		from frappe.model.workflow import WorkflowPermissionError, WorkflowTransitionError
+
+		frappe.flags.itag_enforce_release_control = True
 		frappe.set_user(email)
 		try:
-			with self.assertRaises(frappe.PermissionError):
-				apply_workflow(eir, "Submit for Duplicate Review")
+			with self.assertRaises(
+				(frappe.PermissionError, WorkflowPermissionError, WorkflowTransitionError), msg=f"{email} {action}"):
+				apply_workflow(frappe.get_doc("BOM", docname), action)
 		finally:
 			frappe.set_user("Administrator")
+			frappe.flags.itag_enforce_release_control = False
 
-	def test_integration_user_cannot_approve_an_eco(self):
+	def test_non_manager_roles_cannot_approve_a_bom(self):
+		bom = self._new_bom()
+		users = [
+			_ensure_user("secaudit-integration@example.com", "SECAUDIT Integration", []),
+			_ensure_user("secaudit-enguser@example.com", "SECAUDIT EngUser", ["Engineering User"]),
+			_ensure_user("secaudit-sysmgr@example.com", "SECAUDIT SysMgr", ["System Manager"]),
+		]
+		for email in users:
+			self._assert_refused(bom.name, "Approve", email)
+		self.assertEqual(frappe.db.get_value("BOM", bom.name, "docstatus"), 0)
+		self.assertNotEqual(frappe.db.get_value("BOM", bom.name, "itag_workflow_state"), "Approved")
+
+	def test_plain_integration_user_cannot_approve_an_eco(self):
+		from itag_engineering.itag_engineering_management.eco_service import approve_or_reject_workflow_step
+
 		ecr = create_test_ecr(request_title="SECAUDIT Integration User ECO")
 		eco = create_eco_from_accepted_ecr_factory(ecr=ecr)
-		email = _ensure_user(
-			"secaudit-integration@example.com", "SECAUDIT Integration", ["ITAG Integration User"]
-		)
+		email = _ensure_user("secaudit-integration@example.com", "SECAUDIT Integration", [])
 		frappe.set_user(email)
 		try:
 			with self.assertRaises(frappe.PermissionError):
-				apply_workflow(eco, "Begin Engineering Definition")
+				approve_or_reject_workflow_step(eco.name, 1, True)
 		finally:
 			frappe.set_user("Administrator")
 

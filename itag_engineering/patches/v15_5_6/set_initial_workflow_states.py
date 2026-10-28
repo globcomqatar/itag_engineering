@@ -1,10 +1,11 @@
-"""Give existing BOM, BOM Creator and Engineering Release records a starting
+"""Give existing BOM and Engineering Release records a starting
 workflow state for the 15.5.6 workflows.
 
 Safe to run more than once: only rows whose state is still empty are set.
-Submitted BOMs and BOM Creators are never set to Draft.
+Submitted BOMs are never set to Draft. (BOM Creator has no workflow; see
+v15_5_6.remove_bom_creator_workflow.)
 
-BOM / BOM Creator
+BOM
   docstatus 1 (submitted)  -> Released
   docstatus 0 (draft)      -> Draft
   docstatus 2 (cancelled)  -> left empty
@@ -16,9 +17,8 @@ Engineering Release (not submittable; from release_status)
 Rollback (see handover-v1.md): restore the backup taken before migrate, or
 clear the states this patch set:
   update `tabBOM` set itag_workflow_state = null;
-  update `tabBOM Creator` set itag_workflow_state = null;
   update `tabEngineering Release` set workflow_state = null;
-and disable or delete the three "ITAG ..." Workflow records.
+and disable or delete the two "ITAG ..." Workflow records.
 """
 
 import frappe
@@ -36,7 +36,7 @@ def execute():
 	create_custom_fields(get_release_control_fields(), update=True)
 	frappe.reload_doc("itag_engineering_management", "doctype", "engineering_release")
 
-	for doctype in ("BOM", "BOM Creator"):
+	for doctype in ("BOM",):
 		table = f"`tab{doctype}`"
 		frappe.db.sql(
 			f"""update {table} set itag_workflow_state = 'Released'
