@@ -13,6 +13,7 @@ ITAG_ITEM_FIELDS = (
 	"itag_body_material",
 	"itag_trim_material",
 	"itag_end_connection",
+	"itag_manufacturer_part_number",
 	"itag_design_standard",
 	"itag_manufacturing_method",
 	"itag_drawing_number",

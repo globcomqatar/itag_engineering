@@ -9,6 +9,9 @@ from itag_engineering.itag_engineering_management.traceability_service import (
 	forward_traceability,
 )
 from itag_engineering.itag_engineering_management.wip_service import link_component_to_assembly
+from itag_engineering.itag_engineering_management.testing_support import (
+	align_default_company_with_test_company,
+)
 from itag_engineering.tests.factories import (
 	create_test_wip_unit,
 	create_test_work_order_with_wip_tracking,
@@ -19,6 +22,7 @@ from itag_engineering.tests.factories import (
 
 class TestTraceabilityService(FrappeTestCase):
 	def setUp(self):
+		align_default_company_with_test_company(self)
 		frappe.db.delete("Item", {"item_code": ["like", "TRACESVC-TEST%"]})
 
 	def tearDown(self):
@@ -141,7 +145,7 @@ class TestTraceabilityService(FrappeTestCase):
 	def test_user_without_customer_info_role_gets_masked_customer_data(self):
 		chain = self._build_three_level_chain_with_delivery()
 		email = self._ensure_user(
-			"tracesvc-supervisor@example.com", "TRACESVC Supervisor", ["Production Supervisor"]
+			"tracesvc-supervisor@example.com", "TRACESVC Supervisor", ["Engineering User"]
 		)
 		frappe.set_user(email)
 		try:

@@ -7,19 +7,15 @@ from frappe.tests.utils import FrappeTestCase
 from itag_engineering.itag_engineering_management.checksum_service import (
 	compute_file_checksum_from_content,
 )
+from itag_engineering.itag_engineering_management.drawing_service import advance_drawing
 
 
 def _advance_workflow_state(doc, next_state):
-	"""Replicate exactly what frappe.model.workflow.apply_workflow does for a
-	transition: `doc.set("workflow_state", next_state); doc.save()`. Real users
-	clicking a workflow transition button never touch release_status - only
-	the real Workflow engine's mechanism (this helper) does either, so tests
-	that want to prove the immutability/checksum guards work for real users
-	must drive state changes this way instead of hand-setting release_status
-	alongside workflow_state.
-	"""
-	doc.set("workflow_state", next_state)
-	doc.save()
+	"""Move a drawing one step with drawing_service.advance_drawing(), the only
+	supported way to change release_status now that the Engineering Drawing
+	workflow is removed, then reload `doc` so it holds the saved state."""
+	advance_drawing(doc.name, next_state)
+	doc.reload()
 	return doc
 
 
@@ -59,34 +55,22 @@ class TestEngineeringDrawing(FrappeTestCase):
 				}
 			).insert()
 
-	def test_release_status_stays_synced_with_workflow_state(self):
-		"""release_status is a denormalized mirror of workflow_state. Nothing in
-		the Workflow fixture (no update_field/update_value action) keeps them in
-		sync, and the real Workflow engine (frappe.model.workflow.apply_workflow)
-		never touches release_status - so the sync has to happen in validate().
-		This proves it holds across a realistic sequence of transitions, driven
-		exactly the way the Workflow engine drives them."""
+	def test_workflow_state_stays_synced_with_release_status(self):
+		"""workflow_state is a read-only mirror of release_status, kept in step
+		inside validate(). This proves it holds across a realistic sequence of
+		transitions made with advance_drawing()."""
 		drawing = self._new_drawing()
 		for next_state in ("Engineering Review", "Checked", "Approved"):
 			_advance_workflow_state(drawing, next_state)
 			self.assertEqual(drawing.release_status, next_state)
+			self.assertEqual(drawing.workflow_state, next_state)
 
 	def test_cannot_release_without_file_checksum(self):
-		"""Structural regression test for the same class of bug Build 0.2.0's
-		final review caught (fba776b), and the exact gap the ITAG-0.3.0 Task 2
-		review found: the raw workflow engine must not be able to land this
-		document in Released without a real file checksum having been recorded.
-
-		This drives the document through the actual sequence of workflow
-		transitions using `doc.set("workflow_state", next_state); doc.save()`
-		at each step - precisely what frappe.model.workflow.apply_workflow does
-		- and never touches release_status by hand. Before the fix, this
-		reached workflow_state == "Released" with release_status stuck at
-		"Draft" and file_checksum blank, and neither guard fired. After the
-		fix, release_status is kept in sync with workflow_state inside
-		validate(), so validate_release_requires_checksum() correctly blocks
-		the final transition.
-		"""
+		"""A drawing must not reach Released without a recorded file checksum.
+		The checksum guard reads release_status, so it is only effective if the
+		status the service sets is the status validate() checks. advance_drawing()
+		to Released has to fail at Approved with no checksum, and the drawing has
+		to stay Approved."""
 		drawing = self._new_drawing()
 		for next_state in ("Engineering Review", "Checked", "Approved"):
 			_advance_workflow_state(drawing, next_state)
@@ -101,10 +85,9 @@ class TestEngineeringDrawing(FrappeTestCase):
 
 	def test_released_drawing_cannot_be_edited(self):
 		"""The central requirement of this task (roadmap Section 4.2): a
-		released engineering record must never be overwritten. Reached via the
-		real workflow transition mechanism (not by hand-setting release_status)
-		so this actually proves the guard fires for documents processed the way
-		real users process them."""
+		released engineering record must never be overwritten. Reached with
+		advance_drawing() (not by hand-setting release_status) so this proves the
+		guard fires for drawings released the way real users release them."""
 		drawing = self._new_drawing()
 		for next_state in ("Engineering Review", "Checked", "Approved"):
 			_advance_workflow_state(drawing, next_state)
@@ -136,11 +119,10 @@ class TestEngineeringDrawing(FrappeTestCase):
 
 		_advance_workflow_state(drawing, "Released")
 
-		drawing.set("workflow_state", "Superseded")
-		drawing.superseded_date = frappe.utils.today()
-		drawing.save()
+		_advance_workflow_state(drawing, "Superseded")
 		self.assertEqual(drawing.workflow_state, "Superseded")
 		self.assertEqual(drawing.release_status, "Superseded")
+		self.assertEqual(str(drawing.superseded_date), frappe.utils.today())
 
 	def test_released_drawing_with_dates_can_transition_to_superseded(self):
 		"""Regression test for the review finding that the same str-vs-native-type
@@ -165,11 +147,10 @@ class TestEngineeringDrawing(FrappeTestCase):
 
 		_advance_workflow_state(drawing, "Released")
 
-		drawing.set("workflow_state", "Superseded")
-		drawing.superseded_date = frappe.utils.today()
-		drawing.save()
+		_advance_workflow_state(drawing, "Superseded")
 		self.assertEqual(drawing.workflow_state, "Superseded")
 		self.assertEqual(drawing.release_status, "Superseded")
+		self.assertEqual(str(drawing.superseded_date), frappe.utils.today())
 
 	def test_revision_date_change_blocked_after_release(self):
 		"""Confirms the has_value_changed()-based fix doesn't overcorrect into
@@ -266,16 +247,77 @@ class TestEngineeringDrawing(FrappeTestCase):
 			compute_file_checksum_from_content(b"drawing content for release"),
 		)
 
-	def test_workflow_exists_with_expected_states(self):
-		workflow = frappe.get_doc("Workflow", "Engineering Drawing Workflow")
-		state_names = [s.state for s in workflow.states]
-		for expected in (
-			"Draft",
-			"Engineering Review",
-			"Checked",
-			"Approved",
-			"Released",
-			"Superseded",
-			"Obsolete",
-		):
-			self.assertIn(expected, state_names)
+	def test_workflow_state_keeps_every_state_without_a_workflow(self):
+		"""The Engineering Drawing workflow was removed (see
+		install.remove_engineering_workflows). Both state fields keep all of
+		their states, which advance_drawing() moves through."""
+		self.assertFalse(frappe.db.exists("Workflow", "Engineering Drawing Workflow"))
+		meta = frappe.get_meta("Engineering Drawing")
+		for fieldname in ("release_status", "workflow_state"):
+			options = meta.get_field(fieldname).options.split("\n")
+			for expected in (
+				"Draft",
+				"Engineering Review",
+				"Checked",
+				"Approved",
+				"Released",
+				"Superseded",
+				"Obsolete",
+			):
+				self.assertIn(expected, options, f"{expected} missing from {fieldname}")
+
+	def test_new_drawing_must_start_at_draft(self):
+		for fieldname in ("release_status", "workflow_state"):
+			frappe.db.delete("Engineering Drawing", {"drawing_number": "DWG-TEST-001"})
+			with self.assertRaises(frappe.ValidationError, msg=fieldname):
+				frappe.get_doc(
+					{
+						"doctype": "Engineering Drawing",
+						"drawing_number": "DWG-TEST-001",
+						"drawing_revision": "A",
+						"drawing_title": "Starts Released",
+						"drawing_type": "Assembly",
+						fieldname: "Released",
+					}
+				).insert()
+
+	def test_plain_save_cannot_change_release_status(self):
+		"""Root cause regression. validate() used to copy workflow_state over
+		release_status on every save, so a status set by code was silently reset
+		to Draft. Now a plain save that changes either field is refused, and a
+		plain save that does not touch them leaves the status where it was."""
+		drawing = self._new_drawing()
+
+		drawing.release_status = "Released"
+		with self.assertRaises(frappe.ValidationError):
+			drawing.save()
+		drawing.reload()
+		self.assertEqual(drawing.release_status, "Draft")
+
+		drawing.workflow_state = "Engineering Review"
+		with self.assertRaises(frappe.ValidationError):
+			drawing.save()
+		drawing.reload()
+		self.assertEqual(drawing.workflow_state, "Draft")
+		self.assertEqual(drawing.release_status, "Draft")
+
+	def test_plain_save_keeps_release_status_set_by_the_service(self):
+		drawing = self._new_drawing()
+		_advance_workflow_state(drawing, "Engineering Review")
+
+		again = frappe.get_doc("Engineering Drawing", drawing.name)
+		again.drawing_title = "Retitled while in review"
+		again.save()
+		again.reload()
+		self.assertEqual(again.release_status, "Engineering Review")
+		self.assertEqual(again.workflow_state, "Engineering Review")
+
+	def test_status_transition_flag_still_enforces_the_step_order(self):
+		"""Even with the service flag set, validate() refuses a skipped step."""
+		drawing = self._new_drawing()
+		drawing.release_status = "Approved"
+		drawing.flags.status_transition = True
+		with self.assertRaises(frappe.ValidationError):
+			drawing.save()
+		drawing.reload()
+		self.assertEqual(drawing.release_status, "Draft")

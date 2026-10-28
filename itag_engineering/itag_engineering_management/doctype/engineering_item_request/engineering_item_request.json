@@ -76,7 +76,8 @@
    "fieldname": "item_type",
    "fieldtype": "Select",
    "label": "Item Type",
-   "options": "\nCritical\nNon-Critical\nGeneral"
+   "options": "Critical\nNon-Critical\nGeneral",
+   "reqd": 1
   },
   {
    "fieldname": "product_family",
@@ -91,6 +92,7 @@
    "options": "Valve Type"
   },
   {
+   "default": "Nos",
    "fieldname": "uom",
    "fieldtype": "Link",
    "label": "UOM",
@@ -107,18 +109,21 @@
   },
   {
    "fieldname": "nominal_size",
-   "fieldtype": "Data",
-   "label": "Nominal Size"
+   "fieldtype": "Link",
+   "label": "Nominal Size",
+   "options": "Nominal Size"
   },
   {
    "fieldname": "pressure_class",
-   "fieldtype": "Data",
-   "label": "Pressure Class"
+   "fieldtype": "Link",
+   "label": "Pressure Class",
+   "options": "Pressure Class"
   },
   {
    "fieldname": "body_material",
-   "fieldtype": "Data",
-   "label": "Body Material"
+   "fieldtype": "Link",
+   "label": "Body Material",
+   "options": "Body Material"
   },
   {
    "fieldname": "trim_material",
@@ -212,7 +217,7 @@
   }
  ],
  "links": [],
- "modified": "2026-07-20 00:00:00.000000",
+ "modified": "2026-10-25 11:05:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "Engineering Item Request",

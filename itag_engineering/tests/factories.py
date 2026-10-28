@@ -10,6 +10,39 @@ test factories.
 import frappe
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 
+from itag_engineering.itag_engineering_management.testing_support import (
+	aligned_default_company,
+	TEST_OPERATION,
+	TEST_WORKSTATION,
+	ensure_test_workstation,
+	item_product_type_fields,
+)
+
+
+def ensure_classification_value(doctype, code):
+	"""Create one Nominal Size, Pressure Class, or Body Material for a test.
+
+	Production lists are not seeded. Tests that store these values need the
+	list record first, because the request and Item fields are Links.
+	"""
+	if not code or frappe.db.exists(doctype, code):
+		return code
+	code_field = {
+		"Nominal Size": "nominal_size_code",
+		"Pressure Class": "pressure_class_code",
+		"Body Material": "body_material_code",
+	}[doctype]
+	name_field = code_field.replace("_code", "_name")
+	frappe.get_doc(
+		{
+			"doctype": doctype,
+			code_field: code,
+			name_field: code,
+			"is_active": 1,
+		}
+	).insert(ignore_permissions=True)
+	return code
+
 
 def ensure_test_company():
 	"""Return the name of an existing Company. Never creates or hardcodes
@@ -118,6 +151,13 @@ def create_test_eir(**overrides):
 		"item_code_rule": rule.name,
 	}
 	fields.update(overrides)
+	for doctype, key in (
+		("Nominal Size", "nominal_size"),
+		("Pressure Class", "pressure_class"),
+		("Body Material", "body_material"),
+	):
+		if fields.get(key):
+			ensure_classification_value(doctype, fields[key])
 	return frappe.get_doc(fields).insert(ignore_permissions=True)
 
 
@@ -175,6 +215,7 @@ def create_fresh_stock_item(prefix="TEST-ITEM"):
 			"item_group": "Products",
 			"stock_uom": "Nos",
 			"is_stock_item": 1,
+			**item_product_type_fields(),
 		}
 	).insert(ignore_permissions=True)
 
@@ -247,6 +288,7 @@ def create_test_bom_with_operations(item=None, drawing=None, product_revision=No
 	matched by a `{"item_code": ["like", "UAT003BOM-%"]}` tearDown filter).
 	"""
 	company = ensure_test_company()
+	ensure_test_workstation()
 	item = item or create_fresh_stock_item("BOMOPS-TEST-ITEM").name
 	frappe.db.set_value("Item", item, "itag_engineering_classification", "Manufactured")
 	drawing = drawing or create_released_test_drawing()
@@ -271,8 +313,8 @@ def create_test_bom_with_operations(item=None, drawing=None, product_revision=No
 			"with_operations": 1,
 			"operations": [
 				{
-					"operation": "_Test Operation 1",
-					"workstation": "_Test Workstation 1",
+					"operation": TEST_OPERATION,
+					"workstation": TEST_WORKSTATION,
 					"description": "Final hydrostatic test",
 					"time_in_mins": 15,
 					"itag_hold_point": 1,
@@ -353,10 +395,21 @@ def create_fully_approved_engineering_release(item=None, **release_overrides):
 		"product_revision": bom.itag_product_revision,
 		"drawing_revision": bom.itag_drawing_revision,
 		"bom": bom.name,
-		"effective_datetime": frappe.utils.now_datetime(),
+		# Effective a little in the past, not "now": resolve_effective_release()
+		# compares effective_datetime <= now at the moment the Work Order is
+		# submitted a fraction of a second later, and a test machine whose
+		# wall clock steps back (seen on WSL: clock ran ~7% slow vs monotonic
+		# time) otherwise makes the release "not yet effective" at random.
+		"effective_datetime": frappe.utils.add_to_date(frappe.utils.now_datetime(), seconds=-30),
 	}
 	release_fields.update(release_overrides)
-	release = frappe.get_doc(release_fields).insert(ignore_permissions=True)
+	# EngineeringRelease.apply_default_company() overwrites `company` on every
+	# new release with Engineering Settings.default_company, which on a site
+	# with real owner config is not the Company ensure_test_company() returns
+	# for the Work Order. Align them for the insert so the release is
+	# effective for the Company the test actually uses.
+	with aligned_default_company():
+		release = frappe.get_doc(release_fields).insert(ignore_permissions=True)
 
 	resolve_release_approval_matrix(release.name)
 	release.reload()
@@ -486,8 +539,8 @@ def create_test_work_order_and_job_card(item, qty=1):
 			"for_quantity": work_order.qty,
 			"company": company,
 			"wip_warehouse": warehouse,
-			"operation": "_Test Operation 1",
-			"workstation": "_Test Workstation 1",
+			"operation": TEST_OPERATION,
+			"workstation": TEST_WORKSTATION,
 		}
 	).insert(ignore_permissions=True)
 	return work_order, job_card
@@ -646,6 +699,7 @@ def create_test_wip_unit(work_order, operation="Final Inspection"):
 	since it is a mandatory Link, not free text."""
 	from itag_engineering.itag_engineering_management.wip_service import create_wip_unit_from_job_card
 
+	ensure_test_workstation()
 	_ensure_test_operation(operation)
 	job_card = frappe.get_doc(
 		{
@@ -655,7 +709,7 @@ def create_test_wip_unit(work_order, operation="Final Inspection"):
 			"company": work_order.company,
 			"wip_warehouse": work_order.wip_warehouse,
 			"operation": operation,
-			"workstation": "_Test Workstation 1",
+			"workstation": TEST_WORKSTATION,
 		}
 	).insert(ignore_permissions=True)
 	return create_wip_unit_from_job_card(job_card.name)

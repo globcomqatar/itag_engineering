@@ -21,7 +21,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Item Engineering & Coding",
-   "link_count": 7,
+   "link_count": 10,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -77,6 +77,39 @@
    "label": "Product Family",
    "link_count": 0,
    "link_to": "Product Family",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Nominal Size",
+   "link_count": 0,
+   "link_to": "Nominal Size",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Pressure Class",
+   "link_count": 0,
+   "link_to": "Pressure Class",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Body Material",
+   "link_count": 0,
+   "link_to": "Body Material",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -647,7 +680,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-10-22 14:40:00.000000",
+ "modified": "2026-10-23 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "ITAG Engineering",

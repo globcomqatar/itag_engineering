@@ -4,28 +4,23 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
+from itag_engineering.itag_engineering_management.drawing_service import advance_drawing
 from itag_engineering.tests.factories import create_released_test_drawing, create_test_product_revision
 
 
 def _advance_workflow_state(doc, next_state):
-	"""Replicate exactly what frappe.model.workflow.apply_workflow does for a
-	transition: `doc.set("workflow_state", next_state); doc.save()`. Real users
-	clicking a workflow transition button never touch release_status - only the
-	real Workflow engine's mechanism (this helper) does either.
+	"""Move a drawing one step with drawing_service.advance_drawing(), the only
+	supported way to change release_status now that the Engineering Drawing
+	workflow is removed, then reload `doc` so it holds the saved state.
 
-	This build fought a 3-round bug (commits 1b8c9ba, 05b9cc5, and the
-	Product Revision equivalent in Task 5) where workflow_state and
-	release_status could desync when a document was driven through the real
-	Workflow engine, silently defeating the released-record immutability
-	guarantee. UAT-018 exists specifically to prove that guarantee holds for
-	real users, so it must drive the drawing through this same transition
-	mechanism rather than `factories.create_released_test_drawing`'s
-	`frappe.db.set_value` shortcut (which hand-sets workflow_state and
-	release_status together and would not exercise - or catch a regression in -
-	the synchronization logic in Engineering Drawing.validate()).
+	UAT-018 exists to prove the released-record immutability guarantee holds for
+	real users, so it drives the drawing through the same service they use
+	rather than `factories.create_released_test_drawing`'s `frappe.db.set_value`
+	shortcut (which hand-sets workflow_state and release_status together and
+	would not exercise the status handling in Engineering Drawing.validate()).
 	"""
-	doc.set("workflow_state", next_state)
-	doc.save()
+	advance_drawing(doc.name, next_state)
+	doc.reload()
 	return doc
 
 
@@ -38,11 +33,10 @@ class TestUAT018ReleasedDrawingImmutability(FrappeTestCase):
 
 	def test_uat_018_released_drawing_immutability(self):
 		"""UAT-018: Released Drawing Immutability. Drives a fresh drawing through
-		every real workflow transition (Draft -> Engineering Review -> Checked ->
-		Approved -> Released) via `_advance_workflow_state`, then confirms an
-		attempted edit is rejected - a genuine end-to-end exercise of the guard
-		this build spent three rounds getting right, not a shortcut that could
-		mask a regression in it.
+		every step (Draft -> Engineering Review -> Checked -> Approved ->
+		Released) via `advance_drawing`, then confirms an attempted edit is
+		rejected - an end-to-end exercise of the guard, not a shortcut that
+		could mask a regression in it.
 		"""
 		drawing = frappe.get_doc(
 			{

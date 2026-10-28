@@ -9,7 +9,9 @@
   "product_family_name",
   "is_active",
   "column_break_1",
-  "description"
+  "description",
+  "valve_types_section",
+  "valve_types"
  ],
  "fields": [
   {
@@ -42,6 +44,17 @@
    "fieldname": "description",
    "fieldtype": "Small Text",
    "label": "Description"
+  },
+  {
+   "fieldname": "valve_types_section",
+   "fieldtype": "Section Break",
+   "label": "Valve Types"
+  },
+  {
+   "fieldname": "valve_types",
+   "fieldtype": "Table",
+   "label": "Valve Types",
+   "options": "Product Family Valve Type"
   }
  ],
  "links": [],

@@ -246,5 +246,118 @@ def create_default_product_families():
 		).insert(ignore_permissions=True)
 
 
+def link_family_valve_types_from_items():
+	"""Give each Product Family the Valve Types already used by its Items.
+
+	Does not invent links, and does not remove a Valve Type somebody added
+	or took off the family.
+	"""
+	if not frappe.db.table_exists("Product Family Valve Type"):
+		return
+	rows = frappe.db.sql(
+		"""
+		select distinct itag_product_family, itag_valve_type
+		from tabItem
+		where ifnull(itag_product_family, '') != ''
+			and ifnull(itag_valve_type, '') != ''
+		"""
+	)
+	by_family = {}
+	for family, valve_type in rows:
+		if not frappe.db.exists("Product Family", family) or not frappe.db.exists("Valve Type", valve_type):
+			continue
+		by_family.setdefault(family, []).append(valve_type)
+	for family, valve_types in by_family.items():
+		doc = frappe.get_doc("Product Family", family)
+		current = {row.valve_type for row in doc.valve_types or []}
+		added = False
+		for valve_type in valve_types:
+			if valve_type in current:
+				continue
+			doc.append("valve_types", {"valve_type": valve_type})
+			current.add(valve_type)
+			added = True
+		if added:
+			doc.save(ignore_permissions=True)
+
+
+def carry_request_classification_forward():
+	"""Fill blank Item, Drawing, and Specification fields from the request.
+
+	Only blank fields are written. A value somebody already set is left as it is.
+	"""
+	if not frappe.db.table_exists("Engineering Item Request") or not frappe.db.table_exists("Item"):
+		return
+	item_meta = frappe.get_meta("Item")
+	pairs = (
+		("item_category", "itag_engineering_classification", None),
+		("product_family", "itag_product_family", "Product Family"),
+		("valve_type", "itag_valve_type", "Valve Type"),
+		("nominal_size", "itag_nominal_size", "Nominal Size"),
+		("pressure_class", "itag_pressure_class", "Pressure Class"),
+		("body_material", "itag_body_material", "Body Material"),
+		("trim_material", "itag_trim_material", None),
+		("end_connection", "itag_end_connection", None),
+		("drawing_number", "itag_drawing_number", None),
+		("manufacturer_part_number", "itag_manufacturer_part_number", None),
+		("uom", "stock_uom", "UOM"),
+		("item_description", "description", None),
+		("item_type", "custom_product_type", None),
+	)
+	requests = frappe.get_all(
+		"Engineering Item Request",
+		filters={"created_item": ["!=", ""]},
+		fields=["name", "created_item"]
+		+ [request_field for request_field, _item_field, _target in pairs],
+	)
+	for request in requests:
+		if not frappe.db.exists("Item", request.created_item):
+			continue
+		current = frappe.db.get_value("Item", request.created_item, ["name"] + [
+			item_field for _request_field, item_field, _target in pairs if item_meta.has_field(item_field)
+		], as_dict=True)
+		updates = {}
+		for request_field, item_field, target in pairs:
+			if not item_meta.has_field(item_field) or current.get(item_field):
+				continue
+			value = request.get(request_field)
+			if not value:
+				continue
+			field = item_meta.get_field(item_field)
+			link_target = target or (field.options if field and field.fieldtype == "Link" else None)
+			if link_target and not frappe.db.exists(link_target, value):
+				continue
+			updates[item_field] = value
+		if updates:
+			frappe.db.set_value("Item", request.created_item, updates, update_modified=False)
+
+	_fill_blank_family("Engineering Drawing", "related_item")
+	_fill_blank_family("Technical Specification", "related_item")
+
+
+def _fill_blank_family(doctype, item_field):
+	if not frappe.db.table_exists(doctype) or not frappe.db.has_column(doctype, "product_family"):
+		return
+	rows = frappe.db.sql(
+		f"""
+		select name, `{item_field}` as item_code
+		from `tab{doctype}`
+		where ifnull(`{item_field}`, '') != ''
+			and ifnull(product_family, '') = ''
+		"""
+	)
+	for name, item_code in rows:
+		family = frappe.db.get_value("Item", item_code, "itag_product_family")
+		if family:
+			frappe.db.set_value(doctype, name, "product_family", family, update_modified=False)
+
+
 def before_tests():
 	frappe.clear_cache()
+	# The BOM and Work Order tests use ERPNext's test Workstation and Operation,
+	# which a site without ERPNext test records does not have.
+	from itag_engineering.itag_engineering_management.testing_support import ensure_test_workstation
+
+	ensure_test_workstation()
+	# Commit so the records survive the per-test-class rollback.
+	frappe.db.commit()

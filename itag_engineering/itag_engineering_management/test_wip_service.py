@@ -19,6 +19,9 @@ from itag_engineering.itag_engineering_management.wip_service import (
 	refresh_wip_status,
 	should_create_wip_unit,
 )
+from itag_engineering.itag_engineering_management.testing_support import (
+	align_default_company_with_test_company,
+)
 from itag_engineering.tests.factories import (
 	_ensure_test_operation,
 	create_fresh_stock_item,
@@ -29,6 +32,7 @@ from itag_engineering.tests.factories import (
 
 class TestWIPService(FrappeTestCase):
 	def setUp(self):
+		align_default_company_with_test_company(self)
 		frappe.db.delete("Item", {"item_code": ["like", "WIPSVC-TEST%"]})
 
 	def tearDown(self):

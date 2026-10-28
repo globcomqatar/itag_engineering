@@ -9,6 +9,7 @@ from itag_engineering.itag_engineering_management.product_revision_service impor
 	retrieve_current_effective_product_revision,
 	supersede_revision,
 )
+from itag_engineering.itag_engineering_management.testing_support import item_product_type_fields
 
 
 class TestProductRevisionService(FrappeTestCase):
@@ -23,6 +24,7 @@ class TestProductRevisionService(FrappeTestCase):
 					"item_name": "PR Service Test Item",
 					"item_group": "Products",
 					"stock_uom": "Nos",
+					**item_product_type_fields(),
 				}
 			).insert()
 		self.drawing = frappe.get_doc(

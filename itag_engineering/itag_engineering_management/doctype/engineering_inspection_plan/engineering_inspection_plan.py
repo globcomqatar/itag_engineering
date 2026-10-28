@@ -5,6 +5,8 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+from itag_engineering.itag_engineering_management.classification_service import apply_carried_fields
+
 RELEASED_STATES = ("Released", "Obsolete")
 
 # Fields a transition into Obsolete (and the state field itself) is allowed
@@ -15,6 +17,8 @@ POST_RELEASE_ALLOWED_FIELDS = {"release_status", "modified", "modified_by"}
 
 class EngineeringInspectionPlan(Document):
 	def validate(self):
+		# The plan's own revision letter is not a carried field.
+		apply_carried_fields(self, self.related_item)
 		self.validate_immutable_once_released()
 
 	def validate_immutable_once_released(self):

@@ -15,6 +15,9 @@ from itag_engineering.itag_engineering_management.release_service import (
 	submit_engineering_release,
 	validate_release_package,
 )
+from itag_engineering.itag_engineering_management.testing_support import (
+	align_default_company_with_test_company,
+)
 from itag_engineering.tests.factories import (
 	create_fresh_stock_item,
 	create_test_bom_with_operations,
@@ -27,11 +30,38 @@ SECOND_APPROVER_EMAIL = "rs-test-approver-two@example.com"
 class TestReleaseService(FrappeTestCase):
 	def setUp(self):
 		self._delete_test_fixtures()
+		self._deactivate_foreign_matrices()
+		align_default_company_with_test_company(self)
 		self._make_matrix()
 
 	def tearDown(self):
 		self._delete_test_fixtures()
+		self._restore_foreign_matrices()
 		frappe.set_user("Administrator")
+
+	def _deactivate_foreign_matrices(self):
+		# resolve_approval_disciplines() picks the LOWEST priority number
+		# among ALL active matrices, so any matrix already on the site (the
+		# real "Engineering Release Approval" matrix an operator configures,
+		# priority 1, or "Factory Test Approval Matrix" left by another test
+		# module in the same run) outranks this class's priority-50
+		# "RS-TEST-Default" and changes which steps get materialized. These
+		# tests assert on RS-TEST-Default's exact two disciplines, so for
+		# their duration it must be the only active matrix. The previous
+		# is_active values are put back in tearDown().
+		self._foreign_matrices = frappe.get_all(
+			"Engineering Approval Matrix",
+			filters={"is_active": 1, "name": ["not like", "RS-TEST-%"]},
+			pluck="name",
+		)
+		for name in self._foreign_matrices:
+			frappe.db.set_value("Engineering Approval Matrix", name, "is_active", 0, update_modified=False)
+
+	def _restore_foreign_matrices(self):
+		for name in getattr(self, "_foreign_matrices", []):
+			if frappe.db.exists("Engineering Approval Matrix", name):
+				frappe.db.set_value("Engineering Approval Matrix", name, "is_active", 1, update_modified=False)
+		self._foreign_matrices = []
 
 	def _delete_test_fixtures(self):
 		# frappe.db.delete() is a raw parent-table DELETE - it does not

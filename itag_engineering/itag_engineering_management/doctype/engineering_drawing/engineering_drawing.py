@@ -7,6 +7,11 @@ from frappe.model.document import Document
 
 from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.checksum_service import sync_drawing_checksum
+from itag_engineering.itag_engineering_management.classification_service import (
+	apply_carried_fields,
+	remember_released_drawing,
+)
+from itag_engineering.itag_engineering_management.drawing_service import DRAWING_TRANSITIONS
 
 RELEASED_STATES = ("Released", "Superseded", "Obsolete")
 
@@ -22,14 +27,28 @@ POST_RELEASE_ALLOWED_FIELDS = {
 
 
 class EngineeringDrawing(Document):
+	def before_insert(self):
+		self.pull_item_classification()
+
 	def validate(self):
-		self.sync_release_status_from_workflow_state()
+		self.pull_item_classification()
+		self.validate_status_change_goes_through_service()
+		self.sync_workflow_state_from_release_status()
 		self.sync_file_checksum()
 		self.validate_release_requires_checksum()
 		self.validate_immutable_once_released()
 		self.validate_file_not_replaced_after_release()
 		self.validate_creator_cannot_release()
 		self.log_release_audit_event()
+		remember_released_drawing(self)
+
+	def pull_item_classification(self):
+		"""Blank family, drawing number, and standard follow the related Item.
+
+		An already released drawing is left unchanged. The revision letter is
+		not copied; that field belongs to this drawing.
+		"""
+		apply_carried_fields(self, self.related_item)
 
 	def sync_file_checksum(self):
 		"""Populate file_checksum automatically from approved_file's content
@@ -52,34 +71,59 @@ class EngineeringDrawing(Document):
 		actual save order rather than assumed."""
 		sync_drawing_checksum(self)
 
-	def sync_release_status_from_workflow_state(self):
-		"""release_status is meant to be a denormalized mirror of workflow_state,
-		but Frappe's real Workflow engine (frappe.model.workflow.apply_workflow)
-		only ever does `doc.set("workflow_state", next_state); doc.save()` - it
-		has no knowledge of release_status and nothing in this build's Workflow
-		fixture (an update_field/update_value action on a state) keeps the two
-		fields in step either.
+	def validate_status_change_goes_through_service(self):
+		"""release_status can only be changed by
+		drawing_service.advance_drawing(), which sets flags.status_transition.
 
-		Without this, a document driven through the real workflow UI/engine can
-		reach workflow_state == "Released" while release_status is still stuck
-		at whatever it was initialized to (e.g. "Draft"), which silently
-		disables both validate_release_requires_checksum() and
-		validate_immutable_once_released() below - defeating this DocType's
-		entire immutability guarantee for the only path (the Workflow engine)
-		real users actually take.
-
-		Keeping this as the unconditional first statement in validate() means
-		release_status can never diverge from workflow_state for any save path
-		that runs validate() - the real workflow engine, a direct API/script
-		save, or test code alike - so the guards that follow can keep trusting
-		release_status (and get_doc_before_save().release_status) as an
-		accurate reflection of real state.
-
-		(frappe.db.set_value bypasses validate() entirely and is therefore not
-		a path this can or needs to close - the same is true elsewhere in this
-		app, e.g. the doc_status/submission fields on other doctypes.)
+		The Engineering Drawing workflow was removed (install.
+		remove_engineering_workflows), so a plain save is the only other way a
+		status could change, and it would skip the role check, the one-step
+		order and the audit trail. A new drawing must start at Draft. Editing
+		workflow_state by hand is treated the same as editing release_status.
 		"""
-		self.release_status = self.workflow_state
+		if self.is_new():
+			if (self.release_status or "Draft") != "Draft" or (self.workflow_state or "Draft") != "Draft":
+				frappe.throw(_("A new Engineering Drawing must start at Draft."))
+			return
+		before = self.get_doc_before_save()
+		if not before:
+			return
+		edited = self.release_status != before.release_status or (
+			self.workflow_state != before.workflow_state and self.workflow_state != self.release_status
+		)
+		if not edited:
+			return
+		if not self.flags.get("status_transition"):
+			frappe.throw(
+				_(
+					"Release Status cannot be changed by editing the drawing. Use Actions on the "
+					"drawing, which moves it one step at a time."
+				)
+			)
+		if self.release_status not in DRAWING_TRANSITIONS.get(before.release_status, ()):
+			frappe.throw(
+				_("An Engineering Drawing cannot move from {0} to {1}.").format(
+					before.release_status, self.release_status
+				)
+			)
+
+	def sync_workflow_state_from_release_status(self):
+		"""workflow_state is kept as a read-only mirror of release_status.
+
+		Root cause of the drawing "staying Draft": validate() used to copy
+		workflow_state INTO release_status on every save. That only made sense
+		while the Workflow engine wrote workflow_state. With the workflow
+		removed nothing writes workflow_state, so every save reset
+		release_status to the stale workflow_state (Draft), and a release_status
+		set by hand or by code was silently overwritten. release_status is now
+		the field that carries the state and workflow_state follows it, so
+		reports, list filters and the carry-forward code that still read
+		workflow_state stay correct.
+
+		(frappe.db.set_value bypasses validate() entirely, so test factories
+		that set both fields directly are unaffected.)
+		"""
+		self.workflow_state = self.release_status
 
 	def validate_release_requires_checksum(self):
 		"""Structural guard against Frappe's raw workflow engine (

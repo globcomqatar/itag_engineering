@@ -3,6 +3,7 @@
 
 frappe.ui.form.on("Engineering Item Request", {
 	refresh(frm) {
+		add_review_buttons(frm);
 		const pending = [];
 		if (frm.doc.valve_type && !frm._valve_type_name) {
 			pending.push(
@@ -54,6 +55,91 @@ frappe.ui.form.on("Engineering Item Request", {
 		});
 	},
 });
+
+// The Engineering Item Request workflow was removed. These buttons call the
+// role-gated services in eir_service.py, which enforce the rules. The role and
+// state checks here only decide which buttons to show.
+const EIR_SERVICE = "itag_engineering.itag_engineering_management.eir_service";
+const EIR_OPEN_STATES = ["Draft", "Duplicate Review", "Engineering Review", "Returned for Correction"];
+
+function add_review_buttons(frm) {
+	if (frm.is_new() || frm.doc.__islocal) {
+		return;
+	}
+	if (EIR_OPEN_STATES.includes(frm.doc.workflow_state) && frappe.user.has_role("Engineering Manager")) {
+		frm.add_custom_button(
+			__("Approve"),
+			() => {
+				frappe.confirm(__("Approve this Engineering Item Request?"), () => {
+					frappe
+						.call({
+							method: `${EIR_SERVICE}.approve_eir_api`,
+							args: { eir_name: frm.doc.name },
+							freeze: true,
+							freeze_message: __("Approving..."),
+						})
+						.then((r) => {
+							if (r.message) {
+								frm.reload_doc();
+							}
+						});
+				});
+			},
+			__("Actions")
+		);
+		frm.add_custom_button(
+			__("Reject"),
+			() => {
+				frappe.prompt(
+					[{ fieldname: "reason", fieldtype: "Small Text", label: __("Reason"), reqd: 1 }],
+					(values) => {
+						frappe
+							.call({
+								method: `${EIR_SERVICE}.reject_eir_api`,
+								args: { eir_name: frm.doc.name, reason: values.reason },
+								freeze: true,
+								freeze_message: __("Rejecting..."),
+							})
+							.then((r) => {
+								if (r.message) {
+									frm.reload_doc();
+								}
+							});
+					},
+					__("Reject Engineering Item Request"),
+					__("Reject")
+				);
+			},
+			__("Actions")
+		);
+	}
+	if (
+		frm.doc.workflow_state === "Approved" &&
+		!frm.doc.created_item &&
+		(frappe.user.has_role("Engineering User") || frappe.user.has_role("Engineering Manager"))
+	) {
+		frm.add_custom_button(
+			__("Create Item"),
+			() => {
+				frappe.confirm(__("Create the Item for this request?"), () => {
+					frappe
+						.call({
+							method: `${EIR_SERVICE}.create_item_from_eir_api`,
+							args: { eir_name: frm.doc.name },
+							freeze: true,
+							freeze_message: __("Creating Item..."),
+						})
+						.then((r) => {
+							if (r.message) {
+								frm.reload_doc();
+							}
+						});
+				});
+			},
+			__("Actions")
+		);
+	}
+}
 
 function show_valve_type_code_note(frm) {
 	if (frm.doc.created_item) {
