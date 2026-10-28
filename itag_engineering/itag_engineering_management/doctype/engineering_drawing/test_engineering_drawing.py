@@ -20,6 +20,10 @@ def _advance_workflow_state(doc, next_state):
 	must drive state changes this way instead of hand-setting release_status
 	alongside workflow_state.
 	"""
+	# fix6: a drawing is released only by Submit (Manager/Master Manager).
+	if next_state == "Released" and doc.docstatus == 0:
+		doc.submit()
+		return doc
 	doc.set("workflow_state", next_state)
 	doc.save()
 	return doc
