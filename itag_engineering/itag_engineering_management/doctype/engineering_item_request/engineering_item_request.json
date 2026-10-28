@@ -5,10 +5,10 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "request_title",
   "requested_by",
   "workflow_state",
   "engineering_section",
+  "request_title",
   "item_category",
   "item_type",
   "product_family",
@@ -40,22 +40,23 @@
    "fieldname": "request_title",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Request Title",
+   "label": "Item Name",
    "reqd": 1
   },
   {
    "default": "__user",
    "fieldname": "requested_by",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Requested By",
    "options": "User",
-   "reqd": 1
+   "reqd": 0
   },
   {
    "default": "Draft",
    "fieldname": "workflow_state",
    "fieldtype": "Select",
-   "in_list_view": 1,
+   "hidden": 1,
    "label": "Workflow State",
    "options": "Draft\nDuplicate Review\nEngineering Review\nReturned for Correction\nApproved\nItem Created\nClosed\nRejected\nCancelled",
    "read_only": 1
@@ -107,18 +108,21 @@
   },
   {
    "fieldname": "nominal_size",
-   "fieldtype": "Data",
-   "label": "Nominal Size"
+   "fieldtype": "Link",
+   "label": "Nominal Size",
+   "options": "ITAG Nominal Size"
   },
   {
    "fieldname": "pressure_class",
-   "fieldtype": "Data",
-   "label": "Pressure Class"
+   "fieldtype": "Link",
+   "label": "Pressure Class",
+   "options": "ITAG Pressure Class"
   },
   {
    "fieldname": "body_material",
-   "fieldtype": "Data",
-   "label": "Body Material"
+   "fieldtype": "Link",
+   "label": "Body Material",
+   "options": "ITAG Body Material"
   },
   {
    "fieldname": "trim_material",
@@ -212,7 +216,7 @@
   }
  ],
  "links": [],
- "modified": "2026-07-20 00:00:00.000000",
+ "modified": "2026-10-28 15:55:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "Engineering Item Request",

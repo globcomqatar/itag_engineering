@@ -160,6 +160,14 @@ def create_roles():
 		)
 
 
+def _note(message):
+	"""fix6: record a kept-for-review item in the itag_engineering log and in
+	the migrate output (Frappe's file logger drops warnings on a production
+	bench, where its level is ERROR)."""
+	frappe.logger("itag_engineering").warning(message)
+	print(f"[itag_engineering] {message}")
+
+
 def remove_retired_engineering_roles():
 	"""fix6 (Ahmed, 28-Oct-2026; Waheed's rule: delete nothing): retired roles
 	are disabled (Role.disabled = 1), never deleted. Has Role, DocPerm and
@@ -168,7 +176,6 @@ def remove_retired_engineering_roles():
 	A role that still has a permission on a DocType outside ITAG Engineering
 	Management is left enabled. Idempotent.
 	Rollback: set disabled = 0 on the Role record."""
-	logger = frappe.logger("itag_engineering")
 	changed = False
 	for role_name in RETIRED_ROLES:
 		if not frappe.db.exists("Role", role_name):
@@ -196,7 +203,7 @@ def remove_retired_engineering_roles():
 			else []
 		)
 		if users or perms or custom:
-			logger.warning(
+			_note(
 				f"retired role {role_name!r} disabled; rows kept for manual review: "
 				f"users={sorted(set(users))} docperm={sorted(set(perms))} custom_docperm={sorted(set(custom))}"
 			)
@@ -208,7 +215,7 @@ def remove_retired_engineering_roles():
 		if parents:
 			rows = frappe.get_all("Custom DocPerm", filters={"parent": ["in", parents]}, fields=["parent", "role"])
 			if rows:
-				frappe.logger("itag_engineering").warning(
+				_note(
 					"Custom DocPerm rows kept on ITAG Engineering Management DocTypes: "
 					+ ", ".join(sorted({f"{r.parent}/{r.role}" for r in rows}))
 				)
