@@ -196,7 +196,7 @@ def remove_retired_engineering_roles():
 			else []
 		)
 		if users or perms or custom:
-			logger.info(
+			logger.warning(
 				f"retired role {role_name!r} disabled; rows kept for manual review: "
 				f"users={sorted(set(users))} docperm={sorted(set(perms))} custom_docperm={sorted(set(custom))}"
 			)
@@ -208,7 +208,7 @@ def remove_retired_engineering_roles():
 		if parents:
 			rows = frappe.get_all("Custom DocPerm", filters={"parent": ["in", parents]}, fields=["parent", "role"])
 			if rows:
-				frappe.logger("itag_engineering").info(
+				frappe.logger("itag_engineering").warning(
 					"Custom DocPerm rows kept on ITAG Engineering Management DocTypes: "
 					+ ", ".join(sorted({f"{r.parent}/{r.role}" for r in rows}))
 				)
