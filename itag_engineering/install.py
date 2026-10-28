@@ -161,8 +161,15 @@ def create_roles():
 
 
 def remove_retired_engineering_roles():
-	"""Delete roles this app no longer uses. A role that still has a permission
-	on a DocType outside ITAG Engineering Management is left in place."""
+	"""fix6 (Ahmed, 28-Oct-2026; Waheed's rule: delete nothing): retired roles
+	are disabled (Role.disabled = 1), never deleted. Has Role, DocPerm and
+	Custom DocPerm rows that still point at them are left in place and listed
+	in the itag_engineering log for a manual decision after Nasser's review.
+	A role that still has a permission on a DocType outside ITAG Engineering
+	Management is left enabled. Idempotent.
+	Rollback: set disabled = 0 on the Role record."""
+	logger = frappe.logger("itag_engineering")
+	changed = False
 	for role_name in RETIRED_ROLES:
 		if not frappe.db.exists("Role", role_name):
 			continue
@@ -178,20 +185,35 @@ def remove_retired_engineering_roles():
 		)
 		if external:
 			continue
-		frappe.db.delete("Has Role", {"role": role_name})
-		frappe.db.delete("DocPerm", {"role": role_name})
-		if frappe.db.table_exists("Custom DocPerm"):
-			frappe.db.delete("Custom DocPerm", {"role": role_name})
-		frappe.delete_doc("Role", role_name, force=1, ignore_permissions=True)
-	# Custom DocPerm replaces the JSON permissions for a whole DocType.
-	# Clear any left on this module so the three-role rows apply.
-	if frappe.db.table_exists("Custom DocPerm"):
-		parents = frappe.get_all(
-			"DocType", filters={"module": "ITAG Engineering Management"}, pluck="name"
+		if not frappe.db.get_value("Role", role_name, "disabled"):
+			frappe.db.set_value("Role", role_name, "disabled", 1)
+			changed = True
+		users = frappe.get_all("Has Role", filters={"role": role_name, "parenttype": "User"}, pluck="parent")
+		perms = frappe.get_all("DocPerm", filters={"role": role_name}, pluck="parent")
+		custom = (
+			frappe.get_all("Custom DocPerm", filters={"role": role_name}, pluck="parent")
+			if frappe.db.table_exists("Custom DocPerm")
+			else []
 		)
+		if users or perms or custom:
+			logger.info(
+				f"retired role {role_name!r} disabled; rows kept for manual review: "
+				f"users={sorted(set(users))} docperm={sorted(set(perms))} custom_docperm={sorted(set(custom))}"
+			)
+	# fix6: Custom DocPerm rows on this module are kept - not deleted and not
+	# zeroed (zeroing could silently remove access an admin set on purpose).
+	# They are only logged for a manual decision.
+	if frappe.db.table_exists("Custom DocPerm"):
+		parents = frappe.get_all("DocType", filters={"module": "ITAG Engineering Management"}, pluck="name")
 		if parents:
-			frappe.db.delete("Custom DocPerm", {"parent": ["in", parents]})
-	frappe.clear_cache()
+			rows = frappe.get_all("Custom DocPerm", filters={"parent": ["in", parents]}, fields=["parent", "role"])
+			if rows:
+				frappe.logger("itag_engineering").info(
+					"Custom DocPerm rows kept on ITAG Engineering Management DocTypes: "
+					+ ", ".join(sorted({f"{r.parent}/{r.role}" for r in rows}))
+				)
+	if changed:
+		frappe.clear_cache()
 
 
 ENGINEERING_WORKFLOWS = (
