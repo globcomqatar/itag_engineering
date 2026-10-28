@@ -316,7 +316,25 @@ def before_tests():
 	erpnext_before_tests()
 	_ensure_test_holiday_list()
 	_ensure_test_operation_and_workstation()
+	_ensure_test_dropdown_values()
 	frappe.db.commit()
+
+
+# fix6: values the app tests put on Item Requests (now Link fields).
+TEST_DROPDOWN_VALUES = {
+	"ITAG Nominal Size": ("nominal_size", ("6IN", "4IN", "2IN", "8IN")),
+	"ITAG Pressure Class": ("pressure_class", ("CL150", "CL300", "CL600")),
+	"ITAG Body Material": ("body_material", ("WCB", "CF8M", "A105")),
+}
+
+
+def _ensure_test_dropdown_values():
+	for doctype, (fieldname, values) in TEST_DROPDOWN_VALUES.items():
+		if not frappe.db.table_exists(doctype):
+			continue
+		for value in values:
+			if not frappe.db.exists(doctype, value):
+				frappe.get_doc({"doctype": doctype, fieldname: value, "is_active": 1}).insert(ignore_permissions=True)
 
 
 def _ensure_test_holiday_list():
