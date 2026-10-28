@@ -2,6 +2,8 @@
 Multi-level BOM Builder use the BOM workflow),
 ECO auto-hold, report roles and the Multi-level BOM Builder link."""
 
+import unittest
+
 import frappe
 from frappe.model.workflow import WorkflowTransitionError, apply_workflow
 from frappe.tests.utils import FrappeTestCase
@@ -18,7 +20,8 @@ USERS = {
 	"dual": ("itag.rc.dual@example.com", ["Engineering Manager", "Engineering Master Manager"]),
 	"user_mgr": ("itag.rc.usermgr@example.com", ["Engineering User", "Engineering Manager"]),
 }
-WORKFLOWS = ("ITAG BOM Workflow", "ITAG Engineering Release Workflow")
+# fix6: ITAG BOM Workflow is kept but inactive (BOM uses standard submit).
+WORKFLOWS = ("ITAG Engineering Release Workflow",)
 
 
 def _user(key):
@@ -73,12 +76,14 @@ class TestReleaseControl(FrappeTestCase):
 					t.allowed, ("Engineering User", "Engineering Manager", "Engineering Master Manager")
 				)
 
+	@unittest.skip("fix6 (Waheed, 28-Oct-2026): ITAG BOM Workflow is inactive; BOM uses standard submit. Covered by tests/test_fix6_bom.py")
 	def test_new_bom_starts_in_draft(self):
 		bom = self._bom_as(_user("creator"))
 		self.assertEqual(bom.itag_workflow_state, "Draft")
 		self.assertEqual(bom.docstatus, 0)
 
 	# --- BOM workflow ---------------------------------------------------
+	@unittest.skip("fix6 (Waheed, 28-Oct-2026): ITAG BOM Workflow is inactive; BOM uses standard submit. Covered by tests/test_fix6_bom.py")
 	def test_creator_cannot_approve_own_bom(self):
 		# The dual-role user owns the BOM, so Frappe hides the Approve
 		# transition (self approval off) and our check also refuses it.
@@ -87,12 +92,14 @@ class TestReleaseControl(FrappeTestCase):
 		with self.assertRaises((WorkflowTransitionError, ReleaseControlError, frappe.ValidationError)):
 			apply_workflow(bom, "Approve")
 
+	@unittest.skip("fix6 (Waheed, 28-Oct-2026): ITAG BOM Workflow is inactive; BOM uses standard submit. Covered by tests/test_fix6_bom.py")
 	def test_engineering_user_cannot_approve(self):
 		bom = self._bom_as(_user("creator"))
 		frappe.set_user(_user("creator"))
 		with self.assertRaises((WorkflowTransitionError, frappe.PermissionError, frappe.ValidationError)):
 			apply_workflow(bom, "Approve")
 
+	@unittest.skip("fix6 (Waheed, 28-Oct-2026): ITAG BOM Workflow is inactive; BOM uses standard submit. Covered by tests/test_fix6_bom.py")
 	def test_approver_cannot_release(self):
 		bom = self._bom_as(_user("creator"))
 		frappe.set_user(_user("dual"))
@@ -102,6 +109,7 @@ class TestReleaseControl(FrappeTestCase):
 		with self.assertRaises(ReleaseControlError):
 			apply_workflow(frappe.get_doc("BOM", bom.name), "Release")
 
+	@unittest.skip("fix6 (Waheed, 28-Oct-2026): ITAG BOM Workflow is inactive; BOM uses standard submit. Covered by tests/test_fix6_bom.py")
 	def test_full_bom_path_draft_approved_released(self):
 		bom = self._bom_as(_user("creator"))
 		frappe.set_user(_user("manager"))
@@ -111,12 +119,14 @@ class TestReleaseControl(FrappeTestCase):
 		self.assertEqual(bom.itag_workflow_state, "Released")
 		self.assertEqual(bom.docstatus, 1)
 
+	@unittest.skip("fix6 (Waheed, 28-Oct-2026): ITAG BOM Workflow is inactive; BOM uses standard submit. Covered by tests/test_fix6_bom.py")
 	def test_direct_submit_without_approval_is_blocked(self):
 		bom = self._bom_as(_user("creator"))
 		frappe.set_user(_user("master"))
 		with self.assertRaises(ReleaseControlError):
 			frappe.get_doc("BOM", bom.name).submit()
 
+	@unittest.skip("fix6 (Waheed, 28-Oct-2026): ITAG BOM Workflow is inactive; BOM uses standard submit. Covered by tests/test_fix6_bom.py")
 	def test_reject_returns_to_draft_and_clears_approver(self):
 		bom = self._bom_as(_user("creator"))
 		frappe.set_user(_user("manager"))
@@ -178,6 +188,7 @@ class TestBomBuilderUsesBomWorkflow(FrappeTestCase):
 			self.assertFalse(frappe.db.get_value("Workflow", "ITAG BOM Creator Workflow", "is_active"))
 		self.assertFalse(frappe.get_meta("BOM Creator").get_workflow())
 
+	@unittest.skip("fix6 (Waheed, 28-Oct-2026): ITAG BOM Workflow is inactive; BOM uses standard submit. Covered by tests/test_fix6_bom.py")
 	def test_builder_boms_enter_the_bom_workflow_as_draft(self):
 		company = ensure_test_company()
 		fg = create_fresh_stock_item(prefix="RC-BC-FG").name
@@ -214,6 +225,7 @@ class TestBomBuilderUsesBomWorkflow(FrappeTestCase):
 		self.assertEqual(bom.docstatus, 1)
 		self.assertEqual(bom.itag_workflow_state, "Released")
 
+	@unittest.skip("fix6 (Waheed, 28-Oct-2026): ITAG BOM Workflow is inactive; BOM uses standard submit. Covered by tests/test_fix6_bom.py")
 	def test_builder_bom_cannot_be_submitted_directly(self):
 		company = ensure_test_company()
 		fg = create_fresh_stock_item(prefix="RC-BC-FG").name

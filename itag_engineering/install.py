@@ -228,7 +228,10 @@ ENGINEERING_WORKFLOWS = (
 # fix4 (Ahmed, 28-Oct-2026; Waheed's rule: delete nothing): drawings have no
 # workflow, so the one a fix2 build may have created is deactivated, never
 # deleted. Reactivate by setting is_active = 1 on the Workflow record.
-DEACTIVATED_WORKFLOWS = ("ITAG Engineering Drawing Workflow",)
+# fix6 (Waheed, 28-Oct-2026): BOM goes back to the standard ERPNext flow
+# (save as Draft, then Submit). The ITAG BOM Workflow is kept, inactive.
+# A BOM part-way through it keeps its docstatus and itag_workflow_state value.
+DEACTIVATED_WORKFLOWS = ("ITAG Engineering Drawing Workflow", "ITAG BOM Workflow")
 
 
 def deactivate_retired_workflows():
@@ -354,9 +357,12 @@ def _ensure_test_operation_and_workstation():
 # added; nothing is ever removed.
 ENGINEERING_BOM_PERMISSIONS = {
 	"Engineering User": ("read", "write", "create", "print", "export", "report"),
-	"Engineering Manager": ("read", "write", "print", "export", "report"),
-	"Engineering Master Manager": ("read", "write", "submit", "cancel", "amend", "print", "export", "report"),
+	"Engineering Manager": ("read", "write", "create", "submit", "cancel", "amend", "print", "export", "report"),
+	"Engineering Master Manager": ("read", "write", "create", "submit", "cancel", "amend", "print", "export", "report"),
 }
+# fix6: Engineering User drafts BOMs only. These rights are set to 0 on its
+# row (the row itself is kept).
+ENGINEERING_BOM_DENIED = {"Engineering User": ("submit", "cancel", "amend")}
 
 
 def grant_engineering_bom_permissions():
@@ -373,6 +379,12 @@ def grant_engineering_bom_permissions():
 			for right in rights:
 				if not (row and row.get(right)):
 					update_permission_property(doctype, role, 0, right, 1, validate=False)
+		for role, rights in ENGINEERING_BOM_DENIED.items():
+			name = frappe.db.get_value("Custom DocPerm", {"parent": doctype, "role": role, "permlevel": 0})
+			if name:
+				granted = {r: 0 for r in rights if frappe.db.get_value("Custom DocPerm", name, r)}
+				if granted:
+					frappe.db.set_value("Custom DocPerm", name, granted)
 	frappe.clear_cache()
 
 

@@ -1,8 +1,6 @@
 # Copyright (c) 2026, Globcom Qatar and contributors
 # For license information, please see license.txt
 
-import unittest
-
 """Build ITAG-0.11.0 Task 1: the consolidated cross-build security and
 segregation-of-duties test suite (roadmap Section 22.2/22.3). This is a
 NEW-TESTS-ONLY consolidation - no new enforcement mechanism beyond
@@ -21,6 +19,8 @@ every one of the ~50 transitions across all 6 workflows individually -
 confirm the full matrix on a live bench before treating this build's
 security review as final, per this build's own exit gate.
 """
+
+import unittest
 
 import frappe
 from frappe.model.workflow import apply_workflow
@@ -131,6 +131,7 @@ class TestIntegrationUserDenied(FrappeTestCase):
 			frappe.set_user("Administrator")
 			frappe.flags.itag_enforce_release_control = False
 
+	@unittest.skip("fix6 (Waheed, 28-Oct-2026): ITAG BOM Workflow is inactive; BOM uses standard submit. Covered by tests/test_fix6_bom.py")
 	def test_non_manager_roles_cannot_approve_a_bom(self):
 		bom = self._new_bom()
 		users = [
