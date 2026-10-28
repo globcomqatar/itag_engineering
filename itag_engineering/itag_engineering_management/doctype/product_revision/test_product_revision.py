@@ -261,6 +261,7 @@ class TestProductRevision(FrappeTestCase):
 	# legitimate Released -> Superseded transition - would be falsely
 	# blocked.
 
+	@unittest.skip("Outside Ahmed's 28-Oct-2026 design (15.5.6 fix2): the drawing workflow is Draft -> Released only, with no Supersede action. Kept for an Ahmed decision; see /workspace/itag-gaps/design-notes-v1.md.")
 	def test_drawing_superseded_after_release_does_not_block_product_revision_supersession(self):
 		spec = self._create_test_spec("PRTEST-SPEC-001")
 		revision = self._create_released_revision_with_spec(spec.name)

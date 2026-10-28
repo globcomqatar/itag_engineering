@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Globcom Qatar and contributors
 # For license information, please see license.txt
 
+import unittest
+
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
@@ -12,6 +14,19 @@ from itag_engineering.itag_engineering_management.ecr_service import (
 	submit_ecr_for_review,
 )
 from itag_engineering.tests.factories import create_fresh_stock_item
+
+
+# fix2: approvals and rejections need someone other than the requestor.
+OTHER_REQUESTOR = "itag.other.requestor@example.com"
+
+
+def _ensure_other_requestor():
+	email = "itag.other.requestor@example.com"
+	if not frappe.db.exists("User", email):
+		frappe.get_doc(
+			{"doctype": "User", "email": email, "first_name": "Other Requestor", "send_welcome_email": 0}
+		).insert(ignore_permissions=True)
+	return email
 
 
 class TestECRService(FrappeTestCase):
@@ -51,6 +66,7 @@ class TestECRService(FrappeTestCase):
 		ecr.reload()
 		self.assertEqual(ecr.workflow_state, "Submitted for Review")
 
+	@unittest.skip("Outside Ahmed's 28-Oct-2026 design (15.5.6 fix2): the ECR workflow has no More Information Required state. Kept for an Ahmed decision; see /workspace/itag-gaps/design-notes-v1.md.")
 	def test_request_more_information(self):
 		ecr = self._make_ecr()
 		submit_ecr_for_review(ecr.name)
@@ -70,6 +86,7 @@ class TestECRService(FrappeTestCase):
 		with self.assertRaises(frappe.ValidationError):
 			ecr.save()
 
+	@unittest.skip("Outside Ahmed's 28-Oct-2026 design (15.5.6 fix2): the ECR workflow has no Accepted for ECO transition (create_eco_from_accepted_ecr still sets it directly). Kept for an Ahmed decision; see /workspace/itag-gaps/design-notes-v1.md.")
 	def test_accepted_for_eco_succeeds_when_originating_eco_already_set(self):
 		ecr = self._make_ecr()
 		ecr.db_set("workflow_state", "Engineering Review")
@@ -103,6 +120,7 @@ class TestECRService(FrappeTestCase):
 		with self.assertRaises(frappe.ValidationError):
 			reject_ecr(ecr.name, "")
 
+	@unittest.skip("Outside Ahmed's 28-Oct-2026 design (15.5.6 fix2): the ECR workflow ends at Approved or Rejected, with no Closed state. Rejection itself is covered by test_reject_by_a_different_manager.")
 	def test_reject_and_close(self):
 		ecr = self._make_ecr()
 		ecr.db_set("workflow_state", "Engineering Review")
@@ -115,6 +133,25 @@ class TestECRService(FrappeTestCase):
 		close_ecr(ecr.name)
 		ecr.reload()
 		self.assertEqual(ecr.workflow_state, "Closed")
+
+	def test_reject_by_a_different_manager(self):
+		ecr = self._make_ecr()
+		_ensure_other_requestor()
+		frappe.db.set_value(
+			"Engineering Change Request",
+			ecr.name,
+			{"workflow_state": "Submitted for Review", "owner": OTHER_REQUESTOR, "requestor": OTHER_REQUESTOR},
+		)
+		reject_ecr(ecr.name, "Duplicate of ECR-2026-0001.")
+		ecr.reload()
+		self.assertEqual(ecr.workflow_state, "Rejected")
+		self.assertEqual(ecr.rejection_reason, "Duplicate of ECR-2026-0001.")
+
+	def test_requestor_cannot_reject_own_request(self):
+		ecr = self._make_ecr()
+		ecr.db_set("workflow_state", "Submitted for Review")
+		with self.assertRaises(frappe.PermissionError):
+			reject_ecr(ecr.name, "Self rejection.")
 
 	def test_close_blocked_without_disposition(self):
 		ecr = self._make_ecr()

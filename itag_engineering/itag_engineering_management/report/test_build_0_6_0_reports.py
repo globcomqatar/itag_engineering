@@ -71,7 +71,17 @@ class TestBuild060ReportsAgainstRealData(FrappeTestCase):
 		from itag_engineering.itag_engineering_management.ecr_service import reject_ecr
 
 		ecr = self._make_ecr("B6R-TEST Rejected ECR")
-		ecr.db_set("workflow_state", "Engineering Review")
+		from itag_engineering.itag_engineering_management.test_ecr_service import _ensure_other_requestor
+
+		_ensure_other_requestor()
+		# fix2: rejected from Submitted for Review by someone other than the requestor.
+		ecr.db_set(
+			{
+				"workflow_state": "Submitted for Review",
+				"owner": "itag.other.requestor@example.com",
+				"requestor": "itag.other.requestor@example.com",
+			}
+		)
 		ecr.reload()
 		reject_ecr(ecr.name, "B6R-TEST rejection reason")
 

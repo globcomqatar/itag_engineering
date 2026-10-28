@@ -40,6 +40,7 @@ after_migrate = [
 	"itag_engineering.setup.custom_fields.sync_custom_fields",
 	"itag_engineering.install.grant_engineering_bom_permissions",
 	"itag_engineering.install.sync_report_roles",
+	"itag_engineering.install.grant_read_only_support_permissions",
 ]
 
 # Testing
@@ -54,15 +55,22 @@ fixtures = [
 	# 15.5.6: approval only on BOM and Engineering Release. BOMs made in the
 	# Multi-level BOM Builder (BOM Creator) go into the ITAG BOM Workflow. Draft (Engineering User) -> Approved
 	# (Engineering Manager) -> Released (Engineering Master Manager).
-	{"doctype": "Workflow State", "filters": [["name", "in", ["Draft", "Approved", "Released"]]]},
-	{"doctype": "Workflow Action Master", "filters": [["name", "in", ["Approve", "Reject", "Release"]]]},
+	{"doctype": "Workflow State", "filters": [["name", "in", ["Draft", "Approved", "Released", "Submitted for Review", "Rejected", "Implemented", "Closed"]]]},
+	{"doctype": "Workflow Action Master", "filters": [["name", "in", ["Approve", "Reject", "Release", "Submit", "Mark Implemented", "Close"]]]},
 	{
 		"doctype": "Workflow",
 		"filters": [
 			[
 				"name",
 				"in",
-				["ITAG BOM Workflow", "ITAG Engineering Release Workflow"],
+				[
+					"ITAG BOM Workflow",
+					"ITAG Engineering Release Workflow",
+					# 15.5.6 fix2 (Ahmed, 28-Oct-2026): drawing release, ECR and ECO lifecycles.
+					"ITAG Engineering Drawing Workflow",
+					"ITAG Engineering Change Request Workflow",
+					"ITAG Engineering Change Order Workflow",
+				],
 			]
 		],
 	},

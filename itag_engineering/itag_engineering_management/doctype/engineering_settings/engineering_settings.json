@@ -206,7 +206,7 @@
  "icon": "fa fa-cog",
  "issingle": 1,
  "links": [],
- "modified": "2026-10-28 12:00:00.000000",
+ "modified": "2026-10-28 14:30:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "Engineering Settings",
@@ -240,6 +240,10 @@
    "role": "Engineering Master Manager",
    "share": 1,
    "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Engineering User"
   }
  ],
  "sort_field": "modified",

@@ -14,7 +14,8 @@ frappe.ui.form.on("Engineering Change Request", {
 		// regardless, so this is a UX convenience, not the enforcement
 		// point - same pattern as engineering_item_request.js's
 		// "Create Item" button.
-		if (frm.doc.workflow_state === "Engineering Review" && !frm.doc.originating_eco) {
+		// 15.5.6 fix2: the ITAG ECR workflow ends in "Approved".
+		if (["Approved", "Engineering Review"].includes(frm.doc.workflow_state) && !frm.doc.originating_eco) {
 			frm.add_custom_button(
 				__("Accept for ECO"),
 				() => {

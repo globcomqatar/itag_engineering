@@ -11,6 +11,7 @@
   "column_break_header",
   "workflow_state",
   "implementation_status",
+  "implemented_by",
   "classification_section",
   "change_classification",
   "risk_level",
@@ -81,6 +82,14 @@
    "fieldtype": "Select",
    "label": "Implementation Status",
    "options": "Not Started\nIn Progress\nImplemented\nVerified"
+  },
+  {
+   "fieldname": "implemented_by",
+   "fieldtype": "Link",
+   "options": "User",
+   "label": "Implemented By",
+   "read_only": 1,
+   "no_copy": 1
   },
   {
    "fieldname": "classification_section",
@@ -242,7 +251,7 @@
   }
  ],
  "links": [],
- "modified": "2026-07-20 00:00:00.000000",
+ "modified": "2026-10-28 14:30:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "Engineering Change Order",

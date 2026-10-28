@@ -346,6 +346,9 @@ def sync_report_roles():
 		name = data.get("name")
 		if data.get("doctype") != "Report" or not frappe.db.exists("Report", name):
 			continue
+		# fix2 (D1): keep ref_doctype in step with the JSON too.
+		if data.get("ref_doctype") and frappe.db.get_value("Report", name, "ref_doctype") != data["ref_doctype"]:
+			frappe.db.set_value("Report", name, "ref_doctype", data["ref_doctype"], update_modified=False)
 		wanted = [r["role"] for r in data.get("roles", []) if frappe.db.exists("Role", r["role"])]
 		current = frappe.get_all(
 			"Has Role", filters={"parent": name, "parenttype": "Report"}, pluck="role", order_by="idx"
@@ -357,4 +360,40 @@ def sync_report_roles():
 		report.set("roles", [])
 		for role in wanted:
 			report.append("roles", {"role": role}).db_insert()
+	frappe.clear_cache()
+
+
+# 15.5.6 fix2 (Ahmed, 28-Oct-2026), QA defects D1, D2 and D4. Read-only
+# Custom DocPerm rows through Frappe's own permission API (standard rows are
+# copied first, so existing access is unchanged). Nothing beyond the listed
+# rights is granted and nothing is removed. No new roles.
+#   D1: Operation Hold Point Register used the child table BOM Operation as its
+#       ref_doctype. Frappe never grants report rights on a child table (it
+#       checks the parent, and a report has none), so the report now points at
+#       BOM, and System Manager gets read + report on BOM only.
+#   D2: Engineering User needs read on Currency and Project (BOM Creator).
+#   D4: Engineering User read on Engineering Settings is in that DocType's JSON.
+READ_ONLY_SUPPORT_PERMISSIONS = (
+	("BOM", "System Manager", ("read", "report")),
+	("Currency", "Engineering User", ("read",)),
+	("Project", "Engineering User", ("read",)),
+)
+
+
+def grant_read_only_support_permissions():
+	from frappe.permissions import add_permission, update_permission_property
+
+	for doctype, role, rights in READ_ONLY_SUPPORT_PERMISSIONS:
+		if not (frappe.db.exists("DocType", doctype) and frappe.db.exists("Role", role)):
+			continue
+		add_permission(doctype, role, 0)
+		row = frappe.db.get_value(
+			"Custom DocPerm",
+			{"parent": doctype, "role": role, "permlevel": 0, "if_owner": 0},
+			list(rights),
+			as_dict=True,
+		)
+		for right in rights:
+			if not (row and row.get(right)):
+				update_permission_property(doctype, role, 0, right, 1, validate=False)
 	frappe.clear_cache()
