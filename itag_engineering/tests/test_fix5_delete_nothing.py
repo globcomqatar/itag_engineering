@@ -38,7 +38,7 @@ class TestFix5DeleteNothing(FrappeTestCase):
 		install.remove_engineering_workflows()
 		self.assertTrue(frappe.db.exists("Workflow", LEGACY))
 		self.assertEqual(frappe.db.get_value("Workflow", LEGACY, "is_active"), 0)
-		for wf in ("ITAG BOM Workflow", "ITAG Engineering Release Workflow", "ITAG Engineering Change Order Workflow"):
+		for wf in ("ITAG Engineering Release Workflow", "ITAG Engineering Change Order Workflow"):
 			if frappe.db.exists("Workflow", wf):
 				self.assertEqual(frappe.db.get_value("Workflow", wf, "is_active"), 1, wf)
 
