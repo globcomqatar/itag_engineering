@@ -13,7 +13,8 @@ required_apps = ["erpnext"]
 # BOM is a core ERPNext DocType, not this app's own - injecting JS here
 # (rather than a doctype/ folder + hand-edit) is the sanctioned way to add
 # a client-side button to it without ever touching core files.
-doctype_js = {"BOM": "public/js/bom.js"}
+# v15.5.13 #2: Item form shows Item Type Critical on a new Item.
+doctype_js = {"BOM": "public/js/bom.js", "Item": "public/js/item.js"}
 
 # Installation
 # ------------
@@ -161,6 +162,10 @@ override_whitelisted_methods = {
 }
 
 doc_events = {
+	"Item": {
+		# v15.5.13 #2: new Items default to Item Type Critical (insert only).
+		"before_insert": "itag_engineering.itag_engineering_management.item_type_options.default_new_item_product_type",
+	},
 	"BOM": {
 		"before_insert": "itag_engineering.itag_engineering_management.release_control.prepare_bom_from_bom_creator",
 		"validate": [

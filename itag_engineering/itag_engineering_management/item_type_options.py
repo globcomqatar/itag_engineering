@@ -44,3 +44,35 @@ def rename_general_to_non_product():
 			"update `tabEngineering Item Request` set item_type='Non-Product' where item_type='General'"
 		)
 	return names
+
+
+DEFAULT_PRODUCT_TYPE = "Critical"
+
+
+def _automatic_value(field):
+	"""What Frappe puts in the field on a new Item when nobody chooses: the
+	field's own default, else the first Select option."""
+	if field.default:
+		return field.default
+	return (field.options or "").split("\n", 1)[0]
+
+
+def default_new_item_product_type(doc, method=None):
+	"""v15.5.13 #2 (Waheed, Ahmed agreed): Item.before_insert. A new Item
+	gets Item Type Critical unless Critical, Non-Critical or Non-Product was
+	set (by the user or mapped from the request). A blank value, or the
+	value Frappe filled in automatically from the erpcloud_itagksa field
+	(its default or first option, e.g. General), becomes Critical. Existing
+	Items are never touched (insert only). No Property Setter and no edit
+	to the erpcloud_itagksa field."""
+	field = doc.meta.get_field(ITEM_FIELD)
+	if not field or field.fieldtype != "Select":
+		return
+	options = (field.options or "").split("\n")
+	if DEFAULT_PRODUCT_TYPE not in options:
+		return
+	value = doc.get(ITEM_FIELD)
+	if value in REQUIRED_OPTIONS:
+		return
+	if not value or value == _automatic_value(field):
+		doc.set(ITEM_FIELD, DEFAULT_PRODUCT_TYPE)
