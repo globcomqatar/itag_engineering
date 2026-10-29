@@ -5,6 +5,10 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+from itag_engineering.itag_engineering_management.doctype.engineering_drawing.engineering_drawing import (
+	next_revision,
+)
+
 RELEASED_STATES = ("Released", "Superseded", "Obsolete")
 
 # Fields a transition INTO Superseded/Obsolete is allowed to change, on top of
@@ -16,14 +20,145 @@ POST_RELEASE_ALLOWED_FIELDS = {
 	"previous_revision",
 	"modified",
 	"modified_by",
+	# F3 (Waheed, 29-Oct-2026): submitting a revision that was already
+	# Released (before Product Revision was submittable) only changes
+	# docstatus.
+	"docstatus",
 }
+
+# F3: revision history links. A previous revision is cancelled (Superseded)
+# by the time its next revision is saved or submitted; like amended_from,
+# pointing at it is history, not a live link.
+HISTORY_LINK_FIELDS = ("previous_revision", "superseding_revision")
 
 
 class ProductRevision(Document):
+	def onload(self):
+		# F3: the Desk's Cancel must not offer to cancel the BOMs, Engineering
+		# Releases or Work Orders that still point at this revision.
+		self.set_onload("ignore_doctypes_on_cancel", get_history_link_doctypes())
+
+	def get_invalid_links(self, is_submittable=False):
+		invalid_links, cancelled_links = super().get_invalid_links(is_submittable=is_submittable)
+		cancelled_links = [link for link in cancelled_links if link[0] not in HISTORY_LINK_FIELDS]
+		return invalid_links, cancelled_links
+
+	def before_naming(self):
+		# F3: the amended copy is named after its next revision number.
+		self.prepare_amended_revision()
+
 	def validate(self):
+		self.prepare_amended_revision()
+		self.release_on_submit()
 		self.sync_revision_status_from_workflow_state()
+		self.validate_release_only_by_submit()
 		self.validate_drawing_is_released()
 		self.validate_immutable_once_released()
+
+	def before_submit(self):
+		self.validate_release_prerequisites()
+
+	def after_insert(self):
+		self.link_amended_from()
+
+	def before_cancel(self):
+		# F3: a superseded revision stays on record. Submitted BOMs,
+		# Engineering Releases and Work Orders that point at it keep that
+		# link as history; they are neither blocking nor cancelled with it.
+		self.ignore_linked_doctypes = get_history_link_doctypes()
+
+	def on_cancel(self):
+		"""F3 (Waheed, 29-Oct-2026): Cancel marks the revision Superseded
+		through product_revision_service.supersede_revision (status and audit
+		log). It stays on record; nothing is deleted. Its amended copy is the
+		next revision and is linked back when it is created."""
+		from itag_engineering.itag_engineering_management.product_revision_service import (
+			supersede_revision,
+		)
+
+		if self.revision_status in ("Superseded", "Obsolete"):
+			return
+		supersede_revision(self.name)
+		self.update(
+			frappe.db.get_value(
+				"Product Revision", self.name, ["revision_status", "workflow_state", "modified"], as_dict=True
+			)
+		)
+
+	def prepare_amended_revision(self):
+		"""F3: a submitted revision is locked. It is changed by Cancel + Amend,
+		and the amended copy is the next revision number (1 -> 2, A -> B),
+		linked to the previous one and starting again as Draft."""
+		if not (self.is_new() and self.amended_from):
+			return
+		source = frappe.db.get_value(
+			"Product Revision", self.amended_from, ["item", "revision_number"], as_dict=True
+		)
+		if source and self.revision_number == source.revision_number:
+			revision = next_revision(source.revision_number)
+			while frappe.db.exists("Product Revision", f"{self.item}-PR-{revision}"):
+				revision = next_revision(revision)
+			self.revision_number = revision
+		self.previous_revision = self.amended_from
+		self.superseding_revision = None
+		self.revision_status = self.workflow_state = "Draft"
+
+	def release_on_submit(self):
+		"""F3: Submit is the release step (Engineering Manager or Engineering
+		Master Manager hold the submit right; Engineering User does not)."""
+		if getattr(self, "_action", None) == "submit" and self.revision_status not in RELEASED_STATES:
+			self.revision_status = self.workflow_state = "Released"
+
+	def validate_release_only_by_submit(self):
+		"""F3: a draft revision becomes Released only by Submit. A revision
+		that was already Released before F3 keeps that status as a draft."""
+		if self.docstatus != 0 or getattr(self, "_action", None) == "submit":
+			return
+		if self.revision_status != "Released":
+			return
+		before = None if self.is_new() else self.get_doc_before_save()
+		if not before or before.revision_status != "Released":
+			frappe.throw(
+				_("A Product Revision is released by submitting it. Ask an Engineering Manager to submit {0}.").format(
+					self.name or _("this revision")
+				)
+			)
+
+	def validate_release_prerequisites(self):
+		"""F3: before a revision is released (submitted), its drawing must be
+		released and its BOM must be submitted."""
+		if self.revision_status in ("Superseded", "Obsolete"):
+			frappe.throw(
+				_("Product Revision {0} is {1} and cannot be released.").format(self.name, self.revision_status)
+			)
+		drawing = frappe.db.get_value(
+			"Engineering Drawing", self.drawing_revision, ["release_status", "docstatus"], as_dict=True
+		)
+		if not drawing or drawing.release_status != "Released" or drawing.docstatus == 2:
+			frappe.throw(
+				_("Engineering Drawing {0} is not released. Release the drawing before submitting this Product Revision.").format(
+					self.drawing_revision
+				)
+			)
+		if not self.bom_revision_reference:
+			frappe.throw(_("Link a submitted BOM before submitting this Product Revision."))
+		if frappe.db.get_value("BOM", self.bom_revision_reference, "docstatus") != 1:
+			frappe.throw(
+				_("BOM {0} is not submitted. Submit the BOM before submitting this Product Revision.").format(
+					self.bom_revision_reference
+				)
+			)
+
+	def link_amended_from(self):
+		"""F3: the cancelled revision points at its amended copy, and the copy
+		points back (previous_revision)."""
+		if not self.amended_from:
+			return
+		from itag_engineering.itag_engineering_management.product_revision_service import (
+			supersede_revision,
+		)
+
+		supersede_revision(self.amended_from, self.name)
 
 	def sync_revision_status_from_workflow_state(self):
 		"""revision_status is meant to be a denormalized mirror of
@@ -168,3 +303,15 @@ class ProductRevision(Document):
 						self.meta.get_label(fieldname)
 					)
 				)
+
+
+def get_history_link_doctypes():
+	"""Every DocType that links to Product Revision (Link or Dynamic Link),
+	including Product Revision itself (previous/superseding revision)."""
+	from frappe.model.dynamic_links import get_dynamic_link_map
+	from frappe.model.rename_doc import get_link_fields
+
+	doctypes = {"Product Revision"}
+	doctypes.update(row["parent"] for row in get_link_fields("Product Revision"))
+	doctypes.update(df.parent for df in get_dynamic_link_map().get("Product Revision", []))
+	return sorted(doctypes)

@@ -40,6 +40,7 @@ after_migrate = [
 	"itag_engineering.install.grant_read_only_support_permissions",
 	"itag_engineering.install.revoke_blocked_permissions",
 	"itag_engineering.install.apply_drawing_submit_permissions",
+	"itag_engineering.install.apply_product_revision_submit_permissions",
 ]
 
 # Testing

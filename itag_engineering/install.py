@@ -571,3 +571,78 @@ def apply_drawing_submit_permissions():
 		changed = True
 	if changed:
 		frappe.clear_cache()
+
+
+# F3 (Waheed, 29-Oct-2026): Product Revision is submittable, the same way as
+# Engineering Drawing (fix6). The JSON carries the rights; if a site has
+# Custom DocPerm rows on it (they replace the JSON rows), the same rights are
+# applied there. Rows are only updated, never removed. Engineering User keeps
+# create/read/write and loses delete. Engineering Master Manager has no JSON
+# row before F3; it gets one from the JSON (or a Custom DocPerm row if the
+# site already customises this DocType's permissions).
+PRODUCT_REVISION_SUBMIT_RIGHTS = {
+	"Engineering User": {"submit": 0, "cancel": 0, "amend": 0, "delete": 0},
+	"Engineering Manager": {"submit": 1, "cancel": 1, "amend": 1},
+	"Engineering Master Manager": {"submit": 1, "cancel": 1, "amend": 1},
+}
+PRODUCT_REVISION_BASE_RIGHTS = ("read", "write", "create")
+
+
+def apply_product_revision_submit_permissions():
+	"""Idempotent. Updates Custom DocPerm rows on Product Revision (if the site
+	has any) to the F3 rights, adds a Master Manager row only when the site
+	uses Custom DocPerms there and has none for that role, and makes an
+	amended revision take its normal name ({item}-PR-{revision_number})
+	instead of an "-1" counter. Nothing is deleted. Rollback: set the flags
+	back on the Custom DocPerm rows and remove the Product Revision row under
+	Document Naming Settings > Amended Documents."""
+	from frappe.permissions import add_permission, update_permission_property
+
+	changed = False
+	rows = frappe.get_all(
+		"Custom DocPerm",
+		filters={"parent": "Product Revision", "permlevel": 0},
+		fields=["name", "role", *PRODUCT_REVISION_BASE_RIGHTS, "submit", "cancel", "amend", "delete"],
+	)
+	for row in rows:
+		want = PRODUCT_REVISION_SUBMIT_RIGHTS.get(row.role)
+		if want and any(row.get(k) != v for k, v in want.items()):
+			frappe.db.set_value("Custom DocPerm", row.name, want)
+			changed = True
+	if rows and not any(r.role == "Engineering Master Manager" for r in rows) and frappe.db.exists(
+		"Role", "Engineering Master Manager"
+	):
+		add_permission("Product Revision", "Engineering Master Manager", 0)
+		for right in (*PRODUCT_REVISION_BASE_RIGHTS, "submit", "cancel", "amend"):
+			update_permission_property("Product Revision", "Engineering Master Manager", 0, right, 1, validate=False)
+		changed = True
+	if frappe.db.table_exists("Amended Document Naming Settings") and not frappe.db.exists(
+		"Amended Document Naming Settings", {"document_type": "Product Revision"}
+	):
+		frappe.get_doc({
+			"doctype": "Amended Document Naming Settings",
+			"parent": "Document Naming Settings",
+			"parenttype": "Document Naming Settings",
+			"parentfield": "amend_naming_override",
+			"document_type": "Product Revision",
+			"action": "Default Naming",
+		}).db_insert()
+		changed = True
+	if changed:
+		frappe.clear_cache()
+
+
+def deactivate_product_revision_workflows():
+	"""F3: Product Revision has no Frappe workflow. Any workflow on it (the
+	legacy "Product Revision Workflow" or any other) is set inactive in
+	place, never deleted. Rollback: set is_active = 1 on the Workflow."""
+	changed = False
+	for name in frappe.get_all(
+		"Workflow", filters={"document_type": "Product Revision", "is_active": 1}, pluck="name"
+	):
+		frappe.db.set_value("Workflow", name, "is_active", 0)
+		_note(f"workflow {name!r} on Product Revision set inactive (kept)")
+		changed = True
+	if changed:
+		frappe.clear_cache(doctype="Product Revision")
+		frappe.cache.delete_value("workflow")
