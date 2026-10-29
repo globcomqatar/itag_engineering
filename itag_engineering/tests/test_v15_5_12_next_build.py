@@ -301,3 +301,48 @@ class TestQAa_ItemGroupOnRequest(_EIRCase):
 	def test_group_node_rejected(self):
 		eir = self._eir(title="F8T Group Node Valve", item_category="Manufactured", item_group="All Item Groups").insert()
 		self.assertRaises(frappe.ValidationError, eir.submit)
+
+
+class TestQAb_AmendNominalSizePersists(_EIRCase):
+	"""QA (b): on staging f55e9a4 a Nominal Size change on amend looked like
+	it did not persist (stayed 12). Not reproducible locally: the amended
+	request and the Item's itag_nominal_size both take the new value. Before
+	v15.5.12 the Item description was only the request's free-text
+	description, so a size written there (e.g. "12") stayed visible on the
+	Item. #2 now builds the description from the spec fields, so it follows
+	the new size. These tests pin the server behaviour."""
+
+	_amend = TestWaheedAmendUpdatesItemDetails._amend
+
+	def _two_sizes(self):
+		sizes = frappe.get_all("ITAG Nominal Size", pluck="name", limit=2, order_by="name")
+		if len(sizes) < 2:
+			self.skipTest("needs two ITAG Nominal Size records")
+		return sizes
+
+	def test_amend_changes_size_on_request_item_and_description(self):
+		old, new = self._two_sizes()
+		eir = self._eir(title="F8T Size Valve", item_category="Manufactured", nominal_size=old).insert()
+		eir.submit()
+		eir.reload()
+		code = eir.created_item
+		amended = self._amend(eir, nominal_size=new)
+		self.assertEqual(frappe.db.get_value(EIR, amended.name, "nominal_size"), new)
+		amended.submit()
+		self.assertEqual(frappe.db.get_value(EIR, amended.name, "nominal_size"), new)
+		self.assertEqual(frappe.db.get_value("Item", code, "itag_nominal_size"), new)
+		self.assertIn(f", {new}, ", frappe.db.get_value("Item", code, "description"))
+		self.assertNotIn(f", {old}, ", frappe.db.get_value("Item", code, "description"))
+
+	def test_every_spec_field_follows_amend(self):
+		old, new = self._two_sizes()
+		eir = self._eir(title="F8T Spec Valve", item_category="Manufactured", nominal_size=old).insert()
+		eir.submit()
+		eir.reload()
+		changes = {"nominal_size": new, "trim_material": "F8T-SPEC2", "end_connection": "F8T-BW",
+		           "drawing_number": "F8T-DWG-SPEC2"}
+		amended = self._amend(eir, **changes)
+		amended.submit()
+		item = frappe.get_doc("Item", eir.created_item)
+		for field, value in changes.items():
+			self.assertEqual(item.get("itag_" + field), value, field)
