@@ -166,7 +166,7 @@ class TestEirService(FrappeTestCase):
 		tag = _insert_series("EIRSVC990", "990", "Tag Plate")
 		indicator = _insert_series("EIRSVC992", "992", "Indicator Plate")
 		first = _create_item_from_series(tag.name, "EIRSVC Test Tag Plate 50mm", "Critical")
-		second = _create_item_from_series(tag.name, "EIRSVC Test Tag Plate 80mm", "General")
+		second = _create_item_from_series(tag.name, "EIRSVC Test Tag Plate 80mm", "Non-Product")  # v15.5.12 #3: General renamed
 		other = _create_item_from_series(indicator.name, "EIRSVC Test Indicator Plate", "Non-Critical")
 
 		self.assertEqual(first, "990-00001")

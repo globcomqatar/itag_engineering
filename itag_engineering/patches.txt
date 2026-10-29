@@ -16,3 +16,4 @@ itag_engineering.patches.v15_5_6.remove_bom_creator_workflow
 itag_engineering.patches.v15_5_8.product_revision_submittable
 itag_engineering.patches.v15_5_8.engineering_item_request_submittable
 itag_engineering.patches.v15_5_10.item_request_links
+itag_engineering.patches.v15_5_12.item_type_non_product

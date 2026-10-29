@@ -80,11 +80,11 @@
    "options": "\nManufactured\nPurchased\nRaw Material\nSub-Assembly"
   },
   {
-   "default": "General",
+   "default": "Critical",
    "fieldname": "item_type",
    "fieldtype": "Select",
    "label": "Item Type",
-   "options": "\nCritical\nNon-Critical\nGeneral"
+   "options": "Critical\nNon-Critical\nNon-Product"
   },
   {
    "fieldname": "product_family",

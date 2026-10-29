@@ -154,7 +154,7 @@ def build_item_values(eir, item_code):
 		"itag_engineering_classification": eir.item_category,
 	}
 	# erpcloud_itagksa makes Item Type mandatory on Item.
-	values["custom_product_type"] = eir.get("item_type") or "General"
+	values["custom_product_type"] = eir.get("item_type") or "Critical"  # v15.5.12 #3
 	for itag_field, eir_field in ITEM_FIELD_MAP.items():
 		values[itag_field] = eir.get(eir_field)
 	return {k: v for k, v in values.items() if k in ("doctype", "item_code") or meta.has_field(k)}
