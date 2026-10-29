@@ -76,3 +76,19 @@ def default_new_item_product_type(doc, method=None):
 		return
 	if not value or value == _automatic_value(field):
 		doc.set(ITEM_FIELD, DEFAULT_PRODUCT_TYPE)
+
+
+def items_general_to_non_product():
+	"""v15.5.13 #7: Items still on Item Type General move to Non-Product in
+	place. Idempotent (a second run finds none). Returns the Item codes
+	changed; nothing is deleted and no other field is touched."""
+	field = frappe.get_meta("Item").get_field(ITEM_FIELD)
+	if not field:
+		return []
+	ensure_item_product_type_options()
+	names = frappe.get_all("Item", filters={ITEM_FIELD: "General"}, pluck="name")
+	if names:
+		frappe.db.sql(
+			f"update `tabItem` set `{ITEM_FIELD}`='Non-Product' where `{ITEM_FIELD}`='General'"
+		)
+	return names

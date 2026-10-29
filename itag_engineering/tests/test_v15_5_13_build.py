@@ -70,7 +70,7 @@ class TestItem1Tabs(FrappeTestCase):
 		self.assertIn("BOM", links._items_with_link_field(DWG, '["BOM", "Item"]'))
 
 
-class TestItem2ItemTypeDefaultCritical(FrappeTestCase):
+class _ItemTypeFieldCase(FrappeTestCase):
 	"""The Item field belongs to erpcloud_itagksa and is not installed on this
 	bench; a stand-in with the same fieldname is added for the test only."""
 
@@ -100,6 +100,9 @@ class TestItem2ItemTypeDefaultCritical(FrappeTestCase):
 		from itag_engineering.tests.factories import create_fresh_stock_item
 
 		return create_fresh_stock_item(prefix="V13-TYPE")
+
+
+class TestItem2ItemTypeDefaultCritical(_ItemTypeFieldCase):
 
 	def test_new_item_defaults_to_critical(self):
 		item = self._item()
@@ -358,3 +361,27 @@ class TestItem6EngineeringUserAddsMasterValues(_f10._EIRCase):
 		js = _read("engineering_item_request", "engineering_item_request.js")
 		self.assertIn("warn_on_unknown_master_values(frm)", js)
 		self.assertIn("was not found, so it was not kept", js)
+
+
+class TestItem7ItemsOnGeneralPatch(_ItemTypeFieldCase):
+	"""Same stand-in Item field as item 2 (options include General)."""
+
+	def test_patch_twice_changes_nothing_the_second_time(self):
+		from itag_engineering.patches.v15_5_13 import item_product_type_general_to_non_product as patch_mod
+		from itag_engineering.itag_engineering_management.item_type_options import items_general_to_non_product
+
+		general = self._item()
+		other = self._item()
+		frappe.db.set_value("Item", general.name, self.FIELD, "General")
+		frappe.db.set_value("Item", other.name, self.FIELD, "Non-Critical")
+		items = frappe.db.count("Item")
+		patch_mod.execute()
+		self.assertEqual(frappe.db.get_value("Item", general.name, self.FIELD), "Non-Product")
+		self.assertEqual(frappe.db.get_value("Item", other.name, self.FIELD), "Non-Critical")
+		self.assertEqual(items_general_to_non_product(), [])
+		self.assertEqual(frappe.db.get_value("Item", general.name, self.FIELD), "Non-Product")
+		self.assertEqual(frappe.db.count("Item"), items)
+
+	def test_listed_in_patches_txt(self):
+		with open(os.path.join(APP, "patches.txt")) as f:
+			self.assertIn("itag_engineering.patches.v15_5_13.item_product_type_general_to_non_product", f.read())
