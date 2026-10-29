@@ -209,7 +209,7 @@ class TestFix9ItemRequestCreateLinks(FrappeTestCase):
 		amended.reload()
 		self.assertEqual(amended.created_item, item_code)
 		self.assertEqual(frappe.db.get_value("Item", item_code, "disabled"), 0)
-		self.assertEqual(frappe.db.get_value("Item", item_code, "description"), "F9T amended description")
+		self.assertTrue(frappe.db.get_value("Item", item_code, "description").endswith(", F9T amended description"))  # v15.5.12 #2
 		self.assertEqual(frappe.db.count("Item"), items)
 		self.assertEqual(frappe.db.count("Item Code Reservation", {"rule": RULE}), reservations)
 		# Cancel still disables it.

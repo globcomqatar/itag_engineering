@@ -119,7 +119,11 @@ class TestFix8ItemRequestSubmit(FrappeTestCase):
 			"item_name": "F8T Gate Valve",
 			"item_group": "Raw Material",
 			"stock_uom": "Nos",
-			"description": "F8T 6in gate valve, CL300, WCB body",
+			# v15.5.12 #2: Item Name, specs, MPN, then the request description.
+			"description": ", ".join(
+				p for p in ("F8T Gate Valve", eir.nominal_size, eir.pressure_class, eir.body_material,
+				            "F8T-13CR", "F8T-MPN-1", "F8T 6in gate valve, CL300, WCB body") if p
+			),
 			"itag_engineering_status": "Approved",
 			"itag_engineering_classification": "Raw Material",
 			"itag_product_family": "CS",

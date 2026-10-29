@@ -121,6 +121,24 @@ def _item_group_for(eir):
 	return DEFAULT_ITEM_GROUP
 
 
+# v15.5.12 #2 (Waheed): Item Master description = these request values in
+# this order, joined by ", ", blanks skipped.
+DESCRIPTION_FIELDS = (
+	"request_title",  # Item Name
+	"nominal_size",
+	"pressure_class",
+	"body_material",
+	"trim_material",
+	"manufacturer_part_number",
+	"item_description",
+)
+
+
+def build_item_description(eir):
+	parts = [str(eir.get(f) or "").strip() for f in DESCRIPTION_FIELDS]
+	return ", ".join(p for p in parts if p)
+
+
 def build_item_values(eir, item_code):
 	"""fix8 mapping, Engineering Item Request -> Item. Only fields that exist
 	on the Item meta are set. See design notes for the table."""
@@ -131,7 +149,7 @@ def build_item_values(eir, item_code):
 		"item_name": eir.request_title,
 		"item_group": _item_group_for(eir),
 		"stock_uom": eir.uom or "Nos",
-		"description": eir.item_description or eir.request_title,
+		"description": build_item_description(eir) or eir.request_title,
 		"itag_engineering_status": "Approved",
 		"itag_engineering_classification": eir.item_category,
 	}

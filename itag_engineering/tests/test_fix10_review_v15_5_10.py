@@ -211,7 +211,7 @@ class TestWaheedAmendUpdatesItemDetails(_EIRCase):
 		item = frappe.get_doc("Item", code)
 		self.assertEqual(item.disabled, 0)
 		self.assertEqual(item.item_name, "F8T Amend Valve Rev2")
-		self.assertEqual(item.description, "F8T amended: 8in, CL600")
+		self.assertTrue(item.description.endswith(", F8T amended: 8in, CL600"))  # v15.5.12 #2
 		if other_uom:
 			self.assertEqual(item.stock_uom, other_uom[0])
 		expected = build_item_values(amended, code)

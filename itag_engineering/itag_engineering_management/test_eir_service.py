@@ -178,9 +178,11 @@ class TestEirService(FrappeTestCase):
 
 	def test_create_item_copies_item_description_to_item(self):
 		item_code = submit_eir_and_get_item(self.eir.name)
-		self.assertEqual(
-			frappe.db.get_value("Item", item_code, "description"),
-			"Cast steel gate valve, 6 inch, class 300, per EIRSVC test spec.",
+		# v15.5.12 #2: the request description is the last part of the Item description.
+		self.assertTrue(
+			frappe.db.get_value("Item", item_code, "description").endswith(
+				"Cast steel gate valve, 6 inch, class 300, per EIRSVC test spec."
+			)
 		)
 
 	def test_create_item_is_idempotent_on_retry(self):
