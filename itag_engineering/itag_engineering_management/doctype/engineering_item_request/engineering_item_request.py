@@ -17,10 +17,17 @@ class EngineeringItemRequest(Document):
 		from itag_engineering.itag_engineering_management.eir_service import (
 			check_duplicates_before_submit,
 			create_item_from_eir,
+			original_item_for_amended,
+			reenable_item_for_amended,
 		)
 
-		check_duplicates_before_submit(self)
-		create_item_from_eir(self.name, eir=self)
+		# fix9 (Waheed): an amended request re-enables the original Item.
+		original = original_item_for_amended(self) if self.amended_from else None
+		check_duplicates_before_submit(self, ignore_item=original)
+		if original:
+			reenable_item_for_amended(self, original)
+		else:
+			create_item_from_eir(self.name, eir=self)
 
 	def on_cancel(self):
 		"""Cancel disables the linked Item (disabled = 1). It is never deleted."""

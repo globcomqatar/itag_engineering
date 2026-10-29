@@ -31,6 +31,10 @@ class EngineeringDrawing(Document):
 
 	def validate(self):
 		self.prepare_amended_revision()
+		# fix9: one active drawing per Engineering Item Request.
+		from itag_engineering.itag_engineering_management.item_request_links import validate_one_per_request
+
+		validate_one_per_request(self)
 		self.release_on_submit()
 		self.sync_release_status_from_workflow_state()
 		self.validate_release_only_by_submit()

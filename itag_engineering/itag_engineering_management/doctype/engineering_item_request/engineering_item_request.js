@@ -3,6 +3,7 @@
 
 frappe.ui.form.on("Engineering Item Request", {
 	refresh(frm) {
+		setup_create_and_connections(frm);
 		const pending = [];
 		if (frm.doc.valve_type && !frm._valve_type_name) {
 			pending.push(
@@ -88,4 +89,47 @@ function show_valve_type_code_note(frm) {
 		),
 		"green"
 	);
+}
+
+// fix9 (Waheed, 29-Oct-2026): Create -> Engineering Drawing / BOM from a
+// submitted request with an enabled Item; one of each per request.
+// Connections rows for Product Revision / Engineering Release open the
+// list filtered by item = created_item.
+const FIX9_ITEM_KEYED = ["Product Revision", "Engineering Release"];
+
+function setup_create_and_connections(frm) {
+	if (frm.dashboard && !frm.dashboard._fix9_patched) {
+		const original = frm.dashboard.get_document_filter.bind(frm.dashboard);
+		frm.dashboard.get_document_filter = (doctype) =>
+			FIX9_ITEM_KEYED.includes(doctype) ? { item: frm.doc.created_item || "__none__" } : original(doctype);
+		frm.dashboard._fix9_patched = true;
+	}
+	if (frm.doc.docstatus !== 1 || !frm.doc.created_item) return;
+	frappe.call({
+		method: "frappe.client.get_value",
+		args: { doctype: "Item", filters: { name: frm.doc.created_item }, fieldname: "disabled" },
+	}).then((r) => {
+		if (r.message && cint(r.message.disabled)) {
+			frm.set_intro(__("Item {0} is disabled, so Create is not available.", [frm.doc.created_item]), "orange");
+			return;
+		}
+		const targets = [
+			["Engineering Drawing", "item_request", "make_engineering_drawing"],
+			["BOM", "itag_item_request", "make_bom"],
+		];
+		targets.forEach(([doctype, field, method]) => {
+			frappe.db.count(doctype, { filters: { [field]: frm.doc.name, docstatus: ["<", 2] } }).then((n) => {
+				if (n) return; // one of each per request
+				frm.add_custom_button(
+					__(doctype),
+					() =>
+						frappe.model.open_mapped_doc({
+							method: "itag_engineering.itag_engineering_management.item_request_links." + method,
+							frm: frm,
+						}),
+					__("Create")
+				);
+			});
+		});
+	});
 }

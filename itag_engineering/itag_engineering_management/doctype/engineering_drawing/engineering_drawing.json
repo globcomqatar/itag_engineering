@@ -13,6 +13,7 @@
   "release_status",
   "workflow_state",
   "classification_section",
+  "item_request",
   "related_item",
   "product_family",
   "applicable_standard",
@@ -92,6 +93,15 @@
    "fieldname": "classification_section",
    "fieldtype": "Section Break",
    "label": "Classification"
+  },
+  {
+   "fieldname": "item_request",
+   "fieldtype": "Link",
+   "label": "Item Request",
+   "options": "Engineering Item Request",
+   "read_only": 1,
+   "search_index": 1,
+   "description": "fix9: the submitted Engineering Item Request this drawing was created from. One active drawing per request."
   },
   {
    "fieldname": "related_item",
@@ -232,7 +242,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-28 15:50:00.000000",
+ "modified": "2026-10-29 13:00:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "Engineering Drawing",

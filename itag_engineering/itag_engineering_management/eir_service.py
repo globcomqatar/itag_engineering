@@ -70,7 +70,7 @@ def _check_eir_action_permission():
 		)
 
 
-def check_duplicates_before_submit(eir):
+def check_duplicates_before_submit(eir, ignore_item=None):
 	"""fix8: duplicate check at Submit. All possible matches (any one spec
 	field equal) are recorded on the request for review. Submit is blocked
 	only by a real duplicate: an enabled Item with the same Item Name, or
@@ -92,7 +92,7 @@ def check_duplicates_before_submit(eir):
 		frappe.get_all("Item", filters={"item_name": eir.request_title, "disabled": 0}, pluck="name")
 	)
 	blocking = sorted(
-		c for c in blocking if not frappe.db.get_value("Item", c, "disabled")
+		c for c in blocking if c != ignore_item and not frappe.db.get_value("Item", c, "disabled")
 	)
 	if blocking:
 		frappe.throw(
@@ -190,6 +190,45 @@ def create_item_from_eir(eir_name, eir=None, persist_request=True):
 	)
 	log_audit_event("Item Code Creation", "Item", item.item_code, {"originating_eir": eir.name})
 	return item.item_code
+
+
+def original_item_for_amended(eir):
+	"""fix9: walk amended_from back to the first request that has an Item."""
+	seen = set()
+	source = eir.amended_from
+	while source and source not in seen:
+		seen.add(source)
+		item, source_next = frappe.db.get_value(
+			"Engineering Item Request", source, ["created_item", "amended_from"]
+		) or (None, None)
+		if item and frappe.db.exists("Item", item):
+			return item
+		source = source_next
+	return None
+
+
+def reenable_item_for_amended(eir, item_code):
+	"""fix9 (Waheed): an amended request re-enables the original Item and
+	updates its mapped fields. No new Item and no new code reservation."""
+	_check_eir_action_permission()
+	item = frappe.get_doc("Item", item_code)
+	values = build_item_values(eir, item_code)
+	for key in ("doctype", "item_code", "stock_uom"):
+		values.pop(key, None)  # stock UOM cannot change once there are transactions
+	item.update(values)
+	item.disabled = 0
+	item.save(ignore_permissions=True)
+	eir.db_set(
+		{
+			"reserved_item_code": item_code,
+			"created_item": item_code,
+			"workflow_state": "Item Created",
+		}
+	)
+	log_audit_event(
+		"Item Code Creation", "Item", item_code, {"originating_eir": eir.name, "reason": "amended request re-enabled Item"}
+	)
+	return item_code
 
 
 def disable_item_for_eir(eir):

@@ -778,8 +778,26 @@ def get_release_control_fields():
 	}
 
 
+def get_item_request_link_fields():
+	"""fix9: BOM link back to the Engineering Item Request it was created from."""
+	return {
+		"BOM": [
+			{
+				"fieldname": "itag_item_request",
+				"fieldtype": "Link",
+				"label": "Item Request",
+				"options": "Engineering Item Request",
+				"insert_after": "item",
+				"read_only": 1,
+				"search_index": 1,
+			}
+		]
+	}
+
+
 def sync_custom_fields():
 	create_custom_fields(get_custom_fields(), update=True)
+	create_custom_fields(get_item_request_link_fields(), update=True)
 	create_custom_fields(get_release_control_fields(), update=True)
 	create_custom_fields(get_bom_fields(), update=True)
 	create_custom_fields(get_routing_fields(), update=True)

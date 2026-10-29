@@ -151,10 +151,20 @@ override_doctype_class = {
 	"BOM Creator": "itag_engineering.itag_engineering_management.bom_creator_override.ITAGBOMCreator",
 }
 
+# fix9: Connections tab on Engineering Item Request counts Product Revision
+# and Engineering Release by the created Item. Wrapper only; other doctypes
+# pass straight through to frappe.desk.notifications.get_open_count.
+override_whitelisted_methods = {
+	"frappe.desk.notifications.get_open_count": "itag_engineering.itag_engineering_management.item_request_links.get_open_count",
+}
+
 doc_events = {
 	"BOM": {
 		"before_insert": "itag_engineering.itag_engineering_management.release_control.prepare_bom_from_bom_creator",
-		"validate": "itag_engineering.itag_engineering_management.release_control.validate_release_control",
+		"validate": [
+			"itag_engineering.itag_engineering_management.release_control.validate_release_control",
+			"itag_engineering.itag_engineering_management.item_request_links.validate_one_per_request",
+		],
 		"before_submit": "itag_engineering.itag_engineering_management.release_control.guard_bom_submit",
 	},
 	"Engineering Release": {
