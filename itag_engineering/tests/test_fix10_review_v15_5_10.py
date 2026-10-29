@@ -168,3 +168,78 @@ class TestReviewFinding2CancelBlockedWhenItemInUse(_EIRCase):
 		self.assertEqual(frappe.db.get_value("Item", code, "disabled"), 1)
 		self.assertTrue(frappe.db.exists("Item", code))
 		self.assertEqual(frappe.db.get_value(DT, eir.name, ["docstatus", "workflow_state"]), (2, "Cancelled"))
+
+
+class TestWaheedAmendUpdatesItemDetails(_EIRCase):
+	"""Waheed (29-Oct-2026, review finding 3): an amended request re-enables
+	the original Item and updates its details with the Submit mapping, through
+	a validated save."""
+
+	def _amend(self, eir, **changes):
+		eir.reload()
+		eir.cancel()
+		amended = frappe.copy_doc(eir)
+		amended.amended_from = eir.name
+		amended.docstatus = 0  # same as Desk Amend
+		amended.update(changes)
+		amended.insert()
+		return amended
+
+	def test_amend_updates_item_details_from_request(self):
+		from unittest import mock
+
+		from itag_engineering.itag_engineering_management.eir_service import build_item_values
+
+		other_uom = frappe.get_all("UOM", filters={"name": ["!=", "Nos"], "enabled": 1}, pluck="name", limit=1)
+		eir = self._eir(title="F8T Amend Valve", item_category="Manufactured").insert()
+		eir.submit()
+		eir.reload()
+		code = eir.created_item
+		items = frappe.db.count("Item")
+		changes = {
+			"request_title": "F8T Amend Valve Rev2",
+			"item_description": "F8T amended: 8in, CL600",
+			"trim_material": "F8T-STELLITE",
+			"end_connection": "F8T-RTJ",
+			"drawing_number": "F8T-DWG-002",
+		}
+		if other_uom:
+			changes["uom"] = other_uom[0]
+		amended = self._amend(eir, **changes)
+		item_cls = type(frappe.get_doc("Item", code))
+		orig_validate = item_cls.validate
+		with mock.patch.object(item_cls, "validate", autospec=True, side_effect=orig_validate) as validate:
+			amended.submit()
+		self.assertTrue(validate.called, "Item.validate must run (validated save)")
+		amended.reload()
+		self.assertEqual(amended.created_item, code)
+		self.assertEqual(frappe.db.count("Item"), items)
+		item = frappe.get_doc("Item", code)
+		self.assertEqual(item.disabled, 0)
+		self.assertEqual(item.item_name, "F8T Amend Valve Rev2")
+		self.assertEqual(item.description, "F8T amended: 8in, CL600")
+		if other_uom:
+			self.assertEqual(item.stock_uom, other_uom[0])
+		expected = build_item_values(amended, code)
+		for field, value in expected.items():
+			if field.startswith("itag_"):
+				self.assertEqual(item.get(field), value, field)
+		meta = frappe.get_meta("Item")
+		for field, value in (("itag_trim_material", "F8T-STELLITE"), ("itag_end_connection", "F8T-RTJ"),
+				("itag_drawing_number", "F8T-DWG-002")):
+			if meta.has_field(field):
+				self.assertEqual(item.get(field), value, field)
+
+	def test_amend_failing_item_validation_rolls_back(self):
+		eir = self._eir(title="F8T Amend Bad", item_category="Manufactured").insert()
+		eir.submit()
+		code = frappe.db.get_value(DT, eir.name, "created_item")
+		amended = self._amend(eir)
+		frappe.db.set_value(DT, amended.name, "uom", "F8T-NO-SUCH-UOM", update_modified=False)
+		amended.reload()
+		frappe.db.savepoint("f10a")
+		with self.assertRaises(frappe.ValidationError):
+			amended.submit()
+		frappe.db.rollback(save_point="f10a")
+		self.assertEqual(frappe.db.get_value(DT, amended.name, "docstatus"), 0)
+		self.assertEqual(frappe.db.get_value("Item", code, "disabled"), 1)

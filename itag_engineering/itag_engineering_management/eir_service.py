@@ -213,16 +213,23 @@ def original_item_for_amended(eir):
 
 
 def reenable_item_for_amended(eir, item_code):
-	"""fix9 (Waheed): an amended request re-enables the original Item and
-	updates its mapped fields. No new Item and no new code reservation."""
+	"""fix9 (Waheed): an amended request re-enables the original Item. No new
+	Item and no new code reservation.
+
+	Waheed (29-Oct-2026, after review v15.5.10 finding 3): the amend also
+	updates the Item's details from the amended request - item_name,
+	description, stock UOM, item group/classification and the itag_ spec
+	fields - with the same mapping as Submit (build_item_values), through a
+	validated save. ERPNext's own Item validation still applies (e.g. it
+	refuses a stock UOM change once the Item has stock transactions)."""
 	_check_eir_action_permission()
 	item = frappe.get_doc("Item", item_code)
 	values = build_item_values(eir, item_code)
-	for key in ("doctype", "item_code", "stock_uom"):
-		values.pop(key, None)  # stock UOM cannot change once there are transactions
+	for key in ("doctype", "item_code"):
+		values.pop(key, None)
 	item.update(values)
 	item.disabled = 0
-	item.save(ignore_permissions=True)
+	item.save(ignore_permissions=True)  # role gate above; Item.validate runs
 	eir.db_set(
 		{
 			"reserved_item_code": item_code,
