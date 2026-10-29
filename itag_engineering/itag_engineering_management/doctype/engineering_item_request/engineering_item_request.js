@@ -2,6 +2,10 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Engineering Item Request", {
+	setup(frm) {
+		// QA v15.5.12 (a): only leaf Item Groups can hold Items.
+		frm.set_query("item_group", () => ({ filters: { is_group: 0 } }));
+	},
 	refresh(frm) {
 		setup_create_and_connections(frm);
 		const pending = [];

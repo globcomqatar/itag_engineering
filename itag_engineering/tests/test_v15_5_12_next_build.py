@@ -269,3 +269,35 @@ class TestItem6DrawingCreateMenu(_EIRCase):
 		self.assertIn("docstatus !== 1", js)
 		for target in ("Engineering Release", "BOM", "Engineering Change Order"):
 			self.assertIn(f'"{target}"', js)
+
+
+class TestQAa_ItemGroupOnRequest(_EIRCase):
+	"""QA (a): the request had no Item Group field; the Item Group came only
+	from Item Category, so an amend could not change it."""
+
+	_amend = TestWaheedAmendUpdatesItemDetails._amend
+
+	def test_field_exists(self):
+		field = frappe.get_meta(EIR).get_field("item_group")
+		self.assertEqual((field.fieldtype, field.options), ("Link", "Item Group"))
+
+	def test_submit_and_amend_map_item_group(self):
+		eir = self._eir(title="F8T Group Valve", item_category="Manufactured", item_group=f8.GROUP).insert()
+		eir.submit()
+		eir.reload()
+		code = eir.created_item
+		self.assertEqual(frappe.db.get_value("Item", code, "item_group"), f8.GROUP)
+		amended = self._amend(eir, item_group="Products")
+		amended.submit()
+		self.assertEqual(frappe.db.get_value("Item", code, "item_group"), "Products")
+
+	def test_blank_item_group_keeps_category_mapping(self):
+		eir = self._eir(title="F8T Group Blank Valve", item_category="Raw Material").insert()
+		eir.submit()
+		eir.reload()
+		expected = "Raw Material" if frappe.db.exists("Item Group", {"name": "Raw Material", "is_group": 0}) else "Products"
+		self.assertEqual(frappe.db.get_value("Item", eir.created_item, "item_group"), expected)
+
+	def test_group_node_rejected(self):
+		eir = self._eir(title="F8T Group Node Valve", item_category="Manufactured", item_group="All Item Groups").insert()
+		self.assertRaises(frappe.ValidationError, eir.submit)

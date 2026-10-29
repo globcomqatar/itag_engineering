@@ -116,6 +116,11 @@ def check_duplicates_before_submit(eir, ignore_item=None):
 
 
 def _item_group_for(eir):
+	# QA v15.5.12 (a): an explicit Item Group on the request wins (submit and amend).
+	if eir.get("item_group"):
+		if frappe.db.get_value("Item Group", eir.item_group, "is_group"):
+			frappe.throw(_("Item Group {0} is a group; select a leaf Item Group.").format(eir.item_group))
+		return eir.item_group
 	if eir.item_category and frappe.db.exists("Item Group", {"name": eir.item_category, "is_group": 0}):
 		return eir.item_category
 	return DEFAULT_ITEM_GROUP

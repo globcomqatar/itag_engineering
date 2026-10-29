@@ -11,6 +11,7 @@
   "engineering_section",
   "request_title",
   "item_category",
+  "item_group",
   "item_type",
   "product_family",
   "valve_type",
@@ -78,6 +79,13 @@
    "fieldtype": "Select",
    "label": "Item Category",
    "options": "\nManufactured\nPurchased\nRaw Material\nSub-Assembly"
+  },
+  {
+   "fieldname": "item_group",
+   "fieldtype": "Link",
+   "label": "Item Group",
+   "options": "Item Group",
+   "description": "Item Group of the created Item. Blank: taken from Item Category when a group of that name exists, else Products."
   },
   {
    "default": "Critical",
