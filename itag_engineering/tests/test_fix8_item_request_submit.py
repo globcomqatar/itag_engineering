@@ -59,6 +59,11 @@ class TestFix8ItemRequestSubmit(FrappeTestCase):
 
 	def _cleanup(self):
 		frappe.db.delete(DT, {"request_title": ["like", "F8T %"]})
+		# frappe.db.delete on Item leaves child rows behind and item codes are
+		# re-used once reservations are cleared; stale UOM rows would make the
+		# validated Item save on cancel (review v15.5.10 #2) fail.
+		for child in ("UOM Conversion Detail", "Item Default", "Item Barcode", "Item Supplier", "Item Customer Detail"):
+			frappe.db.delete(child, {"parenttype": "Item", "parent": ["like", "978-%"]})
 		frappe.db.delete("Item", {"item_code": ["like", "978-%"]})
 		frappe.db.delete("Item", {"item_name": ["like", "F8T %"]})
 		frappe.db.delete("Item Code Reservation", {"rule": RULE})

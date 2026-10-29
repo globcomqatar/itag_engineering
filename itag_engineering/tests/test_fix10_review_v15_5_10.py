@@ -34,13 +34,7 @@ class _EIRCase(FrappeTestCase):
 
 	setUp = f8.TestFix8ItemRequestSubmit.setUp
 	tearDown = f8.TestFix8ItemRequestSubmit.tearDown
-	def _cleanup(self):
-		# frappe.db.delete on Item leaves child rows behind; item codes are
-		# re-used once reservations are cleared, so clear them too (otherwise a
-		# validated Item save sees duplicate UOM rows).
-		for child in ("UOM Conversion Detail", "Item Default", "Item Barcode", "Item Supplier", "Item Customer Detail"):
-			frappe.db.delete(child, {"parenttype": "Item", "parent": ["like", "978-%"]})
-		f8.TestFix8ItemRequestSubmit._cleanup(self)
+	_cleanup = f8.TestFix8ItemRequestSubmit._cleanup
 	_eir = f8.TestFix8ItemRequestSubmit._eir
 
 
