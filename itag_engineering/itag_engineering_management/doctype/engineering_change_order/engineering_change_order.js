@@ -3,6 +3,8 @@
 
 frappe.ui.form.on("Engineering Change Order", {
 	refresh(frm) {
+		show_mark_implemented_hint(frm);
+
 		// approval_steps is read_only:1 (materialized display only) - there
 		// was no way to ever mark a row Approved/Rejected through the Desk,
 		// even though eco_service.approve_or_reject_workflow_step() already
@@ -74,3 +76,19 @@ frappe.ui.form.on("Engineering Change Order", {
 		}
 	},
 });
+
+// v15.5.13 #4 (Waheed): Mark Implemented is unchanged (Engineering Manager,
+// not the person who created the ECO; enforced in
+// engineering_change_order.py). This only tells the user who can do it.
+function show_mark_implemented_hint(frm) {
+	if (frm.doc.workflow_state !== "Approved") {
+		return;
+	}
+	frm.set_intro(
+		__(
+			"Mark Implemented: an Engineering Manager who did not create this Engineering Change Order ({0}) can mark it implemented.",
+			[frappe.utils.escape_html(frappe.user.full_name(frm.doc.owner))]
+		),
+		"blue"
+	);
+}

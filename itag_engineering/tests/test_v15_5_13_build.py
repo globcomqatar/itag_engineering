@@ -230,3 +230,35 @@ class TestItem3F4SubmitReleaseForProduction(FrappeTestCase):
 		self.assertIn('frappe.user.has_role("Engineering Master Manager")', js)
 		self.assertIn("submit_release_for_production_api", js)
 		self.assertNotIn('release_status === "Engineering Approved"', js)
+
+
+class TestItem4ECOMarkImplementedHint(FrappeTestCase):
+	def test_hint_on_form(self):
+		js = _read("engineering_change_order", "engineering_change_order.js")
+		self.assertIn("show_mark_implemented_hint(frm)", js)
+		self.assertIn("who did not create this Engineering Change Order", js)
+		self.assertIn('frm.doc.workflow_state !== "Approved"', js)
+
+	def test_creator_still_blocked(self):
+		user = _user("eco_creator", ["Engineering Manager"])
+		eco = frappe.new_doc("Engineering Change Order")
+		eco.owner = user
+		eco.workflow_state = "Implemented"
+		frappe.set_user(user)
+		try:
+			with patch.object(type(eco), "_state_changed_to", lambda self, state: state == "Implemented"):
+				self.assertRaises(frappe.PermissionError, eco.validate_workflow_transition_guards)
+		finally:
+			frappe.set_user("Administrator")
+
+	def test_other_manager_may_mark_implemented(self):
+		eco = frappe.new_doc("Engineering Change Order")
+		eco.owner = _user("eco_creator", ["Engineering Manager"])
+		other = _user("eco_other", ["Engineering Manager"])
+		frappe.set_user(other)
+		try:
+			with patch.object(type(eco), "_state_changed_to", lambda self, state: state == "Implemented"):
+				eco.validate_workflow_transition_guards()
+		finally:
+			frappe.set_user("Administrator")
+		self.assertEqual(eco.implemented_by, other)
