@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 import frappe
+
+from itag_engineering.tests.factories import submit_eir_and_get_item
 from frappe.tests.utils import FrappeTestCase
 
 from itag_engineering.itag_engineering_management.eir_service import create_item_from_eir
@@ -19,8 +21,7 @@ class TestUAT001NewManufacturedValveItem(FrappeTestCase):
 
 	def test_uat_001_new_manufactured_valve_item(self):
 		eir = create_test_eir()
-		frappe.db.set_value("Engineering Item Request", eir.name, "workflow_state", "Approved")
-		item_code = create_item_from_eir(eir.name)
+		item_code = submit_eir_and_get_item(eir.name)
 		item = frappe.get_doc("Item", item_code)
 		self.assertEqual(item.itag_product_family, "CS")
 		self.assertEqual(item.itag_valve_type, "BALL")
@@ -47,8 +48,7 @@ class TestEIRUOMMapsToItemStockUOM(FrappeTestCase):
 
 	def test_eir_uom_is_copied_to_item_stock_uom(self):
 		eir = create_test_eir(request_title="UATUOM Test Request", uom="Kg")
-		frappe.db.set_value("Engineering Item Request", eir.name, "workflow_state", "Approved")
-		item_code = create_item_from_eir(eir.name)
+		item_code = submit_eir_and_get_item(eir.name)
 		item = frappe.get_doc("Item", item_code)
 		self.assertEqual(item.stock_uom, "Kg")
 
@@ -85,6 +85,5 @@ class TestUAT002DuplicateItemPrevention(FrappeTestCase):
 		eir.reload()
 		self.assertEqual(eir.duplicate_check_status, "Possible Duplicates Found")
 
-		frappe.db.set_value("Engineering Item Request", eir.name, "workflow_state", "Approved")
 		with self.assertRaises(frappe.ValidationError):
-			create_item_from_eir(eir.name)
+			submit_eir_and_get_item(eir.name)

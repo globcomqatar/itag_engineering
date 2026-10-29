@@ -27,7 +27,12 @@ ITEM_FIELD_MAP = {
 CREATE_ITEM_ROLES = (
 	"Engineering User",
 	"Engineering Manager",
+	"Engineering Master Manager",
 )
+
+# fix8: Item Category on the request -> Item Group on the Item, when a group
+# of that name exists; otherwise the existing default "Products".
+DEFAULT_ITEM_GROUP = "Products"
 
 
 def run_duplicate_check(eir_name):
@@ -65,28 +70,84 @@ def _check_eir_action_permission():
 		)
 
 
-def create_item_from_eir(eir_name, eir=None, persist_request=True):
-	"""Idempotent: if this EIR already has created_item set, return it
-	without creating a second Item or consuming a second reservation.
+def check_duplicates_before_submit(eir):
+	"""fix8: duplicate check at Submit. All possible matches (any one spec
+	field equal) are recorded on the request for review. Submit is blocked
+	only by a real duplicate: an enabled Item with the same Item Name, or
+	one whose spec fields equal every spec field filled on the request.
+	Raising rolls the submit back."""
+	results = find_possible_duplicates(
+		product_family=eir.product_family,
+		valve_type=eir.valve_type,
+		nominal_size=eir.nominal_size,
+		pressure_class=eir.pressure_class,
+		body_material=eir.body_material,
+		trim_material=eir.trim_material,
+		end_connection=eir.end_connection,
+		drawing_number=eir.drawing_number,
+	)
+	filled = sum(1 for f in ITEM_FIELD_MAP.values() if eir.get(f))
+	blocking = {r["item_code"] for r in results if filled and r["match_score"] >= filled}
+	blocking.update(
+		frappe.get_all("Item", filters={"item_name": eir.request_title, "disabled": 0}, pluck="name")
+	)
+	blocking = sorted(
+		c for c in blocking if not frappe.db.get_value("Item", c, "disabled")
+	)
+	if blocking:
+		frappe.throw(
+			_("Duplicate Item already exists: {0}. Resolve it before submitting this request.").format(
+				", ".join(blocking)
+			),
+			title=_("Duplicate Item"),
+		)
+	eir.db_set(
+		{
+			"possible_duplicates_json": json.dumps(results),
+			"duplicate_check_status": "Possible Duplicates Found" if results else "No Duplicates Found",
+		},
+		update_modified=False,
+	)
 
-	Pass the in-memory document when this runs inside that document's own
-	save (the workflow Create Item button). persist_request=False leaves
-	the request fields for that save to write, so the workflow save and the
-	item creation do not overwrite each other.
-	"""
+
+def _item_group_for(eir):
+	if eir.item_category and frappe.db.exists("Item Group", {"name": eir.item_category, "is_group": 0}):
+		return eir.item_category
+	return DEFAULT_ITEM_GROUP
+
+
+def build_item_values(eir, item_code):
+	"""fix8 mapping, Engineering Item Request -> Item. Only fields that exist
+	on the Item meta are set. See design notes for the table."""
+	meta = frappe.get_meta("Item")
+	values = {
+		"doctype": "Item",
+		"item_code": item_code,
+		"item_name": eir.request_title,
+		"item_group": _item_group_for(eir),
+		"stock_uom": eir.uom or "Nos",
+		"description": eir.item_description or eir.request_title,
+		"itag_engineering_status": "Approved",
+		"itag_engineering_classification": eir.item_category,
+	}
+	# erpcloud_itagksa makes Item Type mandatory on Item.
+	values["custom_product_type"] = eir.get("item_type") or "General"
+	for itag_field, eir_field in ITEM_FIELD_MAP.items():
+		values[itag_field] = eir.get(eir_field)
+	return {k: v for k, v in values.items() if k in ("doctype", "item_code") or meta.has_field(k)}
+
+
+def create_item_from_eir(eir_name, eir=None, persist_request=True):
+	"""fix8: called from on_submit. Idempotent: if the request already has
+	created_item, that Item is returned and no second Item or reservation is
+	made. Any error raises, so the submit rolls back."""
 	_check_eir_action_permission()
 	eir = eir or frappe.get_doc("Engineering Item Request", eir_name)
 
 	if eir.created_item:
 		return eir.created_item
-
-	previous_state = None
-	if getattr(eir, "_doc_before_save", None):
-		previous_state = eir._doc_before_save.get("workflow_state")
-	if eir.workflow_state != "Approved" and previous_state != "Approved":
-		frappe.throw(_("Engineering Item Request must be Approved before an Item can be created."))
-	if eir.duplicate_check_status == "Possible Duplicates Found":
-		frappe.throw(_("Possible duplicates must be resolved before an Item can be created."))
+	if eir.docstatus != 1:
+		frappe.throw(_("Submit the Engineering Item Request to create the Item."))
 
 	item_code = eir.reserved_item_code
 	if not item_code:
@@ -107,26 +168,10 @@ def create_item_from_eir(eir_name, eir=None, persist_request=True):
 		item_code = reserve_item_code(eir.item_code_rule, values)
 		eir.reserved_item_code = item_code
 		log_audit_event(
-			"Item Code Reservation", "Engineering Item Request", eir_name, {"item_code": item_code}
+			"Item Code Reservation", "Engineering Item Request", eir.name, {"item_code": item_code}
 		)
 
-	item_fields = {
-		"doctype": "Item",
-		"item_code": item_code,
-		"item_name": eir.request_title,
-		"item_group": "Products",
-		"stock_uom": eir.uom or "Nos",
-		"itag_engineering_status": "Approved",
-		"description": eir.item_description,
-	}
-	# erpcloud_itagksa makes Item Type mandatory on Item. Copy the request's
-	# choice when that field exists, so creation does not die on a blank value.
-	if frappe.get_meta("Item").has_field("custom_product_type"):
-		item_fields["custom_product_type"] = eir.get("item_type") or "General"
-	for itag_field, eir_field in ITEM_FIELD_MAP.items():
-		item_fields[itag_field] = eir.get(eir_field)
-
-	item = frappe.get_doc(item_fields)
+	item = frappe.get_doc(build_item_values(eir, item_code))
 	item.insert(ignore_permissions=True)
 
 	frappe.db.set_value(
@@ -134,22 +179,28 @@ def create_item_from_eir(eir_name, eir=None, persist_request=True):
 		{"item_code": item_code},
 		{"status": "Consumed", "consumed_by_item": item.item_code},
 	)
-	eir.created_item = item.item_code
-	eir.workflow_state = "Item Created"
-	if persist_request:
-		frappe.db.set_value(
-			"Engineering Item Request",
-			eir_name,
-			{
-				"reserved_item_code": eir.reserved_item_code,
-				"item_code_rule": eir.item_code_rule,
-				"code_pattern": eir.code_pattern,
-				"created_item": eir.created_item,
-				"workflow_state": eir.workflow_state,
-			},
-		)
-	log_audit_event("Item Code Creation", "Item", item.item_code, {"originating_eir": eir_name})
+	eir.db_set(
+		{
+			"reserved_item_code": item_code,
+			"item_code_rule": eir.item_code_rule,
+			"code_pattern": eir.code_pattern,
+			"created_item": item.item_code,
+			"workflow_state": "Item Created",
+		}
+	)
+	log_audit_event("Item Code Creation", "Item", item.item_code, {"originating_eir": eir.name})
 	return item.item_code
+
+
+def disable_item_for_eir(eir):
+	"""fix8: on cancel the linked Item is disabled, never deleted. The link on
+	the request is kept."""
+	eir.db_set("workflow_state", "Cancelled")
+	if eir.created_item and frappe.db.exists("Item", eir.created_item):
+		frappe.db.set_value("Item", eir.created_item, "disabled", 1)
+		log_audit_event(
+			"Item Disabled", "Item", eir.created_item, {"originating_eir": eir.name, "reason": "request cancelled"}
+		)
 
 
 @frappe.whitelist()

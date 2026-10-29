@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 import frappe
+
+from itag_engineering.tests.factories import submit_eir_and_get_item
 from frappe.tests.utils import FrappeTestCase
 
 from itag_engineering.itag_engineering_management.eir_service import (
@@ -39,8 +41,7 @@ def _create_item_from_series(rule_name, title, item_type):
 			"duplicate_check_status": "No Duplicates Found",
 		}
 	).insert()
-	frappe.db.set_value("Engineering Item Request", eir.name, "workflow_state", "Approved")
-	return create_item_from_eir(eir.name)
+	return submit_eir_and_get_item(eir.name)
 
 
 class TestEirService(FrappeTestCase):
@@ -108,13 +109,12 @@ class TestEirService(FrappeTestCase):
 		self.assertEqual(results, [])
 		self.assertEqual(self.eir.duplicate_check_status, "No Duplicates Found")
 
-	def test_create_item_requires_approved_state(self):
+	def test_create_item_requires_submitted_request(self):
 		with self.assertRaises(frappe.ValidationError):
 			create_item_from_eir(self.eir.name)
 
 	def test_create_item_from_approved_eir_creates_exactly_one_item(self):
-		frappe.db.set_value("Engineering Item Request", self.eir.name, "workflow_state", "Approved")
-		item_code = create_item_from_eir(self.eir.name)
+		item_code = submit_eir_and_get_item(self.eir.name)
 		self.assertTrue(frappe.db.exists("Item", item_code))
 		self.eir.reload()
 		self.assertEqual(self.eir.created_item, item_code)
@@ -151,9 +151,9 @@ class TestEirService(FrappeTestCase):
 		frappe.db.set_value(
 			"Engineering Item Request",
 			eir.name,
-			{"workflow_state": "Approved", "item_code_rule": "EIRSVC981"},
+			{"item_code_rule": "EIRSVC981"},
 		)
-		self.assertEqual(create_item_from_eir(eir.name), "980-00001")
+		self.assertEqual(submit_eir_and_get_item(eir.name), "980-00001")
 		eir.reload()
 		self.assertEqual(eir.item_code_rule, "EIRSVC980")
 		self.assertEqual(frappe.db.get_value("Item", "980-00001", "itag_valve_type"), "EIRSVC980")
@@ -177,16 +177,14 @@ class TestEirService(FrappeTestCase):
 			self.assertEqual(frappe.db.get_value("Item", other, "custom_product_type"), "Non-Critical")
 
 	def test_create_item_copies_item_description_to_item(self):
-		frappe.db.set_value("Engineering Item Request", self.eir.name, "workflow_state", "Approved")
-		item_code = create_item_from_eir(self.eir.name)
+		item_code = submit_eir_and_get_item(self.eir.name)
 		self.assertEqual(
 			frappe.db.get_value("Item", item_code, "description"),
 			"Cast steel gate valve, 6 inch, class 300, per EIRSVC test spec.",
 		)
 
 	def test_create_item_is_idempotent_on_retry(self):
-		frappe.db.set_value("Engineering Item Request", self.eir.name, "workflow_state", "Approved")
-		first_code = create_item_from_eir(self.eir.name)
-		second_code = create_item_from_eir(self.eir.name)
+		first_code = submit_eir_and_get_item(self.eir.name)
+		second_code = submit_eir_and_get_item(self.eir.name)
 		self.assertEqual(first_code, second_code)
 		self.assertEqual(frappe.db.count("Item", {"item_code": first_code}), 1)

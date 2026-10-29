@@ -83,7 +83,7 @@ function show_valve_type_code_note(frm) {
 	const rule_label = frm._rule_series_name || frm.doc.item_code_rule;
 	frm.set_intro(
 		__(
-			"Item code comes from Item Code Rule {0} ({1}), selected by Valve Type {2}. Create Item assigns the next number from that rule.",
+			"Item code comes from Item Code Rule {0} ({1}), selected by Valve Type {2}. Submit creates the Item with the next number from that rule.",
 			[rule_label, frm.doc.code_pattern, valve_label]
 		),
 		"green"

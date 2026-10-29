@@ -33,7 +33,8 @@
   "item_code_rule",
   "code_pattern",
   "reserved_item_code",
-  "created_item"
+  "created_item",
+  "amended_from"
  ],
  "fields": [
   {
@@ -172,13 +173,15 @@
    "fieldtype": "Select",
    "label": "Duplicate Check Status",
    "options": "Not Checked\nNo Duplicates Found\nPossible Duplicates Found\nDuplicates Resolved",
-   "read_only": 1
+   "read_only": 1,
+   "no_copy": 1
   },
   {
    "fieldname": "possible_duplicates_json",
    "fieldtype": "Long Text",
    "label": "Possible Duplicates (JSON)",
-   "read_only": 1
+   "read_only": 1,
+   "no_copy": 1
   },
   {
    "fieldname": "coding_section",
@@ -205,50 +208,78 @@
    "fieldname": "reserved_item_code",
    "fieldtype": "Data",
    "label": "Reserved Item Code",
-   "read_only": 1
+   "read_only": 1,
+   "no_copy": 1
   },
   {
    "fieldname": "created_item",
    "fieldtype": "Link",
    "label": "Created Item",
    "options": "Item",
-   "read_only": 1
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Engineering Item Request",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   }
  ],
  "links": [],
- "modified": "2026-10-28 15:55:00.000000",
+ "modified": "2026-10-29 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "Engineering Item Request",
  "owner": "Administrator",
  "permissions": [
   {
-   "create": 1,
-   "delete": 1,
    "email": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Engineering User",
    "share": 1,
-   "write": 1
+   "write": 1,
+   "create": 1,
+   "role": "Engineering User"
   },
   {
-   "create": 1,
-   "delete": 1,
    "email": 1,
-   "export": 1,
-   "import": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Engineering Manager",
    "share": 1,
-   "write": 1
+   "write": 1,
+   "create": 1,
+   "role": "Engineering Manager",
+   "delete": 1,
+   "export": 1,
+   "import": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "role": "Engineering Master Manager",
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
   }
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1
+ "track_changes": 1,
+ "is_submittable": 1
 }

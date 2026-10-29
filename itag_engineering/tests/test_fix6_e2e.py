@@ -3,6 +3,8 @@ Engineering Release -> ECR -> ECO, each step done by the role that owns it,
 with the negative checks at every step."""
 
 import frappe
+
+from itag_engineering.tests.factories import submit_eir_and_get_item
 from frappe.model.workflow import apply_workflow
 from frappe.tests.utils import FrappeTestCase
 
@@ -68,9 +70,8 @@ class TestFix6EndToEnd(FrappeTestCase):
 		_as("user")
 		self.assertFalse(frappe.has_permission("ITAG Nominal Size", "create"))
 		frappe.set_user("Administrator")
-		frappe.db.set_value("Engineering Item Request", eir.name, "workflow_state", "Approved")
 		_as("mgr")
-		item = create_item_from_eir(eir.name)
+		item = submit_eir_and_get_item(eir.name)
 		item = item if isinstance(item, str) else (getattr(item, "name", None) or frappe.db.get_value("Engineering Item Request", eir.name, "created_item"))
 		item = frappe.db.get_value("Engineering Item Request", eir.name, "created_item") or item
 		self.assertTrue(frappe.db.exists("Item", item))

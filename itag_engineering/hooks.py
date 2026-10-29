@@ -41,6 +41,8 @@ after_migrate = [
 	"itag_engineering.install.revoke_blocked_permissions",
 	"itag_engineering.install.apply_drawing_submit_permissions",
 	"itag_engineering.install.apply_product_revision_submit_permissions",
+	"itag_engineering.install.deactivate_item_request_workflows",
+	"itag_engineering.install.apply_item_request_submit_permissions",
 ]
 
 # Testing

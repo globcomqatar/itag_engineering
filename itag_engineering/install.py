@@ -242,7 +242,14 @@ ENGINEERING_WORKFLOWS = (
 # fix6 (Waheed, 28-Oct-2026): BOM goes back to the standard ERPNext flow
 # (save as Draft, then Submit). The ITAG BOM Workflow is kept, inactive.
 # A BOM part-way through it keeps its docstatus and itag_workflow_state value.
-DEACTIVATED_WORKFLOWS = ("ITAG Engineering Drawing Workflow", "ITAG BOM Workflow")
+# fix8 (Waheed, 29-Oct-2026): Engineering Item Request is a submittable
+# document with no workflow; Submit creates the Item. Its workflow is kept,
+# inactive. Rollback: set is_active = 1 on the Workflow record.
+DEACTIVATED_WORKFLOWS = (
+	"ITAG Engineering Drawing Workflow",
+	"ITAG BOM Workflow",
+	"Engineering Item Request Workflow",
+)
 
 
 def deactivate_retired_workflows():
@@ -646,3 +653,56 @@ def deactivate_product_revision_workflows():
 	if changed:
 		frappe.clear_cache(doctype="Product Revision")
 		frappe.cache.delete_value("workflow")
+
+
+EIR_SUBMIT_RIGHTS = {
+	"Engineering User": {"submit": 0, "cancel": 0, "amend": 0, "delete": 0},
+	"Engineering Manager": {"submit": 1, "cancel": 1, "amend": 1},
+	"Engineering Master Manager": {"submit": 1, "cancel": 1, "amend": 1},
+}
+
+
+def deactivate_item_request_workflows():
+	"""fix8: Engineering Item Request has no Frappe workflow. Any workflow on
+	it is set inactive in place, never deleted. Rollback: is_active = 1."""
+	changed = False
+	for name in frappe.get_all(
+		"Workflow", filters={"document_type": "Engineering Item Request", "is_active": 1}, pluck="name"
+	):
+		frappe.db.set_value("Workflow", name, "is_active", 0)
+		_note(f"workflow {name!r} on Engineering Item Request set inactive (kept)")
+		changed = True
+	if changed:
+		frappe.clear_cache(doctype="Engineering Item Request")
+		frappe.cache.delete_value("workflow")
+
+
+def apply_item_request_submit_permissions():
+	"""fix8: idempotent. Brings any Custom DocPerm rows on Engineering Item
+	Request to the submit rights (User: no submit/cancel/amend/delete;
+	Manager and Master Manager: submit/cancel/amend). Adds a Master Manager
+	row only when the site uses Custom DocPerms there and has none for that
+	role. Nothing is deleted."""
+	from frappe.permissions import add_permission, update_permission_property
+
+	doctype = "Engineering Item Request"
+	rows = frappe.get_all(
+		"Custom DocPerm",
+		filters={"parent": doctype, "permlevel": 0},
+		fields=["name", "role", "submit", "cancel", "amend", "delete"],
+	)
+	changed = False
+	for row in rows:
+		want = EIR_SUBMIT_RIGHTS.get(row.role)
+		if want and any(row.get(k) != v for k, v in want.items()):
+			frappe.db.set_value("Custom DocPerm", row.name, want)
+			changed = True
+	if rows and not any(r.role == "Engineering Master Manager" for r in rows) and frappe.db.exists(
+		"Role", "Engineering Master Manager"
+	):
+		add_permission(doctype, "Engineering Master Manager", 0)
+		for right in ("read", "write", "create", "submit", "cancel", "amend"):
+			update_permission_property(doctype, "Engineering Master Manager", 0, right, 1, validate=False)
+		changed = True
+	if changed:
+		frappe.clear_cache(doctype=doctype)

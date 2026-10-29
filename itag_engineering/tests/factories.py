@@ -725,3 +725,12 @@ def create_multi_level_bom_tree_with_open_work_orders(prefix, depth=3, work_orde
 			work_orders.append(work_order)
 
 	return items, boms, work_orders
+
+
+def submit_eir_and_get_item(eir_name):
+	"""fix8: Submit an Engineering Item Request (Submit creates the Item) and
+	return the created Item code."""
+	eir = frappe.get_doc("Engineering Item Request", eir_name)
+	if eir.docstatus == 0:
+		eir.submit()
+	return frappe.db.get_value("Engineering Item Request", eir_name, "created_item")
