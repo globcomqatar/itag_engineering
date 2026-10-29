@@ -75,7 +75,12 @@ def check_duplicates_before_submit(eir, ignore_item=None):
 	field equal) are recorded on the request for review. Submit is blocked
 	only by a real duplicate: an enabled Item with the same Item Name, or
 	one whose spec fields equal every spec field filled on the request.
-	Raising rolls the submit back."""
+	Raising rolls the submit back.
+
+	Review v15.5.10 finding 1: the request's own Item (created_item, e.g. a
+	legacy draft already at "Item Created") and ignore_item (the original
+	Item of an amended request) are never counted as duplicates."""
+	own_items = {c for c in (ignore_item, eir.get("created_item")) if c}
 	results = find_possible_duplicates(
 		product_family=eir.product_family,
 		valve_type=eir.valve_type,
@@ -92,7 +97,7 @@ def check_duplicates_before_submit(eir, ignore_item=None):
 		frappe.get_all("Item", filters={"item_name": eir.request_title, "disabled": 0}, pluck="name")
 	)
 	blocking = sorted(
-		c for c in blocking if c != ignore_item and not frappe.db.get_value("Item", c, "disabled")
+		c for c in blocking if c not in own_items and not frappe.db.get_value("Item", c, "disabled")
 	)
 	if blocking:
 		frappe.throw(
