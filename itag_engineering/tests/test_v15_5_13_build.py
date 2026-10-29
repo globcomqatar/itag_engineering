@@ -385,3 +385,17 @@ class TestItem7ItemsOnGeneralPatch(_ItemTypeFieldCase):
 	def test_listed_in_patches_txt(self):
 		with open(os.path.join(APP, "patches.txt")) as f:
 			self.assertIn("itag_engineering.patches.v15_5_13.item_product_type_general_to_non_product", f.read())
+
+
+class TestItem9ValveTypeHintRemoved(FrappeTestCase):
+	def test_hint_not_shown_on_new_or_draft_request(self):
+		js = _read("engineering_item_request", "engineering_item_request.js")
+		self.assertNotIn("Select a Valve Type. The Item Code Rule on that Valve Type supplies the pattern", js)
+		body = js[js.index("function show_valve_type_code_note") :]
+		branch = body[body.index("if (!frm.doc.valve_type)") : body.index("const valve_label")]
+		self.assertIn('frm.set_intro("")', branch)
+		self.assertNotIn("__(", branch)
+
+	def test_server_message_stays(self):
+		with open(os.path.join(APP, "itag_engineering_management", "eir_service.py")) as f:
+			self.assertIn("Select a Valve Type. The item code comes from the Item Code Rule", f.read())

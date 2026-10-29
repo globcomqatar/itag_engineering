@@ -67,12 +67,9 @@ function show_valve_type_code_note(frm) {
 		return;
 	}
 	if (!frm.doc.valve_type) {
-		frm.set_intro(
-			__(
-				"Select a Valve Type. The Item Code Rule on that Valve Type supplies the pattern, for example Tag Plate uses 530-#####."
-			),
-			"blue"
-		);
+		// v15.5.13 #9 (Waheed): no "Select a Valve Type..." hint; the server
+		// check in eir_service.py still explains a missing Valve Type.
+		frm.set_intro("");
 		return;
 	}
 	const valve_label = frm._valve_type_name || frm.doc.valve_type;
