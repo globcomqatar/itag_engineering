@@ -32,6 +32,10 @@ POST_RELEASE_ALLOWED_FIELDS = {
 HISTORY_LINK_FIELDS = ("previous_revision", "superseding_revision")
 
 
+# ERPNext v15 Work Order terminal statuses (Stopped can be re-opened).
+WORK_ORDER_CLOSED_STATUSES = ("Completed", "Closed", "Cancelled")
+
+
 class ProductRevision(Document):
 	def onload(self):
 		# F3: the Desk's Cancel must not offer to cancel the BOMs, Engineering
@@ -66,6 +70,30 @@ class ProductRevision(Document):
 		# Engineering Releases and Work Orders that point at it keep that
 		# link as history; they are neither blocking nor cancelled with it.
 		self.ignore_linked_doctypes = get_history_link_doctypes()
+		self.validate_no_open_work_orders()
+
+	def validate_no_open_work_orders(self):
+		"""F3 (Waheed, 29-Oct-2026): an open Work Order blocks cancelling
+		(superseding) the revision it was built against. Open = draft or
+		submitted and not in a terminal ERPNext v15 status. Stopped is NOT
+		terminal (it can be Re-opened), so a Stopped Work Order still blocks."""
+		open_wos = frappe.get_all(
+			"Work Order",
+			filters={
+				"itag_product_revision": self.name,
+				"docstatus": ("in", (0, 1)),
+				"status": ("not in", WORK_ORDER_CLOSED_STATUSES),
+			},
+			pluck="name",
+			order_by="name asc",
+		)
+		if open_wos:
+			frappe.throw(
+				_("Cannot cancel Product Revision {0}: it is used by open Work Order(s) {1}. Complete, close or cancel them first.").format(
+					self.name, ", ".join(open_wos)
+				),
+				title=_("Open Work Orders"),
+			)
 
 	def on_cancel(self):
 		"""F3 (Waheed, 29-Oct-2026): Cancel marks the revision Superseded

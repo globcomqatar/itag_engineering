@@ -285,3 +285,60 @@ class TestFix7ProductRevisionSubmittable(FrappeTestCase):
 		work_order.reload()
 		self.assertEqual(work_order.itag_engineering_release, release.name)
 		self.assertEqual(work_order.itag_product_revision, pr.name)
+
+	# 7. F3 (Waheed, 29-Oct-2026): open Work Orders block cancel.
+	def _submitted_revision_with_work_order(self):
+		item = create_fresh_stock_item("F7PR-WO-ITEM").name
+		drawing = _drawing()
+		pr = create_test_product_revision(item=item, drawing=drawing)
+		bom = create_test_bom_with_operations(item=item, drawing=drawing, product_revision=pr)
+		frappe.db.set_value("Product Revision", pr.name, {"revision_status": "Draft", "workflow_state": "Draft"})
+		bom.submit()
+		pr = frappe.get_doc("Product Revision", pr.name)
+		pr.bom_revision_reference = bom.name
+		pr.save()
+		frappe.set_user(_user("manager"))
+		frappe.get_doc("Product Revision", pr.name).submit()
+		frappe.set_user("Administrator")
+		release = create_fully_approved_engineering_release(
+			item=item, product_revision=pr.name, bom=bom.name, drawing_revision=drawing.name
+		)
+		wo = create_test_work_order(release=release)
+		wo.submit()
+		wo.reload()
+		self.assertEqual(wo.itag_product_revision, pr.name)
+		return pr.name, wo.name
+
+	def _cancel_as_manager(self, name):
+		frappe.set_user(_user("manager"))
+		try:
+			frappe.get_doc("Product Revision", name).cancel()
+		finally:
+			frappe.set_user("Administrator")
+
+	def test_open_work_order_blocks_cancel(self):
+		name, wo = self._submitted_revision_with_work_order()
+		for status in ("Not Started", "In Process", "Stopped"):
+			frappe.db.set_value("Work Order", wo, "status", status)
+			with self.assertRaises(frappe.ValidationError) as ctx:
+				self._cancel_as_manager(name)
+			self.assertIn(wo, str(ctx.exception))
+			self.assertEqual(frappe.db.get_value("Product Revision", name, "docstatus"), 1)
+
+	def test_draft_work_order_blocks_cancel(self):
+		name, wo = self._submitted_revision_with_work_order()
+		frappe.db.set_value("Work Order", wo, {"docstatus": 0, "status": "Draft"})
+		self.assertRaises(frappe.ValidationError, self._cancel_as_manager, name)
+
+	def test_completed_or_closed_work_order_does_not_block_cancel(self):
+		for status in ("Completed", "Closed"):
+			name, wo = self._submitted_revision_with_work_order()
+			frappe.db.set_value("Work Order", wo, "status", status)
+			self._cancel_as_manager(name)
+			self.assertEqual(frappe.db.get_value("Product Revision", name, ["docstatus", "revision_status"]), (2, "Superseded"))
+
+	def test_cancelled_work_order_does_not_block_cancel(self):
+		name, wo = self._submitted_revision_with_work_order()
+		frappe.db.set_value("Work Order", wo, {"docstatus": 2, "status": "Cancelled"})
+		self._cancel_as_manager(name)
+		self.assertEqual(frappe.db.get_value("Product Revision", name, "docstatus"), 2)
