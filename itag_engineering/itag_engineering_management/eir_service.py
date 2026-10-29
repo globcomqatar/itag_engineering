@@ -236,14 +236,84 @@ def reenable_item_for_amended(eir, item_code):
 	return item_code
 
 
+OPEN_WORK_ORDER_CLOSED_STATUSES = ("Completed", "Closed", "Cancelled")
+SUBMITTED_SALES_ITEM_DOCTYPES = (
+	("Sales Order Item", "Sales Order"),
+	("Sales Invoice Item", "Sales Invoice"),
+	("Delivery Note Item", "Delivery Note"),
+)
+
+
+def item_usage_blocking_disable(item_code):
+	"""Review v15.5.10 finding 2: records that use the Item and so stop the
+	request being cancelled (which would disable the Item). Returns a list of
+	(label, [names]) pairs; empty when the Item is unused."""
+	usage = []
+
+	def add(label, names):
+		names = sorted(set(n for n in names if n))
+		if names:
+			usage.append((label, names))
+
+	add(_("Submitted BOM"), frappe.get_all("BOM", filters={"item": item_code, "docstatus": 1}, pluck="name"))
+	add(
+		_("Submitted BOM (as component)"),
+		frappe.get_all("BOM Item", filters={"item_code": item_code, "docstatus": 1}, pluck="parent"),
+	)
+	add(
+		_("Open Work Order"),
+		frappe.get_all(
+			"Work Order",
+			filters={
+				"production_item": item_code,
+				"docstatus": ["<", 2],
+				"status": ["not in", OPEN_WORK_ORDER_CLOSED_STATUSES],
+			},
+			pluck="name",
+		),
+	)
+	add(
+		_("Stock Ledger Entry"),
+		frappe.get_all(
+			"Stock Ledger Entry", filters={"item_code": item_code, "is_cancelled": 0}, pluck="voucher_no"
+		),
+	)
+	for child, parent in SUBMITTED_SALES_ITEM_DOCTYPES:
+		add(
+			_("Submitted {0}").format(_(parent)),
+			frappe.get_all(child, filters={"item_code": item_code, "docstatus": 1}, pluck="parent"),
+		)
+	return usage
+
+
 def disable_item_for_eir(eir):
 	"""fix8: on cancel the linked Item is disabled, never deleted. The link on
-	the request is kept."""
+	the request is kept.
+
+	Review v15.5.10 finding 2: the cancel is blocked when the Item is in use
+	(submitted BOMs, open Work Orders, stock or submitted sales transactions),
+	and the Item is disabled through a validated save, not a direct DB write."""
+	item_code = eir.created_item if eir.created_item and frappe.db.exists("Item", eir.created_item) else None
+	if item_code:
+		usage = item_usage_blocking_disable(item_code)
+		if usage:
+			lines = "".join(
+				"<li>{0}: {1}</li>".format(label, ", ".join(frappe.bold(n) for n in names[:20]) + (" ..." if len(names) > 20 else ""))
+				for label, names in usage
+			)
+			frappe.throw(
+				_("Item {0} is in use, so this request cannot be cancelled (cancel would disable the Item). Close or cancel these first:<ul>{1}</ul>").format(
+					frappe.bold(item_code), lines
+				),
+				title=_("Item In Use"),
+			)
 	eir.db_set("workflow_state", "Cancelled")
-	if eir.created_item and frappe.db.exists("Item", eir.created_item):
-		frappe.db.set_value("Item", eir.created_item, "disabled", 1)
+	if item_code:
+		item = frappe.get_doc("Item", item_code)
+		item.disabled = 1
+		item.save(ignore_permissions=True)  # cancel permission already checked on the request
 		log_audit_event(
-			"Item Disabled", "Item", eir.created_item, {"originating_eir": eir.name, "reason": "request cancelled"}
+			"Item Disabled", "Item", item_code, {"originating_eir": eir.name, "reason": "request cancelled"}
 		)
 
 
