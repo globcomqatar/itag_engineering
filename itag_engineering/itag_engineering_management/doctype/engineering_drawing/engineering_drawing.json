@@ -5,6 +5,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "details_tab",
   "drawing_number",
   "drawing_revision",
   "drawing_title",
@@ -40,6 +41,11 @@
   "amended_from"
  ],
  "fields": [
+  {
+   "fieldname": "details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Details"
+  },
   {
    "fieldname": "drawing_number",
    "fieldtype": "Data",

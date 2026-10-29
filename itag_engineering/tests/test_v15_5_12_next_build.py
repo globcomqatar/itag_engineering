@@ -167,3 +167,23 @@ class TestItem3ItemType(_EIRCase):
 		self.assertEqual(frappe.db.get_value("Item", code, "custom_product_type"), "General")
 		amended.submit()
 		self.assertEqual(frappe.db.get_value("Item", code, ["disabled", "custom_product_type"]), (0, "Non-Critical"))
+
+
+class TestItem4DrawingTabsAndConnections(FrappeTestCase):
+	def test_details_tab_first(self):
+		meta = frappe.get_meta(DWG)
+		self.assertEqual((meta.fields[0].fieldname, meta.fields[0].label), ("details_tab", "Details"))
+		self.assertEqual(len(_tab_fields(DWG)), 1)
+
+	def test_connections_include_release_item_bom_request_eco(self):
+		data = frappe.get_meta(DWG).get_dashboard_data()
+		linked = {d for group in data.transactions for d in group["items"]}
+		self.assertEqual(
+			linked,
+			{"Engineering Release", "Item", "BOM", "Engineering Item Request", "Engineering Change Order"},
+		)
+		self.assertEqual(data.fieldname, "drawing_revision")
+		self.assertEqual(frappe.get_meta("Engineering Release").get_field("drawing_revision").options, DWG)
+		self.assertEqual(frappe.get_meta("BOM").get_field("itag_drawing_revision").options, DWG)
+		for field in data.internal_links.values():
+			self.assertTrue(frappe.get_meta(DWG).has_field(field), field)
