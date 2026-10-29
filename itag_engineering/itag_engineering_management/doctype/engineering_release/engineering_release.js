@@ -43,7 +43,20 @@ frappe.ui.form.on("Engineering Release", {
 		// field (workflow_state_field: "release_status" in the Workflow
 		// fixture) - this DocType has no plain workflow_state field at all,
 		// unlike every other workflow-bearing doctype in this app.
-		if (frm.doc.release_status === "Engineering Approved" && !frm.doc.release_checksum) {
+		// v15.5.13 #3 (F4, Waheed): the workflow moves workflow_state
+		// (Draft -> Approved -> Released), not release_status, so the old
+		// "Engineering Approved" check never matched. The button now shows
+		// after Release, for an Engineering Master Manager only; the server
+		// (release_service.submit_release_for_production) refuses anyone else
+		// and any other state.
+		if (
+			frm.doc.docstatus < 2 &&
+			frm.doc.workflow_state === "Released" &&
+			!["Released for Production", "Suspended", "Withdrawn", "Superseded", "Obsolete"].includes(
+				frm.doc.release_status
+			) &&
+			frappe.user.has_role("Engineering Master Manager")
+		) {
 			frm.add_custom_button(
 				__("Submit Release for Production"),
 				() => {
@@ -51,7 +64,7 @@ frappe.ui.form.on("Engineering Release", {
 						__("This will re-validate the release package, confirm all required approvals are complete, compute the release checksum, supersede the prior release where applicable, and move this release to Released for Production. Continue?"),
 						() => {
 							frappe.call({
-								method: "itag_engineering.itag_engineering_management.release_service.submit_engineering_release_api",
+								method: "itag_engineering.itag_engineering_management.release_service.submit_release_for_production_api",
 								args: { release_name: frm.doc.name },
 								freeze: true,
 								freeze_message: __("Releasing for Production..."),
@@ -70,8 +83,7 @@ frappe.ui.form.on("Engineering Release", {
 							});
 						}
 					);
-				},
-				__("Actions")
+				}
 			);
 		}
 

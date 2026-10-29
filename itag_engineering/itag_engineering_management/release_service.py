@@ -231,8 +231,13 @@ def submit_engineering_release(release_name):
 	Draft -> ... -> Engineering Approved states are a review/UI tracking
 	aid, not an independent gate this function re-derives.
 	"""
-	_check_release_action_permission()
 	release = frappe.get_doc("Engineering Release", release_name)
+	if _f4_enforced() or frappe.flags.itag_f4_release:
+		# v15.5.13 #3: with the release workflow active, only the F4 path
+		# (Released, Engineering Master Manager) may release for production.
+		_check_release_for_production_allowed(release)
+	else:
+		_check_release_action_permission()
 
 	if release.release_status in ALREADY_SUBMITTED_STATES:
 		return retrieve_released_baseline(release_name)
@@ -463,6 +468,55 @@ def validate_release_package_api(release_name):
 @frappe.whitelist()
 def resolve_release_approval_matrix_api(release_name):
 	return success(data=resolve_release_approval_matrix(release_name))
+
+
+F4_ROLE = "Engineering Master Manager"
+F4_WORKFLOW_STATE = "Released"
+
+
+def _f4_enforced():
+	from itag_engineering.itag_engineering_management.release_control import is_enforced
+
+	return is_enforced("Engineering Release")
+
+
+def _check_release_for_production_allowed(release):
+	"""v15.5.13 #3 (F4, Waheed): Submit Release for Production is for an
+	Engineering Master Manager only, and only once the release workflow is
+	Released. Enforced here on the server, whatever the client shows."""
+	if F4_ROLE not in frappe.get_roles():
+		frappe.throw(
+			_("Only an {0} can submit Engineering Release {1} for production.").format(F4_ROLE, release.name),
+			frappe.PermissionError,
+		)
+	if release.get("workflow_state") != F4_WORKFLOW_STATE:
+		frappe.throw(
+			_("Engineering Release {0} must be Released in its workflow before it is submitted for production (now: {1}).").format(
+				release.name, release.get("workflow_state") or "Draft"
+			)
+		)
+
+
+def submit_release_for_production(release_name):
+	"""F4 button. Checks role and state (always, not only when the workflow
+	is active), then runs the full release (package re-validation, approval
+	steps, checksum, supersession, distribution) so Work Orders can submit."""
+	release = frappe.get_doc("Engineering Release", release_name)
+	_check_release_for_production_allowed(release)
+	if release.release_status in ALREADY_SUBMITTED_STATES:
+		frappe.throw(
+			_("Engineering Release {0} is already {1}.").format(release.name, release.release_status)
+		)
+	frappe.flags.itag_f4_release = True
+	try:
+		return submit_engineering_release(release_name)
+	finally:
+		frappe.flags.itag_f4_release = False
+
+
+@frappe.whitelist()
+def submit_release_for_production_api(release_name):
+	return success(data=submit_release_for_production(release_name))
 
 
 @frappe.whitelist()

@@ -143,3 +143,90 @@ class TestItem2ItemTypeDefaultCritical(FrappeTestCase):
 		self.assertIn(
 			"item_type_options.default_new_item_product_type", hooks.doc_events["Item"]["before_insert"]
 		)
+
+
+def _user(key, roles):
+	email = f"itag.v13.{key}@example.com"
+	if not frappe.db.exists("User", email):
+		u = frappe.get_doc(
+			{"doctype": "User", "email": email, "first_name": f"v13 {key}", "send_welcome_email": 0}
+		).insert(ignore_permissions=True)
+		u.add_roles(*roles)
+	return email
+
+
+class TestItem3F4SubmitReleaseForProduction(FrappeTestCase):
+	def setUp(self):
+		frappe.set_user("Administrator")
+		self.master = _user("master", ["Engineering Master Manager"])
+		self.mgr = _user("mgr", ["Engineering Manager"])
+
+	def tearDown(self):
+		frappe.flags.itag_enforce_release_control = False
+		frappe.set_user("Administrator")
+
+	def _ready_release(self, workflow_state="Released"):
+		"""A release whose package and approval steps are complete, as the
+		factory builds it, but not yet released for production."""
+		from itag_engineering.itag_engineering_management import release_service
+		from itag_engineering.tests import factories
+
+		# Build like the factory, stopping before the release call.
+		with patch.object(release_service, "submit_engineering_release", lambda name: None):
+			release = factories.create_fully_approved_engineering_release()
+		self.assertNotEqual(release.release_status, "Released for Production")
+		frappe.db.set_value("Engineering Release", release.name, "workflow_state", workflow_state)
+		return release.name
+
+	def test_full_path_to_submitted_work_order(self):
+		from itag_engineering.itag_engineering_management.release_service import submit_release_for_production
+		from itag_engineering.tests.factories import create_test_work_order
+
+		name = self._ready_release()
+		frappe.flags.itag_enforce_release_control = True
+		frappe.set_user(self.master)
+		submit_release_for_production(name)
+		frappe.set_user("Administrator")
+		frappe.flags.itag_enforce_release_control = False
+		release = frappe.get_doc("Engineering Release", name)
+		self.assertEqual(release.release_status, "Released for Production")
+		self.assertTrue(release.release_checksum)
+		wo = create_test_work_order(release=release)
+		wo.submit()
+		self.assertEqual(wo.docstatus, 1)
+
+	def test_refused_for_engineering_manager(self):
+		from itag_engineering.itag_engineering_management import release_service
+
+		name = self._ready_release()
+		frappe.set_user(self.mgr)
+		self.assertRaises(frappe.PermissionError, release_service.submit_release_for_production, name)
+		# The older API cannot bypass F4 while the workflow is enforced.
+		frappe.flags.itag_enforce_release_control = True
+		self.assertRaises(frappe.PermissionError, release_service.submit_engineering_release, name)
+		frappe.set_user("Administrator")
+		self.assertNotEqual(
+			frappe.db.get_value("Engineering Release", name, "release_status"), "Released for Production"
+		)
+
+	def test_refused_before_released(self):
+		from itag_engineering.itag_engineering_management import release_service
+
+		name = self._ready_release(workflow_state="Approved")
+		frappe.set_user(self.master)
+		self.assertRaises(frappe.ValidationError, release_service.submit_release_for_production, name)
+
+	def test_refused_when_already_released(self):
+		from itag_engineering.itag_engineering_management import release_service
+
+		name = self._ready_release()
+		frappe.set_user(self.master)
+		release_service.submit_release_for_production(name)
+		self.assertRaises(frappe.ValidationError, release_service.submit_release_for_production, name)
+
+	def test_button_condition_in_form_script(self):
+		js = _read("engineering_release", "engineering_release.js")
+		self.assertIn('frm.doc.workflow_state === "Released"', js)
+		self.assertIn('frappe.user.has_role("Engineering Master Manager")', js)
+		self.assertIn("submit_release_for_production_api", js)
+		self.assertNotIn('release_status === "Engineering Approved"', js)
