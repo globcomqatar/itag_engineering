@@ -346,3 +346,29 @@ class TestQAb_AmendNominalSizePersists(_EIRCase):
 		item = frappe.get_doc("Item", eir.created_item)
 		for field, value in changes.items():
 			self.assertEqual(item.get("itag_" + field), value, field)
+
+
+class TestQAc_ItemCreatedStatus(_EIRCase):
+	"""QA (c): pill showed Submitted, never Item Created. Root cause: no
+	Workflow on the request (fix8), so Frappe's default indicator used
+	docstatus. The stored workflow_state was already "Item Created"."""
+
+	_amend = TestWaheedAmendUpdatesItemDetails._amend
+
+	def test_state_stored_after_submit_and_amend(self):
+		eir = self._eir(title="F8T Status Valve", item_category="Manufactured").insert()
+		eir.submit()
+		self.assertEqual(frappe.db.get_value(EIR, eir.name, "workflow_state"), "Item Created")
+		eir.reload()
+		amended = self._amend(eir)
+		self.assertEqual(frappe.db.get_value(EIR, eir.name, "workflow_state"), "Cancelled")
+		amended.submit()
+		self.assertEqual(frappe.db.get_value(EIR, amended.name, "workflow_state"), "Item Created")
+
+	def test_indicator_script_shipped(self):
+		from frappe.desk.form.meta import get_meta
+
+		list_js = get_meta(EIR).get("__list_js") or ""
+		self.assertIn("get_indicator", list_js)
+		self.assertIn('"Item Created"', list_js)
+		self.assertIn("workflow_state", list_js)
