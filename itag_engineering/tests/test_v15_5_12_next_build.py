@@ -200,3 +200,72 @@ class TestItem5DrawingItemRequestDescription(_EIRCase):
 			frappe.get_app_path("itag_engineering", "itag_engineering_management", "doctype",
 			                    "engineering_drawing", "engineering_drawing.py")).read())
 		self.assertTrue(callable(validate_one_per_request))
+
+
+class TestItem6DrawingCreateMenu(_EIRCase):
+	def _submitted_drawing(self):
+		from itag_engineering.itag_engineering_management import item_request_links
+
+		eir = self._eir(title="F8T Drawing Create Valve", item_category="Manufactured").insert()
+		eir.submit()
+		eir.reload()
+		dwg = item_request_links.make_engineering_drawing(eir.name).insert()
+		dwg.db_set("docstatus", 1)  # submit path itself is covered by the fix6 tests
+		dwg.reload()
+		return eir, dwg
+
+	def tearDown(self):
+		frappe.set_user("Administrator")
+		frappe.db.delete(DWG, {"drawing_title": "F8T Drawing Create Valve"})
+		super().tearDown()
+
+	def test_draft_drawing_cannot_create(self):
+		from itag_engineering.itag_engineering_management import drawing_links
+
+		eir, dwg = self._submitted_drawing()
+		dwg.db_set("docstatus", 0)
+		for maker in (drawing_links.make_engineering_release, drawing_links.make_bom,
+		              drawing_links.make_engineering_change_order):
+			self.assertRaises(frappe.ValidationError, maker, dwg.name)
+
+	def test_targets_prefilled_from_drawing(self):
+		from itag_engineering.itag_engineering_management import drawing_links
+
+		eir, dwg = self._submitted_drawing()
+		rel = drawing_links.make_engineering_release(dwg.name)
+		self.assertEqual((rel.doctype, rel.drawing_revision, rel.item, rel.release_status),
+		                 ("Engineering Release", dwg.name, eir.created_item, "Draft"))
+		self.assertTrue(rel.is_new())
+		bom = drawing_links.make_bom(dwg.name)
+		self.assertEqual((bom.doctype, bom.item, bom.itag_drawing_revision, bom.quantity),
+		                 ("BOM", eir.created_item, dwg.name, 1))
+		self.assertFalse(bom.get("itag_item_request"), "must not collide with the one-BOM-per-request rule")
+		eco = drawing_links.make_engineering_change_order(dwg.name)
+		self.assertEqual(eco.doctype, "Engineering Change Order")
+		row = eco.controlled_changes[0]
+		self.assertEqual((row.reference_doctype, row.existing_record, row.existing_revision),
+		                 (DWG, dwg.name, dwg.drawing_revision))
+
+	def test_only_roles_with_create_permission(self):
+		from itag_engineering.itag_engineering_management import drawing_links
+
+		eir, dwg = self._submitted_drawing()
+		master = f8._user("v15512.master@example.com", ["Engineering Master Manager"])
+		frappe.set_user(master)
+		for doctype, maker in (("Engineering Release", drawing_links.make_engineering_release),
+		                       ("Engineering Change Order", drawing_links.make_engineering_change_order)):
+			if not frappe.has_permission(doctype, "create"):
+				self.assertRaises(frappe.PermissionError, maker, dwg.name)
+		frappe.set_user("Administrator")
+		user = f8._user("v15512.user@example.com", ["Engineering User"])
+		frappe.set_user(user)
+		self.assertTrue(frappe.has_permission("Engineering Release", "create"))
+		self.assertEqual(drawing_links.make_engineering_release(dwg.name).drawing_revision, dwg.name)
+
+	def test_form_script_checks_create_permission(self):
+		js = open(frappe.get_app_path("itag_engineering", "itag_engineering_management", "doctype",
+		                              "engineering_drawing", "engineering_drawing.js")).read()
+		self.assertIn("frappe.model.can_create(doctype)", js)
+		self.assertIn("docstatus !== 1", js)
+		for target in ("Engineering Release", "BOM", "Engineering Change Order"):
+			self.assertIn(f'"{target}"', js)
