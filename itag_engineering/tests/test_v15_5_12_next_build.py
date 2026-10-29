@@ -372,3 +372,67 @@ class TestQAc_ItemCreatedStatus(_EIRCase):
 		self.assertIn("get_indicator", list_js)
 		self.assertIn('"Item Created"', list_js)
 		self.assertIn("workflow_state", list_js)
+
+
+class TestQAd_DuplicateCheckTooBroad(_EIRCase):
+	"""QA (d): request "test11" listed GEN-436-01004 as a duplicate. Root
+	cause: find_possible_duplicates ORs every spec field and keeps any Item
+	with match_score >= 1, so an Item of the same series (same Valve Type and
+	Product Family, which every Item of that series shares) was flagged even
+	with a different size, class and body."""
+
+	def _series_item(self, code, **specs):
+		values = {"doctype": "Item", "item_code": code, "item_name": code, "item_group": "Products",
+		          "stock_uom": "Nos", "itag_valve_type": f8.VT, "itag_product_family": "CS"}
+		if frappe.get_meta("Item").has_field("custom_product_type"):
+			values["custom_product_type"] = "Critical"
+		values.update(specs)
+		return frappe.get_doc(values).insert(ignore_permissions=True)
+
+	def _specs(self):
+		sizes = frappe.get_all("ITAG Nominal Size", pluck="name", limit=2, order_by="name")
+		if len(sizes) < 2 or not self.pressure or not self.body:
+			self.skipTest("needs ITAG master data")
+		return sizes
+
+	def test_same_series_only_is_not_flagged(self):
+		from itag_engineering.itag_engineering_management.duplicate_service import find_possible_duplicates
+		from itag_engineering.itag_engineering_management.eir_service import run_duplicate_check
+
+		sizes = self._specs()
+		self._series_item("978-F8T-SERIES", itag_nominal_size=sizes[1], itag_pressure_class="F8T-OTHER-CLASS",
+		                  itag_body_material="F8T-OTHER-BODY")
+		eir = self._eir(title="F8T test11", item_category="Manufactured", nominal_size=sizes[0]).insert()
+		raw = find_possible_duplicates(product_family="CS", valve_type=f8.VT, nominal_size=sizes[0],
+		                               pressure_class=eir.pressure_class, body_material=eir.body_material)
+		hit = [r for r in raw if r["item_code"] == "978-F8T-SERIES"]
+		self.assertEqual(set(hit[0]["matched_fields"]), {"itag_valve_type", "itag_product_family"},
+		                 "root cause: shared series fields alone matched")
+		results = run_duplicate_check(eir.name)
+		self.assertNotIn("978-F8T-SERIES", [r["item_code"] for r in results])
+		eir.reload()
+		eir.submit()  # not blocked
+		self.assertNotIn("978-F8T-SERIES", frappe.db.get_value(EIR, eir.name, "possible_duplicates_json"))
+
+	def test_real_near_duplicate_still_flagged(self):
+		from itag_engineering.itag_engineering_management.eir_service import run_duplicate_check
+
+		sizes = self._specs()
+		eir = self._eir(title="F8T Near Dup", item_category="Manufactured", nominal_size=sizes[0]).insert()
+		self._series_item("978-F8T-NEAR", itag_nominal_size=sizes[0], itag_pressure_class=eir.pressure_class,
+		                  itag_body_material=eir.body_material, itag_trim_material="F8T-DIFFERENT")
+		self.assertIn("978-F8T-NEAR", [r["item_code"] for r in run_duplicate_check(eir.name)])
+
+	def test_exact_duplicate_still_blocks_and_disabled_ignored(self):
+		sizes = self._specs()
+		eir = self._eir(title="F8T Exact Dup", item_category="Manufactured", nominal_size=sizes[0]).insert()
+		dup = self._series_item("978-F8T-EXACT", itag_nominal_size=sizes[0], itag_pressure_class=eir.pressure_class,
+		                        itag_body_material=eir.body_material, itag_trim_material=eir.trim_material,
+		                        itag_end_connection=eir.end_connection, itag_drawing_number=eir.drawing_number)
+		with self.assertRaises(frappe.ValidationError) as c:
+			eir.submit()
+		self.assertIn("978-F8T-EXACT", str(c.exception))
+		frappe.db.set_value("Item", dup.name, "disabled", 1)
+		eir.reload()
+		eir.submit()
+		self.assertEqual(frappe.db.get_value(EIR, eir.name, "docstatus"), 1)

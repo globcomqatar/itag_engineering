@@ -35,6 +35,29 @@ CREATE_ITEM_ROLES = (
 DEFAULT_ITEM_GROUP = "Products"
 
 
+# QA v15.5.12 (d): a candidate Item is a possible duplicate only when every
+# identity field filled on the request matches (at least two filled) and at
+# least three spec fields match in total. Shared family / end connection /
+# trim / drawing values alone (every Item of a series shares them) no longer
+# flag an Item. Disabled Items and the request's own Item are ignored.
+IDENTITY_FIELDS = ("itag_valve_type", "itag_nominal_size", "itag_pressure_class", "itag_body_material")
+MIN_IDENTITY_FIELDS = 2
+MIN_MATCH_SCORE = 3
+
+
+def filter_possible_duplicates(eir, results, own_items=()):
+	identity = [f for f in IDENTITY_FIELDS if eir.get(ITEM_FIELD_MAP[f])]
+	if len(identity) < MIN_IDENTITY_FIELDS:
+		return []
+	kept = []
+	for r in results:
+		if r["item_code"] in own_items or frappe.db.get_value("Item", r["item_code"], "disabled"):
+			continue
+		if r["match_score"] >= MIN_MATCH_SCORE and set(identity) <= set(r["matched_fields"]):
+			kept.append(r)
+	return kept
+
+
 def run_duplicate_check(eir_name):
 	_check_eir_action_permission()
 	eir = frappe.get_doc("Engineering Item Request", eir_name)
@@ -48,6 +71,7 @@ def run_duplicate_check(eir_name):
 		end_connection=eir.end_connection,
 		drawing_number=eir.drawing_number,
 	)
+	results = filter_possible_duplicates(eir, results, own_items={eir.get("created_item")} - {None})
 	status = "Possible Duplicates Found" if results else "No Duplicates Found"
 	frappe.db.set_value(
 		"Engineering Item Request",
@@ -91,6 +115,7 @@ def check_duplicates_before_submit(eir, ignore_item=None):
 		end_connection=eir.end_connection,
 		drawing_number=eir.drawing_number,
 	)
+	results = filter_possible_duplicates(eir, results, own_items=own_items)
 	filled = sum(1 for f in ITEM_FIELD_MAP.values() if eir.get(f))
 	blocking = {r["item_code"] for r in results if filled and r["match_score"] >= filled}
 	blocking.update(
