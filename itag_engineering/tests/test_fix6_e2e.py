@@ -68,7 +68,9 @@ class TestFix6EndToEnd(FrappeTestCase):
 		}).insert()
 		self.assertEqual(eir.requested_by, _u("user"))  # hidden field still filled
 		_as("user")
-		self.assertFalse(frappe.has_permission("ITAG Nominal Size", "create"))
+		# v15.5.13 #6: Engineering User may add a size, never delete one.
+		self.assertTrue(frappe.has_permission("ITAG Nominal Size", "create"))
+		self.assertFalse(frappe.has_permission("ITAG Nominal Size", "delete"))
 		frappe.set_user("Administrator")
 		_as("mgr")
 		item = submit_eir_and_get_item(eir.name)

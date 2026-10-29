@@ -55,6 +55,8 @@ class TestFix6ItemRequest(FrappeTestCase):
 		for master, _fn in seed.MASTERS:
 			perms = {p.role: p for p in frappe.get_meta(master).permissions}
 			self.assertTrue(perms["Engineering User"].read)
-			self.assertFalse(perms["Engineering User"].write or perms["Engineering User"].create)
+			# v15.5.13 #6: Engineering User may add values (Create), not edit or delete.
+			self.assertTrue(perms["Engineering User"].create)
+			self.assertFalse(perms["Engineering User"].write or perms["Engineering User"].delete)
 			for role in ("Engineering Manager", "Engineering Master Manager"):
 				self.assertTrue(perms[role].create and perms[role].write and perms[role].read, role)

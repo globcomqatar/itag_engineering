@@ -8,6 +8,7 @@ frappe.ui.form.on("Engineering Item Request", {
 	},
 	refresh(frm) {
 		setup_create_and_connections(frm);
+		warn_on_unknown_master_values(frm);
 		const pending = [];
 		if (frm.doc.valve_type && !frm._valve_type_name) {
 			pending.push(
@@ -134,6 +135,49 @@ function setup_create_and_connections(frm) {
 					__("Create")
 				);
 			});
+		});
+	});
+}
+
+// v15.5.13 #6 (EIR-00005-1): a value typed into Nominal Size, Pressure Class
+// or Body Material that is not in its list is cleared by the link check and
+// the old value stays. Say so, so the user adds it (Engineering User can
+// create these values) and selects it, instead of saving silently.
+const MASTER_VALUE_FIELDS = {
+	nominal_size: "ITAG Nominal Size",
+	pressure_class: "ITAG Pressure Class",
+	body_material: "ITAG Body Material",
+};
+
+function warn_on_unknown_master_values(frm) {
+	Object.entries(MASTER_VALUE_FIELDS).forEach(([fieldname, doctype]) => {
+		const field = frm.fields_dict[fieldname];
+		if (!field || !field.$input || field.$input.data("itag-master-warn")) {
+			return;
+		}
+		field.$input.data("itag-master-warn", true);
+		field.$input.on("blur", () => {
+			const typed = (field.$input.val() || "").trim();
+			setTimeout(() => {
+				if (!typed || frm.doc[fieldname] === typed) {
+					return;
+				}
+				frappe.db.exists(doctype, typed).then((exists) => {
+					if (exists) {
+						return;
+					}
+					frappe.show_alert(
+						{
+							message: __(
+								"{0} {1} was not found, so it was not kept. Use Create a new {0} in the list to add it, then select it.",
+								[__(field.df.label), frappe.utils.escape_html(typed)]
+							),
+							indicator: "orange",
+						},
+						10
+					);
+				});
+			}, 500);
 		});
 	});
 }

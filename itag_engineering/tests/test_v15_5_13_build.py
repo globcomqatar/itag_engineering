@@ -302,3 +302,59 @@ class TestItem5WorkOrdersBlockCancel(_f10._EIRCase):
 		self._row({"doctype": "Work Order", "name": "WO-V13T-0003", "production_item": code, "docstatus": 1, "status": "Closed"})
 		frappe.get_doc(EIR, eir.name).cancel()
 		self.assertEqual(frappe.db.get_value("Item", code, "disabled"), 1)
+
+
+class TestItem6EngineeringUserAddsMasterValues(_f10._EIRCase):
+	DOCTYPES = {
+		"ITAG Nominal Size": "nominal_size",
+		"ITAG Pressure Class": "pressure_class",
+		"ITAG Body Material": "body_material",
+	}
+
+	def setUp(self):
+		_f10._EIRCase.setUp(self)
+		self.eng_user = _user("eng_user", ["Engineering User"])
+		self.new_size = "V13T-" + frappe.generate_hash(length=4).upper()
+
+	def tearDown(self):
+		frappe.set_user("Administrator")
+		frappe.db.delete("ITAG Nominal Size", {"name": ["like", "V13T-%"]})
+		_f10._EIRCase.tearDown(self)
+
+	def test_create_but_not_delete(self):
+		frappe.set_user(self.eng_user)
+		for doctype in self.DOCTYPES:
+			self.assertTrue(frappe.has_permission(doctype, "create"), doctype)
+			self.assertFalse(frappe.has_permission(doctype, "delete"), doctype)
+		frappe.set_user("Administrator")
+
+	def test_engineering_user_adds_size_and_amend_saves_it(self):
+		frappe.set_user(self.eng_user)
+		frappe.get_doc({"doctype": "ITAG Nominal Size", "nominal_size": self.new_size, "is_active": 1}).insert()
+		frappe.set_user("Administrator")
+		self.assertTrue(frappe.db.exists("ITAG Nominal Size", self.new_size))
+		eir = self._eir(title="F8T V13 Size", item_category="Manufactured").insert()
+		eir.submit()
+		eir.reload()
+		code = eir.created_item
+		amended = _f10.TestWaheedAmendUpdatesItemDetails._amend(self, eir, nominal_size=self.new_size)
+		amended.submit()
+		amended.reload()
+		self.assertEqual(amended.nominal_size, self.new_size)
+		self.assertEqual(frappe.db.get_value("Item", code, "itag_nominal_size"), self.new_size)
+
+	def test_custom_docperm_rows_are_updated_not_removed(self):
+		from itag_engineering import install
+
+		install.apply_master_value_create_permissions()  # idempotent, no error
+		for row in frappe.get_all(
+			"Custom DocPerm",
+			filters={"parent": ["in", list(self.DOCTYPES)], "role": "Engineering User"},
+			fields=["create", "delete"],
+		):
+			self.assertEqual((row.create, row.delete), (1, 0))
+
+	def test_form_warns_on_unknown_value(self):
+		js = _read("engineering_item_request", "engineering_item_request.js")
+		self.assertIn("warn_on_unknown_master_values(frm)", js)
+		self.assertIn("was not found, so it was not kept", js)

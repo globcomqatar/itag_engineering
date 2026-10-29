@@ -706,3 +706,28 @@ def apply_item_request_submit_permissions():
 		changed = True
 	if changed:
 		frappe.clear_cache(doctype=doctype)
+
+
+# v15.5.13 #6 (Waheed decision 5): Engineering User can add Nominal Size,
+# Pressure Class and Body Material values (Create) but not delete them. The
+# JSON carries the rights; Custom DocPerm rows on a site (they replace the
+# JSON rows) get the same. Rows are only updated, never added or removed.
+MASTER_VALUE_DOCTYPES = ("ITAG Nominal Size", "ITAG Pressure Class", "ITAG Body Material")
+MASTER_VALUE_USER_RIGHTS = {"read": 1, "create": 1, "delete": 0}
+
+
+def apply_master_value_create_permissions():
+	"""Idempotent."""
+	changed = False
+	for doctype in MASTER_VALUE_DOCTYPES:
+		for row in frappe.get_all(
+			"Custom DocPerm",
+			filters={"parent": doctype, "role": "Engineering User", "permlevel": 0},
+			fields=["name", *MASTER_VALUE_USER_RIGHTS],
+		):
+			want = {k: v for k, v in MASTER_VALUE_USER_RIGHTS.items() if row.get(k) != v}
+			if want:
+				frappe.db.set_value("Custom DocPerm", row.name, want)
+				changed = True
+	if changed:
+		frappe.clear_cache()

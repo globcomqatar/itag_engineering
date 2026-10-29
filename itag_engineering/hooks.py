@@ -44,6 +44,8 @@ after_migrate = [
 	"itag_engineering.install.apply_product_revision_submit_permissions",
 	"itag_engineering.install.deactivate_item_request_workflows",
 	"itag_engineering.install.apply_item_request_submit_permissions",
+	# v15.5.13 #6: Engineering User may add master values (no delete).
+	"itag_engineering.install.apply_master_value_create_permissions",
 	# v15.5.12 #3: last, so it runs after every app's fixtures.
 	"itag_engineering.itag_engineering_management.item_type_options.ensure_item_product_type_options",
 ]
