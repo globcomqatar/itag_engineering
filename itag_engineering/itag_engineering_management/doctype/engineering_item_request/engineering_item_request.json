@@ -6,6 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "details_tab",
+  "amended_from",
   "requested_by",
   "workflow_state",
   "engineering_section",
@@ -36,13 +37,23 @@
   "code_pattern",
   "reserved_item_code",
   "created_item",
-  "amended_from"
+  "connections_tab"
  ],
  "fields": [
   {
    "fieldname": "details_tab",
    "fieldtype": "Tab Break",
    "label": "Details"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Engineering Item Request",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "request_title",
@@ -234,18 +245,14 @@
    "no_copy": 1
   },
   {
-   "fieldname": "amended_from",
-   "fieldtype": "Link",
-   "label": "Amended From",
-   "no_copy": 1,
-   "options": "Engineering Item Request",
-   "print_hide": 1,
-   "read_only": 1,
-   "search_index": 1
+   "fieldname": "connections_tab",
+   "fieldtype": "Tab Break",
+   "label": "Connections",
+   "show_dashboard": 1
   }
  ],
  "links": [],
- "modified": "2026-10-29 13:00:00.000000",
+ "modified": "2026-10-29 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "Engineering Item Request",

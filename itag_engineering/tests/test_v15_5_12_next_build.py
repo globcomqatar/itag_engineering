@@ -21,7 +21,8 @@ class TestItem1ItemRequestTabs(FrappeTestCase):
 		meta = frappe.get_meta(EIR)
 		self.assertEqual(meta.fields[0].fieldname, "details_tab")
 		self.assertEqual(meta.fields[0].label, "Details")
-		self.assertEqual(len(_tab_fields(EIR)), 1, "one Details tab; Connections is the dashboard tab")
+		# v15.5.13 #1: a last Connections tab (show_dashboard) follows Details.
+		self.assertEqual([t.fieldname for t in _tab_fields(EIR)], ["details_tab", "connections_tab"])
 
 	def test_connections_cover_all_links(self):
 		data = frappe.get_meta(EIR).get_dashboard_data()
@@ -173,7 +174,7 @@ class TestItem4DrawingTabsAndConnections(FrappeTestCase):
 	def test_details_tab_first(self):
 		meta = frappe.get_meta(DWG)
 		self.assertEqual((meta.fields[0].fieldname, meta.fields[0].label), ("details_tab", "Details"))
-		self.assertEqual(len(_tab_fields(DWG)), 1)
+		self.assertEqual([t.fieldname for t in _tab_fields(DWG)], ["details_tab", "connections_tab"])
 
 	def test_connections_include_release_item_bom_request_eco(self):
 		data = frappe.get_meta(DWG).get_dashboard_data()

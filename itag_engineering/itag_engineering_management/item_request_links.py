@@ -103,11 +103,40 @@ def make_bom(source_name, target_doc=None):
 	return target
 
 
+# v15.5.13 #1: Connections on these forms skip a linked doctype whose link
+# field is missing on this site (e.g. BOM.itag_item_request before migrate),
+# so the form never errors with 1054 Unknown column.
+GUARDED_DOCTYPES = (EIR, "Engineering Drawing")
+
+
+def _items_with_link_field(doctype, items=None):
+	"""Dashboard items of `doctype` whose count can run here. Internal links
+	(a field on the form itself) are always kept; external ones only when the
+	linked doctype has the link field."""
+	links = frappe.get_meta(doctype).get_dashboard_data()
+	if items is None:
+		items = [d for group in links.transactions for d in group.get("items")]
+	elif not isinstance(items, list):
+		items = frappe.parse_json(items)
+	internal = links.get("internal_links", {}) or {}
+	kept = []
+	for d in items:
+		if d in internal:
+			kept.append(d)
+			continue
+		fieldname = links.get("non_standard_fieldnames", {}).get(d, links.get("fieldname"))
+		if frappe.db.exists("DocType", d) and frappe.get_meta(d).has_field(fieldname):
+			kept.append(d)
+	return kept
+
+
 @frappe.whitelist()
 def get_open_count(doctype, name, items=None):
 	"""Wraps frappe.desk.notifications.get_open_count. For Engineering Item
 	Request, Product Revision and Engineering Release are counted by
 	item = created_item. Every other doctype is passed through unchanged."""
+	if doctype in GUARDED_DOCTYPES:
+		items = _items_with_link_field(doctype, items)
 	out = notifications.get_open_count(doctype, name, items)
 	if doctype != EIR or not isinstance(out, dict) or not out.get("count"):
 		return out

@@ -6,6 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "details_tab",
+  "amended_from",
   "drawing_number",
   "drawing_revision",
   "drawing_title",
@@ -38,13 +39,23 @@
   "effective_date",
   "superseded_date",
   "change_description",
-  "amended_from"
+  "connections_tab"
  ],
  "fields": [
   {
    "fieldname": "details_tab",
    "fieldtype": "Tab Break",
    "label": "Details"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Engineering Drawing",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "drawing_number",
@@ -235,19 +246,15 @@
    "label": "Change Description"
   },
   {
-   "fieldname": "amended_from",
-   "fieldtype": "Link",
-   "label": "Amended From",
-   "no_copy": 1,
-   "options": "Engineering Drawing",
-   "print_hide": 1,
-   "read_only": 1,
-   "search_index": 1
+   "fieldname": "connections_tab",
+   "fieldtype": "Tab Break",
+   "label": "Connections",
+   "show_dashboard": 1
   }
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-29 13:00:00.000000",
+ "modified": "2026-10-29 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "Engineering Drawing",
