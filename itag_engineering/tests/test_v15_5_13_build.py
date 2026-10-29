@@ -262,3 +262,43 @@ class TestItem4ECOMarkImplementedHint(FrappeTestCase):
 		finally:
 			frappe.set_user("Administrator")
 		self.assertEqual(eco.implemented_by, other)
+
+
+from itag_engineering.tests import test_fix10_review_v15_5_10 as _f10  # noqa: E402
+
+
+class TestItem5WorkOrdersBlockCancel(_f10._EIRCase):
+	"""Reuses the v15.5.10 cancel fixture (helpers only, not its tests)."""
+
+	_submitted = _f10.TestReviewFinding2CancelBlockedWhenItemInUse._submitted
+	_row = _f10.TestReviewFinding2CancelBlockedWhenItemInUse._row
+	_assert_cancel_blocked = _f10.TestReviewFinding2CancelBlockedWhenItemInUse._assert_cancel_blocked
+
+	def setUp(self):
+		_f10._EIRCase.setUp(self)
+		self._rows = []
+
+	def tearDown(self):
+		for dt, name in reversed(self._rows):
+			frappe.db.delete(dt, {"name": name})
+		_f10._EIRCase.tearDown(self)
+
+	def test_draft_work_order_blocks_with_clear_message(self):
+		eir, code = self._submitted()
+		self._row({"doctype": "Work Order", "name": "WO-V13T-0001", "production_item": code, "docstatus": 0, "status": "Draft"})
+		self._assert_cancel_blocked(eir, code, "WO-V13T-0001")
+		with self.assertRaises(frappe.ValidationError) as caught:
+			frappe.get_doc(EIR, eir.name).cancel()
+		self.assertIn("Draft Work Order (not submitted", str(caught.exception))
+		self.assertNotIn("Open Work Order", str(caught.exception))
+
+	def test_open_work_order_blocks(self):
+		eir, code = self._submitted()
+		self._row({"doctype": "Work Order", "name": "WO-V13T-0002", "production_item": code, "docstatus": 1, "status": "Not Started"})
+		self._assert_cancel_blocked(eir, code, "Open Work Order")
+
+	def test_closed_work_order_does_not_block(self):
+		eir, code = self._submitted()
+		self._row({"doctype": "Work Order", "name": "WO-V13T-0003", "production_item": code, "docstatus": 1, "status": "Closed"})
+		frappe.get_doc(EIR, eir.name).cancel()
+		self.assertEqual(frappe.db.get_value("Item", code, "disabled"), 1)

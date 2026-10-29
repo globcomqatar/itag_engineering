@@ -315,13 +315,24 @@ def item_usage_blocking_disable(item_code):
 		_("Submitted BOM (as component)"),
 		frappe.get_all("BOM Item", filters={"item_code": item_code, "docstatus": 1}, pluck="parent"),
 	)
+	# v15.5.13 #5 (Waheed decision 4): Draft and open Work Orders both block
+	# (unchanged); a Draft one is now named as such so the user knows to
+	# delete that draft rather than look for a running order.
+	add(
+		_("Draft Work Order (not submitted, still uses the Item; delete the draft first)"),
+		frappe.get_all(
+			"Work Order",
+			filters={"production_item": item_code, "docstatus": 0},
+			pluck="name",
+		),
+	)
 	add(
 		_("Open Work Order"),
 		frappe.get_all(
 			"Work Order",
 			filters={
 				"production_item": item_code,
-				"docstatus": ["<", 2],
+				"docstatus": 1,
 				"status": ["not in", OPEN_WORK_ORDER_CLOSED_STATUSES],
 			},
 			pluck="name",
