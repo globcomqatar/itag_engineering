@@ -106,8 +106,7 @@
    "label": "Item Request",
    "options": "Engineering Item Request",
    "read_only": 1,
-   "search_index": 1,
-   "description": "fix9: the submitted Engineering Item Request this drawing was created from. One active drawing per request."
+   "search_index": 1
   },
   {
    "fieldname": "related_item",

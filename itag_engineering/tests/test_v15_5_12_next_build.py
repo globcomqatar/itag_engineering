@@ -187,3 +187,16 @@ class TestItem4DrawingTabsAndConnections(FrappeTestCase):
 		self.assertEqual(frappe.get_meta("BOM").get_field("itag_drawing_revision").options, DWG)
 		for field in data.internal_links.values():
 			self.assertTrue(frappe.get_meta(DWG).has_field(field), field)
+
+
+class TestItem5DrawingItemRequestDescription(_EIRCase):
+	def test_fix9_description_removed(self):
+		self.assertFalse(frappe.get_meta(DWG).get_field("item_request").description)
+
+	def test_one_active_drawing_rule_kept(self):
+		from itag_engineering.itag_engineering_management.item_request_links import validate_one_per_request
+
+		self.assertIn("validate_one_per_request", open(
+			frappe.get_app_path("itag_engineering", "itag_engineering_management", "doctype",
+			                    "engineering_drawing", "engineering_drawing.py")).read())
+		self.assertTrue(callable(validate_one_per_request))
