@@ -171,7 +171,11 @@ doc_events = {
 		# v15.5.14 build 2: Item Type Critical is the default of our own
 		# Item.itag_item_type custom field.
 		# v15.5.14 #6: item_code = name when a Document Naming Rule named it.
-		"before_validate": "itag_engineering.itag_engineering_management.item_naming.sync_item_code_with_naming_rule",
+		"before_validate": [
+			"itag_engineering.itag_engineering_management.item_naming.sync_item_code_with_naming_rule",
+			# v15.5.14 build 2: mirror itag_item_type into the hidden, mandatory old field.
+			"itag_engineering.itag_engineering_management.item_type_options.fill_old_product_type_from_itag_item_type",
+		],
 	},
 	"BOM": {
 		"before_insert": "itag_engineering.itag_engineering_management.release_control.prepare_bom_from_bom_creator",
