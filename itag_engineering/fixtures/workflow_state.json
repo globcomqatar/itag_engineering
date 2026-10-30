@@ -1,0 +1,65 @@
+[
+ {
+  "doctype": "Workflow State",
+  "name": "Draft",
+  "docstatus": 0,
+  "modified": "2026-10-28 12:00:00.000000",
+  "workflow_state_name": "Draft",
+  "style": "",
+  "icon": ""
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Approved",
+  "docstatus": 0,
+  "modified": "2026-10-28 12:00:00.000000",
+  "workflow_state_name": "Approved",
+  "style": "Success",
+  "icon": ""
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Released",
+  "docstatus": 0,
+  "modified": "2026-10-28 12:00:00.000000",
+  "workflow_state_name": "Released",
+  "style": "Primary",
+  "icon": ""
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Submitted for Review",
+  "docstatus": 0,
+  "modified": "2026-10-28 14:30:00.000000",
+  "workflow_state_name": "Submitted for Review",
+  "style": "Info",
+  "icon": ""
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Rejected",
+  "docstatus": 0,
+  "modified": "2026-10-28 14:30:00.000000",
+  "workflow_state_name": "Rejected",
+  "style": "Danger",
+  "icon": ""
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Implemented",
+  "docstatus": 0,
+  "modified": "2026-10-28 14:30:00.000000",
+  "workflow_state_name": "Implemented",
+  "style": "Primary",
+  "icon": ""
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Closed",
+  "docstatus": 0,
+  "modified": "2026-10-28 14:30:00.000000",
+  "workflow_state_name": "Closed",
+  "style": "Inverse",
+  "icon": ""
+ }
+]

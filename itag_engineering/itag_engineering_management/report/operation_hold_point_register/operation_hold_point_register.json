@@ -7,10 +7,11 @@
  "module": "ITAG Engineering Management",
  "name": "Operation Hold Point Register",
  "prepared_report": 0,
- "ref_doctype": "BOM Operation",
+ "ref_doctype": "BOM",
  "report_name": "Operation Hold Point Register",
  "report_type": "Script Report",
  "roles": [
+  {"role": "System Manager"},
   {"role": "Engineering User"},
   {"role": "Engineering Manager"},
   {"role": "Engineering Master Manager"}

@@ -42,7 +42,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Hold Scope",
-   "options": "Work Order\nJob Card\nItem\nProduct Revision\nEngineering Release\nBatch\nSerial Number\nWarehouse Stock\nPurchase Receipt\nDelivery\nCustomer Project\nSpecific Quantity or WIP Unit",
+   "options": "Work Order\nJob Card\nItem\nProduct Revision\nEngineering Release\nBatch\nSerial Number\nWarehouse Stock\nPurchase Receipt\nDelivery\nCustomer Project\nSpecific Quantity or WIP Unit\nBOM",
    "reqd": 1
   },
   {
@@ -67,7 +67,7 @@
    "fieldname": "reference_doctype",
    "fieldtype": "Select",
    "label": "Reference Doctype",
-   "options": "Work Order\nJob Card\nItem\nProduct Revision\nEngineering Release\nBatch\nSerial No\nWarehouse\nPurchase Receipt\nDelivery Note\nProject\nWIP Unit Register",
+   "options": "Work Order\nJob Card\nItem\nProduct Revision\nEngineering Release\nBatch\nSerial No\nWarehouse\nPurchase Receipt\nDelivery Note\nProject\nWIP Unit Register\nBOM",
    "reqd": 1
   },
   {
@@ -170,7 +170,7 @@
   }
  ],
  "links": [],
- "modified": "2026-07-20 00:00:00.000000",
+ "modified": "2026-10-28 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "Production Engineering Hold",

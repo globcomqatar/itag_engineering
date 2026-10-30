@@ -183,6 +183,10 @@ class TestECOService(FrappeTestCase):
 		ecr = self._make_ecr()
 		eco_name = create_eco_from_accepted_ecr(ecr.name)
 		resolve_eco_approval_disciplines(eco_name)
+		# fix2: requestors can't approve steps, so make someone else the requestor.
+		other = "itag.other.requestor@example.com"
+		frappe.db.set_value("Engineering Change Request", ecr.name, {"owner": other, "requestor": other})
+		frappe.db.set_value("Engineering Change Order", eco_name, "owner", other)
 
 		approve_or_reject_workflow_step(eco_name, 1, True)
 		with self.assertRaises(frappe.ValidationError):

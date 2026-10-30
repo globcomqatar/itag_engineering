@@ -1,10 +1,12 @@
 # Copyright (c) 2026, Globcom Qatar and contributors
 # For license information, please see license.txt
 
+import unittest
+
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
-from itag_engineering.tests.factories import ensure_test_company
+from itag_engineering.tests.factories import create_fresh_stock_item, ensure_test_company
 
 
 def _advance_workflow_state(doc, next_state):
@@ -16,9 +18,33 @@ def _advance_workflow_state(doc, next_state):
 	state changes this way instead of hand-setting revision_status alongside
 	workflow_state.
 	"""
+	# F3: a Product Revision is released only by Submit (with a submitted
+	# BOM linked) and superseded by Cancel.
+	if next_state == "Released" and doc.docstatus == 0:
+		if not doc.bom_revision_reference:
+			doc.bom_revision_reference = _submitted_bom(doc.item)
+		doc.submit()
+		return doc
+	if next_state == "Superseded" and doc.docstatus == 1:
+		doc.cancel()
+		return doc
 	doc.set("workflow_state", next_state)
 	doc.save()
 	return doc
+
+
+def _submitted_bom(item):
+	bom = frappe.get_doc(
+		{
+			"doctype": "BOM",
+			"item": item,
+			"quantity": 1,
+			"company": ensure_test_company(),
+			"items": [{"item_code": create_fresh_stock_item("PRTEST-COMP").name, "qty": 1, "uom": "Nos"}],
+		}
+	).insert(ignore_permissions=True)
+	bom.submit()
+	return bom.name
 
 
 class TestProductRevision(FrappeTestCase):
@@ -121,6 +147,7 @@ class TestProductRevision(FrappeTestCase):
 		).insert()
 		self.assertEqual(revision.workflow_state, "Draft")
 
+	@unittest.skip("Retired in 15.5.5: this workflow/role was removed by decision (approval only on BOM and Engineering Release from 15.5.6, see tests/test_release_control.py).")
 	def test_workflow_exists_with_expected_states(self):
 		workflow = frappe.get_doc("Workflow", "Product Revision Workflow")
 		state_names = [s.state for s in workflow.states]
@@ -192,7 +219,9 @@ class TestProductRevision(FrappeTestCase):
 		revision.product_revision_specifications[0].notes = "Changed After Release"
 		with self.assertRaises(frappe.ValidationError) as ctx:
 			revision.save()
-		self.assertIn("Technical Specifications", str(ctx.exception))
+		# F3: a released revision is submitted, so Frappe's own
+		# after-submission lock refuses the row edit first.
+		self.assertRegex(str(ctx.exception), "Technical Specifications|after submission")
 
 	def test_child_table_row_add_blocked_after_release(self):
 		spec = self._create_test_spec("PRTEST-SPEC-001")
@@ -258,6 +287,7 @@ class TestProductRevision(FrappeTestCase):
 	# legitimate Released -> Superseded transition - would be falsely
 	# blocked.
 
+	@unittest.skip("Follow-up by Ahmed's ruling (28-Oct-2026): drawing Supersede is a follow-up. See follow-ups.md.")
 	def test_drawing_superseded_after_release_does_not_block_product_revision_supersession(self):
 		spec = self._create_test_spec("PRTEST-SPEC-001")
 		revision = self._create_released_revision_with_spec(spec.name)

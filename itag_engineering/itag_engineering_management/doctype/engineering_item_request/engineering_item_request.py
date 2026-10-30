@@ -9,22 +9,31 @@ from frappe.model.document import Document
 class EngineeringItemRequest(Document):
 	def validate(self):
 		self.apply_series_from_valve_type()
-		self._create_item_from_workflow_action()
-		self._guard_item_created_requires_item()
 
-	def _create_item_from_workflow_action(self):
-		"""The Desk workflow button "Create Item" only changes workflow_state
-		and saves. Create the Item in that same save so the button does what
-		its label says."""
-		if (
-			self.workflow_state != "Item Created"
-			or self.created_item
-			or not self.has_value_changed("workflow_state")
-		):
-			return
-		from itag_engineering.itag_engineering_management.eir_service import create_item_from_eir
+	def on_submit(self):
+		"""fix8 (Waheed, 29-Oct-2026): Submit creates the ERPNext Item. The
+		duplicate check runs first; any failure raises, so the submit rolls
+		back and no Item or code reservation is left behind."""
+		from itag_engineering.itag_engineering_management.eir_service import (
+			check_duplicates_before_submit,
+			create_item_from_eir,
+			original_item_for_amended,
+			reenable_item_for_amended,
+		)
 
-		create_item_from_eir(self.name, eir=self, persist_request=False)
+		# fix9 (Waheed): an amended request re-enables the original Item.
+		original = original_item_for_amended(self) if self.amended_from else None
+		check_duplicates_before_submit(self, ignore_item=original)
+		if original:
+			reenable_item_for_amended(self, original)
+		else:
+			create_item_from_eir(self.name, eir=self)
+
+	def on_cancel(self):
+		"""Cancel disables the linked Item (disabled = 1). It is never deleted."""
+		from itag_engineering.itag_engineering_management.eir_service import disable_item_for_eir
+
+		disable_item_for_eir(self)
 
 	def apply_series_from_valve_type(self):
 		"""The series follows the Valve Type. A Valve Type that has a series
@@ -46,17 +55,3 @@ class EngineeringItemRequest(Document):
 			self.code_pattern = None
 			return
 		self.code_pattern = frappe.db.get_value("Item Code Rule", self.item_code_rule, "preview_template")
-
-	def _guard_item_created_requires_item(self):
-		"""Last resort if item creation did not run or did not record the Item."""
-		if (
-			self.workflow_state == "Item Created"
-			and not self.created_item
-			and self.has_value_changed("workflow_state")
-		):
-			frappe.throw(
-				_(
-					"The Item was not created, so this request cannot move to Item Created. "
-					"Select a Valve Type that has an Item Code Rule, then use Create Item again."
-				)
-			)

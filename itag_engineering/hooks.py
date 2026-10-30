@@ -13,6 +13,7 @@ required_apps = ["erpnext"]
 # BOM is a core ERPNext DocType, not this app's own - injecting JS here
 # (rather than a doctype/ folder + hand-edit) is the sanctioned way to add
 # a client-side button to it without ever touching core files.
+# v15.5.13 #2: Item form shows Item Type Critical on a new Item.
 doctype_js = {"BOM": "public/js/bom.js"}
 
 # Installation
@@ -33,11 +34,23 @@ after_migrate = [
 	"itag_engineering.install.create_roles",
 	"itag_engineering.install.remove_retired_engineering_roles",
 	"itag_engineering.install.remove_engineering_workflows",
-	"itag_engineering.install.create_default_valve_types",
-	"itag_engineering.install.create_default_product_families",
-	"itag_engineering.install.create_default_code_series",
-	"itag_engineering.install.create_valve_types_for_code_series",
+	"itag_engineering.install.deactivate_retired_workflows",
 	"itag_engineering.setup.custom_fields.sync_custom_fields",
+	"itag_engineering.install.grant_engineering_bom_permissions",
+	"itag_engineering.install.sync_report_roles",
+	"itag_engineering.install.grant_read_only_support_permissions",
+	"itag_engineering.install.revoke_blocked_permissions",
+	"itag_engineering.install.apply_drawing_submit_permissions",
+	"itag_engineering.install.apply_product_revision_submit_permissions",
+	"itag_engineering.install.deactivate_item_request_workflows",
+	"itag_engineering.install.apply_item_request_submit_permissions",
+	# v15.5.13 #6: Engineering User may add master values (no delete).
+	"itag_engineering.install.apply_master_value_create_permissions",
+	# v15.5.14 D4/D5: ECO/ECR Master Manager row, no delete for User/Manager.
+	"itag_engineering.install.apply_change_document_permissions",
+	# v15.5.12 #3: last, so it runs after every app's fixtures.
+	# v15.5.14 build 2: options only; Critical default is on itag_item_type.
+	"itag_engineering.itag_engineering_management.item_type_options.ensure_item_product_type_options_and_default",
 ]
 
 # Testing
@@ -49,6 +62,28 @@ before_tests = "itag_engineering.install.before_tests"
 # --------
 
 fixtures = [
+	# 15.5.6: approval only on BOM and Engineering Release. BOMs made in the
+	# Multi-level BOM Builder (BOM Creator) go into the ITAG BOM Workflow. Draft (Engineering User) -> Approved
+	# (Engineering Manager) -> Released (Engineering Master Manager).
+	{"doctype": "Workflow State", "filters": [["name", "in", ["Draft", "Approved", "Released", "Submitted for Review", "Rejected", "Implemented", "Closed"]]]},
+	{"doctype": "Workflow Action Master", "filters": [["name", "in", ["Approve", "Reject", "Release", "Submit", "Mark Implemented", "Close"]]]},
+	{
+		"doctype": "Workflow",
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"ITAG BOM Workflow",
+					"ITAG Engineering Release Workflow",
+					# 15.5.6 fix2 (Ahmed, 28-Oct-2026): ECR and ECO lifecycles. Drawings
+					# have no workflow; users set the status directly.
+					"ITAG Engineering Change Request Workflow",
+					"ITAG Engineering Change Order Workflow",
+				],
+			]
+		],
+	},
 	{
 		# Referenced by the ITAG Engineering workspace's "chart" content block
 		# and by the "ITAG Engineering" Dashboard's charts table - without this
@@ -118,9 +153,59 @@ permission_query_conditions = {
 # Doc Events
 # ----------
 
+# BOMs made by the Multi-level BOM Builder are saved as Draft (not submitted)
+# so they go through the ITAG BOM Workflow like any other BOM.
+override_doctype_class = {
+	"BOM Creator": "itag_engineering.itag_engineering_management.bom_creator_override.ITAGBOMCreator",
+}
+
+# fix9: Connections tab on Engineering Item Request counts Product Revision
+# and Engineering Release by the created Item. Wrapper only; other doctypes
+# pass straight through to frappe.desk.notifications.get_open_count.
+override_whitelisted_methods = {
+	"frappe.desk.notifications.get_open_count": "itag_engineering.itag_engineering_management.item_request_links.get_open_count",
+}
+
 doc_events = {
+	"Item": {
+		# v15.5.14 build 2: Item Type Critical is the default of our own
+		# Item.itag_item_type custom field.
+		# v15.5.14 #6: item_code = name when a Document Naming Rule named it.
+		"before_validate": [
+			"itag_engineering.itag_engineering_management.item_naming.sync_item_code_with_naming_rule",
+			# v15.5.14 build 2: mirror itag_item_type into the hidden, mandatory old field.
+			"itag_engineering.itag_engineering_management.item_type_options.fill_old_product_type_from_itag_item_type",
+		],
+	},
+	"BOM": {
+		"before_insert": "itag_engineering.itag_engineering_management.release_control.prepare_bom_from_bom_creator",
+		"validate": [
+			"itag_engineering.itag_engineering_management.release_control.validate_release_control",
+			"itag_engineering.itag_engineering_management.item_request_links.validate_one_per_request",
+		],
+		"before_submit": "itag_engineering.itag_engineering_management.release_control.guard_bom_submit",
+		# v15.5.14 D3: on top of ERPNext's own parent-BOM / linked-doc block.
+		"before_cancel": "itag_engineering.itag_engineering_management.release_control.guard_bom_cancel",
+	},
+	"Engineering Release": {
+		"validate": [
+			"itag_engineering.itag_engineering_management.release_control.validate_release_control",
+			"itag_engineering.itag_engineering_management.release_control.guard_release_for_production",
+			# v15.5.14 (c): superseded release = same Item/Company, Released for Production.
+			"itag_engineering.itag_engineering_management.release_control.validate_superseded_release",
+		],
+	},
+	"Engineering Change Order": {
+		"on_update": "itag_engineering.itag_engineering_management.eco_auto_hold_service.on_eco_update",
+	},
 	"Work Order": {
-		"before_submit": "itag_engineering.itag_engineering_management.work_order_baseline.freeze_baseline_before_submit",
+		# v15.5.14 D2: ERPNext's validate_bom_no stays; we add only the
+		# engineering release check (warn on save, refuse on submit).
+		"validate": "itag_engineering.itag_engineering_management.release_control.warn_work_order_unreleased_bom",
+		"before_submit": [
+			"itag_engineering.itag_engineering_management.release_control.block_work_order_unreleased_bom",
+			"itag_engineering.itag_engineering_management.work_order_baseline.freeze_baseline_before_submit",
+		],
 	},
 	"Job Card": {
 		# Job Card's "start"/"complete" actions are status transitions, not

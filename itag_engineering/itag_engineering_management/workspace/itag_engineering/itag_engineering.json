@@ -182,10 +182,21 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "BOM, Routing & Inspection",
-   "link_count": 2,
+   "link_count": 3,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
+  },
+  {
+   "dependencies": "",
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Multi-level BOM Builder",
+   "link_count": 0,
+   "link_to": "BOM Creator",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   },
   {
    "dependencies": "",
@@ -572,11 +583,11 @@
   {
    "dependencies": "",
    "hidden": 0,
-   "is_query_report": 1,
-   "label": "BOM Revision Comparison",
+   "is_query_report": 0,
+   "label": "BOM Comparison Tool",
    "link_count": 0,
-   "link_to": "BOM Revision Comparison",
-   "link_type": "Report",
+   "link_to": "bom-comparison-tool",
+   "link_type": "Page",
    "onboard": 0,
    "type": "Link"
   },
@@ -647,7 +658,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-10-22 14:40:00.000000",
+ "modified": "2026-10-30 14:30:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "ITAG Engineering",

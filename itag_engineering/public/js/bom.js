@@ -19,6 +19,15 @@ frappe.ui.form.on("BOM", {
 		if (frm.doc.docstatus === 2) {
 			return;
 		}
+		// v15.5.14 #4: BOM comparison uses ERPNext's own BOM Comparison Tool
+		// (the custom "BOM Revision Comparison" report is retired/disabled).
+		if (!frm.is_new()) {
+			frm.add_custom_button(
+				__("Compare BOMs"),
+				() => frappe.set_route("bom-comparison-tool", { name1: frm.doc.name }),
+				__("View")
+			);
+		}
 		frm.add_custom_button(
 			__("Evaluate Release Readiness"),
 			() => {

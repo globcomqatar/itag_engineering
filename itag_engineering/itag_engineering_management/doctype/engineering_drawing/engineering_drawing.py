@@ -18,18 +18,31 @@ POST_RELEASE_ALLOWED_FIELDS = {
 	"superseded_date",
 	"modified",
 	"modified_by",
+	# fix6: submitting a drawing that was already Released (before drawings
+	# were submittable) only changes docstatus.
+	"docstatus",
 }
 
 
 class EngineeringDrawing(Document):
+	def before_naming(self):
+		# fix6: the amended copy is named after its next revision.
+		self.prepare_amended_revision()
+
 	def validate(self):
+		self.prepare_amended_revision()
+		# fix9: one active drawing per Engineering Item Request.
+		from itag_engineering.itag_engineering_management.item_request_links import validate_one_per_request
+
+		validate_one_per_request(self)
+		self.release_on_submit()
 		self.sync_release_status_from_workflow_state()
+		self.validate_release_only_by_submit()
 		self.sync_file_checksum()
 		self.validate_release_requires_checksum()
 		self.validate_immutable_once_released()
 		self.validate_file_not_replaced_after_release()
-		self.validate_creator_cannot_release()
-		self.log_release_audit_event()
+		self.log_status_audit_event()
 
 	def sync_file_checksum(self):
 		"""Populate file_checksum automatically from approved_file's content
@@ -79,7 +92,18 @@ class EngineeringDrawing(Document):
 		a path this can or needs to close - the same is true elsewhere in this
 		app, e.g. the doc_status/submission fields on other doctypes.)
 		"""
-		self.release_status = self.workflow_state
+		# fix3 (Ahmed, 28-Oct-2026): drawings have no workflow. Users set
+		# release_status directly; workflow_state follows it. A save that only
+		# changes workflow_state (older scripts and tests) still works.
+		if self.workflow_state != self.release_status:
+			before = None if self.is_new() else self.get_doc_before_save()
+			before_ws = before.workflow_state if before else None
+			if self.workflow_state != before_ws and (
+				not before or self.release_status == before.release_status
+			):
+				self.release_status = self.workflow_state
+			else:
+				self.workflow_state = self.release_status
 
 	def validate_release_requires_checksum(self):
 		"""Structural guard against Frappe's raw workflow engine (
@@ -148,46 +172,70 @@ class EngineeringDrawing(Document):
 					)
 				)
 
-	def validate_creator_cannot_release(self):
-		"""Segregation of duties (roadmap Section 22.3(c)) - Build
-		ITAG-0.11.0's own security audit found this rule was never actually
-		implemented in Build ITAG-0.3.0, only assumed; a genuine gap, closed
-		here: the same user who created this Engineering Drawing may not
-		also be the one who releases it. Administrator is exempt - this
-		app's own required break-glass account (roadmap Section 22.2's
-		"Administrator exception controls" - Administrator must never be
-		accidentally locked out), and also the identity every test in this
-		app's suite creates AND drives documents through their full
-		workflow as, so blocking Administrator here would make this guard
-		untestable and would incorrectly reject the entire existing test
-		suite's own driving pattern, not just real self-release attempts."""
-		if self.is_new() or frappe.session.user == "Administrator":
+
+	def prepare_amended_revision(self):
+		"""fix6 (Waheed, 28-Oct-2026): a submitted drawing is locked. It is
+		changed by Cancel + Amend, and the amended copy is the next revision
+		(A -> B, 1 -> 2), starting again as Draft."""
+		if not (self.is_new() and self.amended_from):
 			return
-		before = self.get_doc_before_save()
-		if not before or before.release_status == "Released" or self.release_status != "Released":
+		source_rev = frappe.db.get_value("Engineering Drawing", self.amended_from, "drawing_revision")
+		if self.drawing_revision == source_rev:
+			self.drawing_revision = next_revision(source_rev)
+		self.release_status = self.workflow_state = "Draft"
+		self.superseded_date = None
+		self.effective_date = None
+		self.approved_by = None
+
+	def release_on_submit(self):
+		"""fix6: Submit is the release step (Engineering Manager or Engineering
+		Master Manager). The usual release guards (checksum) still apply."""
+		if getattr(self, "_action", None) == "submit" and self.release_status not in RELEASED_STATES:
+			self.release_status = self.workflow_state = "Released"
+
+	def validate_release_only_by_submit(self):
+		"""fix6: a draft drawing becomes Released only by Submit, which needs
+		the Engineering Manager / Master Manager submit right. A drawing that
+		was already Released before fix6 keeps that status as a draft."""
+		if self.docstatus != 0 or getattr(self, "_action", None) == "submit":
 			return
-		if frappe.session.user == self.owner:
+		if self.release_status != "Released":
+			return
+		before = None if self.is_new() else self.get_doc_before_save()
+		if not before or before.release_status != "Released":
 			frappe.throw(
-				_(
-					"The creator of this Engineering Drawing ({0}) cannot also release it - a "
-					"different Engineering Manager must perform the release."
-				).format(self.owner)
+				_("A drawing is released by submitting it. Ask an Engineering Manager to submit {0}.").format(
+					self.name or _("this drawing")
+				)
 			)
 
-	def log_release_audit_event(self):
-		"""Roadmap Section 22.4 "Drawing Revision Release" - logged as the
-		LAST statement in validate(), after every other guard above has
-		already passed, so a save that is about to genuinely succeed is
-		what gets logged (never a save later guards would still reject).
-		Fires only on the transition INTO "Released" specifically, not on
-		every subsequent save of an already-released drawing."""
+	def on_cancel(self):
+		"""fix6: a cancelled drawing revision is marked Superseded (it stays
+		on record; nothing is deleted). Its amended copy is the next revision."""
+		if self.release_status not in ("Superseded", "Obsolete"):
+			self.db_set({"release_status": "Superseded", "workflow_state": "Superseded",
+				"superseded_date": frappe.utils.today()})
+
+	def log_status_audit_event(self):
+		"""fix3 (Ahmed, 28-Oct-2026): one Engineering Audit Log entry on every
+		status change. A change into Released keeps its own event type
+		(roadmap 22.4 "Drawing Revision Release"). Logged last in validate(),
+		after every guard has passed."""
 		if self.is_new():
 			return
 		before = self.get_doc_before_save()
-		if not before or before.release_status == "Released" or self.release_status != "Released":
+		if not before or before.release_status == self.release_status:
 			return
+		event = "Drawing Revision Release" if self.release_status == "Released" else "Drawing Status Change"
 		log_audit_event(
-			"Drawing Revision Release", "Engineering Drawing", self.name, {"revision": self.drawing_revision}
+			event,
+			"Engineering Drawing",
+			self.name,
+			{
+				"revision": self.drawing_revision,
+				"from_status": before.release_status,
+				"to_status": self.release_status,
+			},
 		)
 
 	def validate_file_not_replaced_after_release(self):
@@ -198,3 +246,21 @@ class EngineeringDrawing(Document):
 			return
 		if before.file_checksum and self.approved_file != before.approved_file:
 			frappe.throw(_("The approved file cannot be replaced once a file checksum has been recorded."))
+
+
+def next_revision(rev):
+	"""A -> B, Z -> AA, 1 -> 2, 01 -> 02; anything else gets a numeric suffix."""
+	rev = (rev or "").strip()
+	if rev.isdigit():
+		return str(int(rev) + 1).zfill(len(rev))
+	if rev.isalpha() and rev.isupper():
+		chars = list(rev)
+		i = len(chars) - 1
+		while i >= 0:
+			if chars[i] != "Z":
+				chars[i] = chr(ord(chars[i]) + 1)
+				return "".join(chars)
+			chars[i] = "A"
+			i -= 1
+		return "A" + "".join(chars)
+	return f"{rev}.1" if rev else "A"

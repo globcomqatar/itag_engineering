@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Globcom Qatar and contributors
 # For license information, please see license.txt
 
+import unittest
+
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
@@ -37,8 +39,10 @@ class TestEngineeringItemRequest(FrappeTestCase):
 		roles_with_create = [p.role for p in meta.permissions if p.create]
 		self.assertIn("Engineering User", roles_with_create)
 		self.assertIn("Engineering Manager", roles_with_create)
-		self.assertNotIn("Engineering Master Manager", roles_with_create)
+		# fix8: Master Manager submits/amends, and amend needs create.
+		self.assertIn("Engineering Master Manager", roles_with_create)
 
+	@unittest.skip("Retired in 15.5.5: this workflow/role was removed by decision (approval only on BOM and Engineering Release from 15.5.6, see tests/test_release_control.py).")
 	def test_workflow_exists_with_expected_states(self):
 		workflow = frappe.get_doc("Workflow", "Engineering Item Request Workflow")
 		state_names = [s.state for s in workflow.states]
@@ -55,9 +59,8 @@ class TestEngineeringItemRequest(FrappeTestCase):
 		):
 			self.assertIn(expected, state_names, f"{expected} missing from workflow states")
 
-	def test_workflow_create_item_without_a_series_explains_valve_type(self):
-		"""Valve Type BALL has no series. The workflow Create Item save must
-		say so, instead of telling the user to click Create Item again."""
+	def test_submit_without_a_series_explains_valve_type(self):
+		"""Valve Type BALL has no series. Submit must say so and roll back."""
 		eir = frappe.get_doc(
 			{
 				"doctype": "Engineering Item Request",
@@ -68,18 +71,15 @@ class TestEngineeringItemRequest(FrappeTestCase):
 				"is_new_item_code": 1,
 			}
 		).insert()
-		frappe.db.set_value("Engineering Item Request", eir.name, "workflow_state", "Approved")
-
-		eir.reload()
-		eir.workflow_state = "Item Created"
+		frappe.db.savepoint("eir_t")
 		with self.assertRaises(frappe.ValidationError) as caught:
-			eir.save()
+			eir.submit()
+		frappe.db.rollback(save_point="eir_t")  # what the request handler does on error
 		self.assertIn("no Item Code Series", str(caught.exception))
-		self.assertNotIn("Use the", str(caught.exception))
+		self.assertEqual(frappe.db.get_value("Engineering Item Request", eir.name, "docstatus"), 0)
 
-	def test_workflow_create_item_button_creates_the_item(self):
-		"""Same save the Desk workflow button performs: state becomes Item
-		Created and the Item is created from the Valve Type series."""
+	def test_submit_creates_the_item(self):
+		"""fix8: Submit creates the Item from the Valve Type series."""
 		frappe.get_doc(
 			{
 				"doctype": "Item Code Rule",
@@ -108,12 +108,9 @@ class TestEngineeringItemRequest(FrappeTestCase):
 		).insert()
 		self.assertEqual(eir.item_code_rule, "EIRTV979")
 		self.assertEqual(eir.code_pattern, "979-#####")
-		frappe.db.set_value("Engineering Item Request", eir.name, "workflow_state", "Approved")
-
+		eir.submit()
 		eir.reload()
-		eir.workflow_state = "Item Created"
-		eir.save()
-		eir.reload()
+		self.assertEqual(eir.docstatus, 1)
 		self.assertEqual(eir.workflow_state, "Item Created")
 		self.assertEqual(eir.created_item, "979-00001")
 		self.assertEqual(frappe.db.get_value("Item", "979-00001", "itag_valve_type"), "EIRTV979")

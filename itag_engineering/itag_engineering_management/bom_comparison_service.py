@@ -1,5 +1,11 @@
 """BOM revision comparison service (roadmap Section 12.5).
 
+v15.5.14 #4 (Waheed, 30-Oct-2026): RETIRED for users. BOM comparison now uses
+ERPNext's standard BOM Comparison Tool (page bom-comparison-tool; workspace
+link and the BOM form "View > Compare BOMs" button). The "BOM Revision
+Comparison" report is disabled, not deleted; this module is kept, unused by
+the UI, so the disabled report and its old tests still import cleanly.
+
 Follows the same BOOKKEEPING_FIELDS / dict-diff idiom already established by
 drawing_service.py's compare_drawing_revisions and
 product_revision_service.py's compare_product_revisions - one comparison

@@ -54,11 +54,12 @@ def create_eco_from_accepted_ecr(ecr_name):
 	if ecr.originating_eco:
 		return ecr.originating_eco
 
-	if ecr.workflow_state != "Engineering Review":
+	# 15.5.6 fix2: the ITAG ECR workflow ends in "Approved".
+	if ecr.workflow_state not in ("Approved", "Engineering Review"):
 		frappe.throw(
 			_(
-				'Cannot create an Engineering Change Order: this request must be in "Engineering '
-				'Review" (about to be Accepted for ECO), not "{0}".'
+				'Cannot create an Engineering Change Order: this request must be Approved '
+				'first, not "{0}".'
 			).format(ecr.workflow_state)
 		)
 
@@ -198,6 +199,12 @@ def resolve_eco_approval_disciplines(eco_name):
 			},
 		)
 	eco.save()
+	log_audit_event(
+		"ECO Approval Matrix Resolved",
+		"Engineering Change Order",
+		eco.name,
+		{"matrix": result["matrix"], "steps": len(eco.approval_steps)},
+	)
 	return result
 
 
@@ -291,6 +298,11 @@ def approve_or_reject_workflow_step(eco_name, step_idx, approve, comments=None):
 	step = matching[0]
 
 	_check_approver_has_required_role(step)
+	if frappe.session.user in eco.get_requestors():
+		frappe.throw(
+			_("You requested this change, so you can't approve or reject its approval steps."),
+			frappe.PermissionError,
+		)
 
 	step.status = "Approved" if approve else "Rejected"
 	step.approver = frappe.session.user
@@ -300,6 +312,12 @@ def approve_or_reject_workflow_step(eco_name, step_idx, approve, comments=None):
 
 	validate_approval_steps_segregation_of_duties(eco.approval_steps)
 	eco.save()
+	log_audit_event(
+		"ECO Approval Step",
+		"Engineering Change Order",
+		eco.name,
+		{"step": step_idx, "discipline": step.discipline, "status": step.status, "comments": comments},
+	)
 	return eco.name
 
 

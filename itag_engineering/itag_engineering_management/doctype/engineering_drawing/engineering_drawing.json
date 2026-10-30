@@ -5,6 +5,8 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "details_tab",
+  "amended_from",
   "drawing_number",
   "drawing_revision",
   "drawing_title",
@@ -13,6 +15,7 @@
   "release_status",
   "workflow_state",
   "classification_section",
+  "item_request",
   "related_item",
   "product_family",
   "applicable_standard",
@@ -35,9 +38,25 @@
   "dates_section",
   "effective_date",
   "superseded_date",
-  "change_description"
+  "change_description",
+  "connections_tab"
  ],
  "fields": [
+  {
+   "fieldname": "details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Engineering Drawing",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
   {
    "fieldname": "drawing_number",
    "fieldtype": "Data",
@@ -70,15 +89,16 @@
    "options": "Assembly\nDetail\nSchematic\nGeneral Arrangement"
   },
   {
+   "allow_on_submit": 1,
    "default": "Draft",
    "fieldname": "release_status",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Release Status",
-   "options": "Draft\nEngineering Review\nChecked\nApproved\nReleased\nSuperseded\nObsolete",
-   "read_only": 1
+   "options": "Draft\nEngineering Review\nChecked\nApproved\nReleased\nSuperseded\nObsolete"
   },
   {
+   "allow_on_submit": 1,
    "default": "Draft",
    "fieldname": "workflow_state",
    "fieldtype": "Select",
@@ -90,6 +110,14 @@
    "fieldname": "classification_section",
    "fieldtype": "Section Break",
    "label": "Classification"
+  },
+  {
+   "fieldname": "item_request",
+   "fieldtype": "Link",
+   "label": "Item Request",
+   "options": "Engineering Item Request",
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "related_item",
@@ -206,6 +234,7 @@
    "label": "Effective Date"
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "superseded_date",
    "fieldtype": "Date",
    "label": "Superseded Date",
@@ -215,10 +244,17 @@
    "fieldname": "change_description",
    "fieldtype": "Small Text",
    "label": "Change Description"
+  },
+  {
+   "fieldname": "connections_tab",
+   "fieldtype": "Tab Break",
+   "label": "Connections",
+   "show_dashboard": 1
   }
  ],
+ "is_submittable": 1,
  "links": [],
- "modified": "2026-07-20 00:00:00.000000",
+ "modified": "2026-10-29 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "Engineering Drawing",
@@ -236,6 +272,8 @@
    "write": 1
   },
   {
+   "amend": 1,
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
@@ -246,6 +284,22 @@
    "report": 1,
    "role": "Engineering Manager",
    "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Engineering Master Manager",
+   "share": 1,
+   "submit": 1,
    "write": 1
   }
  ],

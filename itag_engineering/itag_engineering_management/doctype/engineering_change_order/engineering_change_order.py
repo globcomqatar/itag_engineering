@@ -21,7 +21,73 @@ class EngineeringChangeOrder(Document):
 	def validate(self):
 		self.validate_closed_is_protected()
 		sync_eco_impact_analysis_staleness(self)
+		self.validate_workflow_transition_guards()
 		self.log_transition_audit_event()
+
+	def _state_changed_to(self, state):
+		if self.is_new() or self.workflow_state != state:
+			return False
+		before = self.get_doc_before_save()
+		return bool(before) and before.workflow_state != state
+
+	def get_requestors(self):
+		"""Whoever raised the change: the ECO's creator and the source ECR's
+		requestor and creator."""
+		people = {self.owner}
+		if self.source_ecr:
+			ecr = frappe.db.get_value(
+				"Engineering Change Request", self.source_ecr, ["owner", "requestor"], as_dict=True
+			)
+			if ecr:
+				people.update({ecr.owner, ecr.requestor})
+		people.discard(None)
+		return people
+
+	def validate_workflow_transition_guards(self):
+		"""15.5.6 fix2 (Ahmed, 28-Oct-2026): ITAG Engineering Change Order
+		Workflow is Draft -> Approved -> Implemented -> Closed.
+		- Approve needs every approval step Approved, and the requestor can't approve.
+		- Mark Implemented records who implemented it.
+		- The implementer can't close it."""
+		user = frappe.session.user
+		if self._state_changed_to("Approved"):
+			if not self.approval_steps:
+				frappe.throw(
+					_("Resolve the approval matrix before approving this Engineering Change Order.")
+				)
+			open_steps = [row.discipline for row in self.approval_steps if row.status != "Approved"]
+			if open_steps:
+				frappe.throw(
+					_("Every approval step must be Approved first. Still open: {0}").format(
+						", ".join(open_steps)
+					)
+				)
+			if user in self.get_requestors():
+				frappe.throw(
+					_("You requested this change, so a different Engineering Manager must approve it."),
+					frappe.PermissionError,
+				)
+		# fix4 (Ahmed, 28-Oct-2026): the ECO creator can't approve, implement
+		# or close it. No Administrator exemption.
+		for state, verb in (("Implemented", "implement"), ("Closed", "close")):
+			if self._state_changed_to(state) and user == self.owner:
+				frappe.throw(
+					_("You created this Engineering Change Order, so a different person must {0} it.").format(
+						_(verb)
+					),
+					frappe.PermissionError,
+				)
+		if self._state_changed_to("Implemented"):
+			self.implemented_by = user
+			self.implementation_status = "Implemented"
+		if self._state_changed_to("Closed"):
+			if not self.implemented_by:
+				frappe.throw(_("This Engineering Change Order has no recorded implementer."))
+			if user == self.implemented_by:
+				frappe.throw(
+					_("You implemented this Engineering Change Order, so a different person must close it."),
+					frappe.PermissionError,
+				)
 
 	def log_transition_audit_event(self):
 		"""Roadmap Section 22.4 "ECO Transition" - logged generically here

@@ -40,28 +40,31 @@ def retrieve_current_effective_product_revision(item):
 	return frappe.get_doc("Product Revision", rows[0].name).as_dict()
 
 
-def supersede_revision(old_revision_name, new_revision_name):
+def supersede_revision(old_revision_name, new_revision_name=None):
+	"""Mark old_revision_name Superseded and, when given, link it to the
+	revision that supersedes it (both ways).
+
+	F3 (Waheed, 29-Oct-2026): works on submitted revisions too. Cancelling a
+	submitted revision calls this without new_revision_name (its amended copy
+	doesn't exist yet); the amended copy calls it again with its own name
+	once it is created. Uses frappe.db.set_value, so it updates in place,
+	never deletes, and doesn't need allow_on_submit on these fields."""
 	if not frappe.db.exists("Product Revision", old_revision_name):
 		frappe.throw(_("Product Revision {0} does not exist.").format(old_revision_name))
-	if not frappe.db.exists("Product Revision", new_revision_name):
+	if new_revision_name and not frappe.db.exists("Product Revision", new_revision_name):
 		frappe.throw(_("Product Revision {0} does not exist.").format(new_revision_name))
 
-	frappe.db.set_value(
-		"Product Revision",
-		old_revision_name,
-		{
-			"superseding_revision": new_revision_name,
-			"workflow_state": "Superseded",
-			"revision_status": "Superseded",
-		},
-	)
-	if not frappe.db.get_value("Product Revision", new_revision_name, "previous_revision"):
+	values = {"workflow_state": "Superseded", "revision_status": "Superseded"}
+	if new_revision_name:
+		values["superseding_revision"] = new_revision_name
+	frappe.db.set_value("Product Revision", old_revision_name, values)
+	if new_revision_name and not frappe.db.get_value("Product Revision", new_revision_name, "previous_revision"):
 		frappe.db.set_value("Product Revision", new_revision_name, "previous_revision", old_revision_name)
 
 	log_audit_event(
 		"Product Revision Change",
 		"Product Revision",
-		new_revision_name,
+		new_revision_name or old_revision_name,
 		{"superseded_revision": old_revision_name},
 	)
 

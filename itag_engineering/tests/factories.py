@@ -186,7 +186,10 @@ def create_test_product_revision(item=None, drawing=None, revision_number=None):
 	new release against the same item to simulate a revision change) gets a
 	genuinely distinct Product Revision instead of colliding on the
 	`{item}-PR-{revision_number}` autoname of an already-inserted "1"."""
-	item = item or (ensure_test_company() and frappe.db.get_value("Item", {}, "name"))
+	# Build its own Item instead of picking "any Item": in the full
+	# regression run an earlier test's teardown can leave none (UAT-003).
+	ensure_test_company()
+	item = item or create_fresh_stock_item(prefix="PR-TEST-ITEM").name
 	drawing = drawing or create_released_test_drawing()
 	if not revision_number:
 		existing_count = frappe.db.count("Product Revision", {"item": item})
@@ -518,7 +521,10 @@ def create_test_material_disposition(item, decisions, eco=None, warehouse=None, 
 		"Warehouse", {"company": company, "is_group": 0, "disabled": 0}, "name"
 	)
 	seed_qty = sum(d["quantity"] for d in decisions) * 10
-	make_stock_entry(item_code=item, qty=seed_qty, to_warehouse=warehouse, company=company)
+	# A rate is required for accounting entries under perpetual inventory.
+	make_stock_entry(
+		item_code=item, qty=seed_qty, to_warehouse=warehouse, company=company, rate=100
+	)
 	eco = eco or create_eco_from_accepted_ecr_factory(affected_item=item)
 	fields = {
 		"doctype": "Material Disposition",
@@ -719,3 +725,12 @@ def create_multi_level_bom_tree_with_open_work_orders(prefix, depth=3, work_orde
 			work_orders.append(work_order)
 
 	return items, boms, work_orders
+
+
+def submit_eir_and_get_item(eir_name):
+	"""fix8: Submit an Engineering Item Request (Submit creates the Item) and
+	return the created Item code."""
+	eir = frappe.get_doc("Engineering Item Request", eir_name)
+	if eir.docstatus == 0:
+		eir.submit()
+	return frappe.db.get_value("Engineering Item Request", eir_name, "created_item")

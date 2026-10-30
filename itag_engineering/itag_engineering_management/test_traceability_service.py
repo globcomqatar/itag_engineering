@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Globcom Qatar and contributors
 # For license information, please see license.txt
 
+import unittest
+
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
@@ -141,7 +143,7 @@ class TestTraceabilityService(FrappeTestCase):
 	def test_user_without_customer_info_role_gets_masked_customer_data(self):
 		chain = self._build_three_level_chain_with_delivery()
 		email = self._ensure_user(
-			"tracesvc-supervisor@example.com", "TRACESVC Supervisor", ["Production Supervisor"]
+			"tracesvc-eng-user@example.com", "TRACESVC Engineering User", ["Engineering User"]
 		)
 		frappe.set_user(email)
 		try:

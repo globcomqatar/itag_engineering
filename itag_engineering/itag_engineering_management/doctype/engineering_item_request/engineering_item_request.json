@@ -5,11 +5,14 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "request_title",
+  "details_tab",
+  "amended_from",
   "requested_by",
   "workflow_state",
   "engineering_section",
+  "request_title",
   "item_category",
+  "item_group",
   "item_type",
   "product_family",
   "valve_type",
@@ -33,29 +36,46 @@
   "item_code_rule",
   "code_pattern",
   "reserved_item_code",
-  "created_item"
+  "created_item",
+  "connections_tab"
  ],
  "fields": [
+  {
+   "fieldname": "details_tab",
+   "fieldtype": "Tab Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Engineering Item Request",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
   {
    "fieldname": "request_title",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Request Title",
+   "label": "Item Name",
    "reqd": 1
   },
   {
    "default": "__user",
    "fieldname": "requested_by",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Requested By",
    "options": "User",
-   "reqd": 1
+   "reqd": 0
   },
   {
    "default": "Draft",
    "fieldname": "workflow_state",
    "fieldtype": "Select",
-   "in_list_view": 1,
+   "hidden": 1,
    "label": "Workflow State",
    "options": "Draft\nDuplicate Review\nEngineering Review\nReturned for Correction\nApproved\nItem Created\nClosed\nRejected\nCancelled",
    "read_only": 1
@@ -72,11 +92,18 @@
    "options": "\nManufactured\nPurchased\nRaw Material\nSub-Assembly"
   },
   {
-   "default": "General",
+   "fieldname": "item_group",
+   "fieldtype": "Link",
+   "label": "Item Group",
+   "options": "Item Group",
+   "description": "Item Group of the created Item. Blank: taken from Item Category when a group of that name exists, else Products."
+  },
+  {
+   "default": "Critical",
    "fieldname": "item_type",
    "fieldtype": "Select",
    "label": "Item Type",
-   "options": "\nCritical\nNon-Critical\nGeneral"
+   "options": "Critical\nNon-Critical\nNon-Product"
   },
   {
    "fieldname": "product_family",
@@ -107,18 +134,21 @@
   },
   {
    "fieldname": "nominal_size",
-   "fieldtype": "Data",
-   "label": "Nominal Size"
+   "fieldtype": "Link",
+   "label": "Nominal Size",
+   "options": "ITAG Nominal Size"
   },
   {
    "fieldname": "pressure_class",
-   "fieldtype": "Data",
-   "label": "Pressure Class"
+   "fieldtype": "Link",
+   "label": "Pressure Class",
+   "options": "ITAG Pressure Class"
   },
   {
    "fieldname": "body_material",
-   "fieldtype": "Data",
-   "label": "Body Material"
+   "fieldtype": "Link",
+   "label": "Body Material",
+   "options": "ITAG Body Material"
   },
   {
    "fieldname": "trim_material",
@@ -168,13 +198,15 @@
    "fieldtype": "Select",
    "label": "Duplicate Check Status",
    "options": "Not Checked\nNo Duplicates Found\nPossible Duplicates Found\nDuplicates Resolved",
-   "read_only": 1
+   "read_only": 1,
+   "no_copy": 1
   },
   {
    "fieldname": "possible_duplicates_json",
    "fieldtype": "Long Text",
    "label": "Possible Duplicates (JSON)",
-   "read_only": 1
+   "read_only": 1,
+   "no_copy": 1
   },
   {
    "fieldname": "coding_section",
@@ -201,50 +233,74 @@
    "fieldname": "reserved_item_code",
    "fieldtype": "Data",
    "label": "Reserved Item Code",
-   "read_only": 1
+   "read_only": 1,
+   "no_copy": 1
   },
   {
    "fieldname": "created_item",
    "fieldtype": "Link",
    "label": "Created Item",
    "options": "Item",
-   "read_only": 1
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "connections_tab",
+   "fieldtype": "Tab Break",
+   "label": "Connections",
+   "show_dashboard": 1
   }
  ],
  "links": [],
- "modified": "2026-07-20 00:00:00.000000",
+ "modified": "2026-10-29 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "Engineering Item Request",
  "owner": "Administrator",
  "permissions": [
   {
-   "create": 1,
-   "delete": 1,
    "email": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Engineering User",
    "share": 1,
-   "write": 1
+   "write": 1,
+   "create": 1,
+   "role": "Engineering User"
   },
   {
-   "create": 1,
-   "delete": 1,
    "email": 1,
-   "export": 1,
-   "import": 1,
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "Engineering Manager",
    "share": 1,
-   "write": 1
+   "write": 1,
+   "create": 1,
+   "role": "Engineering Manager",
+   "delete": 1,
+   "export": 1,
+   "import": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "role": "Engineering Master Manager",
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
   }
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "track_changes": 1
+ "track_changes": 1,
+ "is_submittable": 1
 }

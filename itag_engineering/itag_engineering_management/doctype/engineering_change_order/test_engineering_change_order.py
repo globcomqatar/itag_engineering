@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Globcom Qatar and contributors
 # For license information, please see license.txt
 
+import unittest
+
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
@@ -117,6 +119,7 @@ class TestEngineeringChangeOrder(FrappeTestCase):
 		with self.assertRaises(Exception):
 			apply_workflow(eco, "Submit for Discipline Review")
 
+	@unittest.skip("Retired in 15.5.5: this workflow/role was removed by decision (approval only on BOM and Engineering Release from 15.5.6, see tests/test_release_control.py).")
 	def test_workflow_condition_allows_transition_when_impact_analysis_complete(self):
 		from frappe.model.workflow import apply_workflow
 

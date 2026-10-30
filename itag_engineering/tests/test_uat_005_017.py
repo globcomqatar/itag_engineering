@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Globcom Qatar and contributors
 # For license information, please see license.txt
 
+import unittest
+
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
@@ -125,7 +127,7 @@ class TestUAT017UnauthorizedApproval(FrappeTestCase):
 		resolve_eco_approval_disciplines(eco.name)
 
 		requestor_email = self._ensure_user(
-			"uat017-requestor@example.com", "UAT017 Requestor", ["Engineering Requestor"]
+			"uat017-eng-user@example.com", "UAT017 Engineering User", ["Engineering User"]
 		)
 		frappe.set_user(requestor_email)
 		try:

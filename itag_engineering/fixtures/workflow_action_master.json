@@ -1,0 +1,44 @@
+[
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Approve",
+  "docstatus": 0,
+  "modified": "2026-10-28 12:00:00.000000",
+  "workflow_action_name": "Approve"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Reject",
+  "docstatus": 0,
+  "modified": "2026-10-28 12:00:00.000000",
+  "workflow_action_name": "Reject"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Release",
+  "docstatus": 0,
+  "modified": "2026-10-28 12:00:00.000000",
+  "workflow_action_name": "Release"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Submit",
+  "docstatus": 0,
+  "modified": "2026-10-28 14:30:00.000000",
+  "workflow_action_name": "Submit"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Mark Implemented",
+  "docstatus": 0,
+  "modified": "2026-10-28 14:30:00.000000",
+  "workflow_action_name": "Mark Implemented"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Close",
+  "docstatus": 0,
+  "modified": "2026-10-28 14:30:00.000000",
+  "workflow_action_name": "Close"
+ }
+]

@@ -1,0 +1,324 @@
+[
+ {
+  "doctype": "Workflow",
+  "name": "ITAG BOM Workflow",
+  "docstatus": 0,
+  "modified": "2026-10-28 15:40:00.000000",
+  "workflow_name": "ITAG BOM Workflow",
+  "document_type": "BOM",
+  "is_active": 0,
+  "override_status": 0,
+  "send_email_alert": 0,
+  "workflow_state_field": "itag_workflow_state",
+  "states": [
+   {
+    "doctype": "Workflow Document State",
+    "state": "Draft",
+    "doc_status": "0",
+    "allow_edit": "Engineering User",
+    "is_optional_state": 0,
+    "parentfield": "states",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Document State",
+    "state": "Approved",
+    "doc_status": "0",
+    "allow_edit": "Engineering Manager",
+    "is_optional_state": 0,
+    "parentfield": "states",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Document State",
+    "state": "Released",
+    "doc_status": "1",
+    "allow_edit": "Engineering Master Manager",
+    "is_optional_state": 0,
+    "parentfield": "states",
+    "parenttype": "Workflow"
+   }
+  ],
+  "transitions": [
+   {
+    "doctype": "Workflow Transition",
+    "state": "Draft",
+    "action": "Approve",
+    "next_state": "Approved",
+    "allowed": "Engineering Manager",
+    "allow_self_approval": 0,
+    "parentfield": "transitions",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Transition",
+    "state": "Approved",
+    "action": "Reject",
+    "next_state": "Draft",
+    "allowed": "Engineering Manager",
+    "allow_self_approval": 0,
+    "parentfield": "transitions",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Transition",
+    "state": "Approved",
+    "action": "Release",
+    "next_state": "Released",
+    "allowed": "Engineering Master Manager",
+    "allow_self_approval": 0,
+    "parentfield": "transitions",
+    "parenttype": "Workflow"
+   }
+  ]
+ },
+ {
+  "doctype": "Workflow",
+  "name": "ITAG Engineering Release Workflow",
+  "docstatus": 0,
+  "modified": "2026-10-28 12:00:00.000000",
+  "workflow_name": "ITAG Engineering Release Workflow",
+  "document_type": "Engineering Release",
+  "is_active": 1,
+  "override_status": 0,
+  "send_email_alert": 0,
+  "workflow_state_field": "workflow_state",
+  "states": [
+   {
+    "doctype": "Workflow Document State",
+    "state": "Draft",
+    "doc_status": "0",
+    "allow_edit": "Engineering User",
+    "is_optional_state": 0,
+    "parentfield": "states",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Document State",
+    "state": "Approved",
+    "doc_status": "0",
+    "allow_edit": "Engineering Manager",
+    "is_optional_state": 0,
+    "parentfield": "states",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Document State",
+    "state": "Released",
+    "doc_status": "0",
+    "allow_edit": "Engineering Master Manager",
+    "is_optional_state": 0,
+    "parentfield": "states",
+    "parenttype": "Workflow"
+   }
+  ],
+  "transitions": [
+   {
+    "doctype": "Workflow Transition",
+    "state": "Draft",
+    "action": "Approve",
+    "next_state": "Approved",
+    "allowed": "Engineering Manager",
+    "allow_self_approval": 0,
+    "parentfield": "transitions",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Transition",
+    "state": "Approved",
+    "action": "Reject",
+    "next_state": "Draft",
+    "allowed": "Engineering Manager",
+    "allow_self_approval": 0,
+    "parentfield": "transitions",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Transition",
+    "state": "Approved",
+    "action": "Release",
+    "next_state": "Released",
+    "allowed": "Engineering Master Manager",
+    "allow_self_approval": 0,
+    "parentfield": "transitions",
+    "parenttype": "Workflow"
+   }
+  ]
+ },
+ {
+  "doctype": "Workflow",
+  "name": "ITAG Engineering Change Request Workflow",
+  "docstatus": 0,
+  "modified": "2026-10-28 14:30:00.000000",
+  "workflow_name": "ITAG Engineering Change Request Workflow",
+  "document_type": "Engineering Change Request",
+  "is_active": 1,
+  "override_status": 0,
+  "send_email_alert": 0,
+  "workflow_state_field": "workflow_state",
+  "states": [
+   {
+    "doctype": "Workflow Document State",
+    "state": "Draft",
+    "doc_status": "0",
+    "allow_edit": "Engineering User",
+    "is_optional_state": 0,
+    "parentfield": "states",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Document State",
+    "state": "Submitted for Review",
+    "doc_status": "0",
+    "allow_edit": "Engineering Manager",
+    "is_optional_state": 0,
+    "parentfield": "states",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Document State",
+    "state": "Approved",
+    "doc_status": "0",
+    "allow_edit": "Engineering Manager",
+    "is_optional_state": 0,
+    "parentfield": "states",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Document State",
+    "state": "Rejected",
+    "doc_status": "0",
+    "allow_edit": "Engineering Manager",
+    "is_optional_state": 0,
+    "parentfield": "states",
+    "parenttype": "Workflow"
+   }
+  ],
+  "transitions": [
+   {
+    "doctype": "Workflow Transition",
+    "state": "Draft",
+    "action": "Submit",
+    "next_state": "Submitted for Review",
+    "allowed": "Engineering User",
+    "allow_self_approval": 1,
+    "parentfield": "transitions",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Transition",
+    "state": "Draft",
+    "action": "Submit",
+    "next_state": "Submitted for Review",
+    "allowed": "Engineering Manager",
+    "allow_self_approval": 1,
+    "parentfield": "transitions",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Transition",
+    "state": "Submitted for Review",
+    "action": "Approve",
+    "next_state": "Approved",
+    "allowed": "Engineering Manager",
+    "allow_self_approval": 0,
+    "parentfield": "transitions",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Transition",
+    "state": "Submitted for Review",
+    "action": "Reject",
+    "next_state": "Rejected",
+    "allowed": "Engineering Manager",
+    "allow_self_approval": 0,
+    "parentfield": "transitions",
+    "parenttype": "Workflow"
+   }
+  ]
+ },
+ {
+  "doctype": "Workflow",
+  "name": "ITAG Engineering Change Order Workflow",
+  "docstatus": 0,
+  "modified": "2026-10-28 14:30:00.000000",
+  "workflow_name": "ITAG Engineering Change Order Workflow",
+  "document_type": "Engineering Change Order",
+  "is_active": 1,
+  "override_status": 0,
+  "send_email_alert": 0,
+  "workflow_state_field": "workflow_state",
+  "states": [
+   {
+    "doctype": "Workflow Document State",
+    "state": "Draft",
+    "doc_status": "0",
+    "allow_edit": "Engineering Manager",
+    "is_optional_state": 0,
+    "parentfield": "states",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Document State",
+    "state": "Approved",
+    "doc_status": "0",
+    "allow_edit": "Engineering Manager",
+    "is_optional_state": 0,
+    "parentfield": "states",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Document State",
+    "state": "Implemented",
+    "doc_status": "0",
+    "allow_edit": "Engineering Manager",
+    "is_optional_state": 0,
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "update_field": "implementation_status",
+    "update_value": "Implemented"
+   },
+   {
+    "doctype": "Workflow Document State",
+    "state": "Closed",
+    "doc_status": "0",
+    "allow_edit": "Engineering Manager",
+    "is_optional_state": 0,
+    "parentfield": "states",
+    "parenttype": "Workflow"
+   }
+  ],
+  "transitions": [
+   {
+    "doctype": "Workflow Transition",
+    "state": "Draft",
+    "action": "Approve",
+    "next_state": "Approved",
+    "allowed": "Engineering Manager",
+    "allow_self_approval": 0,
+    "parentfield": "transitions",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Transition",
+    "state": "Approved",
+    "action": "Mark Implemented",
+    "next_state": "Implemented",
+    "allowed": "Engineering Manager",
+    "allow_self_approval": 0,
+    "parentfield": "transitions",
+    "parenttype": "Workflow"
+   },
+   {
+    "doctype": "Workflow Transition",
+    "state": "Implemented",
+    "action": "Close",
+    "next_state": "Closed",
+    "allowed": "Engineering Manager",
+    "allow_self_approval": 0,
+    "parentfield": "transitions",
+    "parenttype": "Workflow"
+   }
+  ]
+ }
+]

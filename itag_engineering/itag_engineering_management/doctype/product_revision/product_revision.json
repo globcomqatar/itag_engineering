@@ -28,7 +28,8 @@
   "scope_section",
   "customer_or_project",
   "effective_from",
-  "effective_to"
+  "effective_to",
+  "amended_from"
  ],
  "fields": [
   {
@@ -173,10 +174,21 @@
    "fieldname": "effective_to",
    "fieldtype": "Date",
    "label": "Effective To"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Product Revision",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   }
  ],
+ "is_submittable": 1,
  "links": [],
- "modified": "2026-07-20 00:00:00.000000",
+ "modified": "2026-10-29 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "ITAG Engineering Management",
  "name": "Product Revision",
@@ -184,7 +196,6 @@
  "permissions": [
   {
    "create": 1,
-   "delete": 1,
    "email": 1,
    "print": 1,
    "read": 1,
@@ -194,6 +205,8 @@
    "write": 1
   },
   {
+   "amend": 1,
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
@@ -204,6 +217,22 @@
    "report": 1,
    "role": "Engineering Manager",
    "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Engineering Master Manager",
+   "share": 1,
+   "submit": 1,
    "write": 1
   }
  ],

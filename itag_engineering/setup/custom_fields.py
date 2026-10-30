@@ -33,9 +33,29 @@ def get_custom_fields():
 				"insert_after": "itag_product_family",
 			},
 			{
+				# v15.5.14 #6: back-link from the Item to the request that created it.
+				"fieldname": "itag_engineering_item_request",
+				"label": "Engineering Item Request",
+				"fieldtype": "Link",
+				"options": "Engineering Item Request",
+				"read_only": 1,
+				"no_copy": 1,
+				"insert_after": "itag_valve_type",
+			},
+			{
+				# v15.5.14 build 2 (Waheed via Ahmed, 30-Oct-2026): Item Type owned
+				# by itag_engineering, independent of erpcloud_itagksa.
+				"fieldname": "itag_item_type",
+				"label": "Item Type",
+				"fieldtype": "Select",
+				"options": "Critical\nNon-Critical\nNon-Product",
+				"default": "Critical",
+				"insert_after": "itag_engineering_item_request",
+			},
+			{
 				"fieldname": "itag_column_break_1",
 				"fieldtype": "Column Break",
-				"insert_after": "itag_valve_type",
+				"insert_after": "itag_engineering_item_request",
 			},
 			{
 				"fieldname": "itag_nominal_size",
@@ -731,8 +751,74 @@ def get_wip_traceability_fields():
 	}
 
 
+def get_release_control_fields():
+	"""15.5.6: workflow state and approver fields for the BOM workflow, plus
+	drawing and product revision links on BOM Creator (the Multi-level BOM
+	Builder has no workflow of its own; its BOMs use the BOM workflow)."""
+	state = {
+		"fieldname": "itag_workflow_state",
+		"fieldtype": "Link",
+		"label": "Workflow State",
+		"options": "Workflow State",
+		"read_only": 1,
+		"allow_on_submit": 1,
+		"no_copy": 1,
+		"in_standard_filter": 1,
+	}
+	approved_by = {
+		"fieldname": "itag_approved_by",
+		"fieldtype": "Link",
+		"label": "Approved By",
+		"options": "User",
+		"read_only": 1,
+		"allow_on_submit": 1,
+		"no_copy": 1,
+	}
+	return {
+		"BOM": [
+			dict(state, insert_after="itag_engineering_status"),
+			dict(approved_by, insert_after="itag_workflow_state"),
+		],
+		"BOM Creator": [
+			{
+				"fieldname": "itag_drawing_revision",
+				"fieldtype": "Link",
+				"label": "Drawing Revision",
+				"options": "Engineering Drawing",
+				"insert_after": "project",
+			},
+			{
+				"fieldname": "itag_product_revision",
+				"fieldtype": "Link",
+				"label": "Product Revision",
+				"options": "Product Revision",
+				"insert_after": "itag_drawing_revision",
+			},
+		],
+	}
+
+
+def get_item_request_link_fields():
+	"""fix9: BOM link back to the Engineering Item Request it was created from."""
+	return {
+		"BOM": [
+			{
+				"fieldname": "itag_item_request",
+				"fieldtype": "Link",
+				"label": "Item Request",
+				"options": "Engineering Item Request",
+				"insert_after": "item",
+				"read_only": 1,
+				"search_index": 1,
+			}
+		]
+	}
+
+
 def sync_custom_fields():
 	create_custom_fields(get_custom_fields(), update=True)
+	create_custom_fields(get_item_request_link_fields(), update=True)
+	create_custom_fields(get_release_control_fields(), update=True)
 	create_custom_fields(get_bom_fields(), update=True)
 	create_custom_fields(get_routing_fields(), update=True)
 	create_custom_fields(get_bom_operation_fields(), update=True)
