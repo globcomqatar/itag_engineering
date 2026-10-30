@@ -5,6 +5,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+from itag_engineering.itag_engineering_management.audit_service import log_audit_event
 from itag_engineering.itag_engineering_management.doctype.engineering_drawing.engineering_drawing import (
 	next_revision,
 )
@@ -61,6 +62,26 @@ class ProductRevision(Document):
 
 	def before_submit(self):
 		self.validate_release_prerequisites()
+		self.link_bom_to_revision()
+
+	def link_bom_to_revision(self):
+		"""v15.5.14 (b): on submit, write this Product Revision onto its BOM
+		(BOM.itag_product_revision) when that field is blank. A BOM already
+		linked to a different, not-cancelled revision is refused. The BOM field itself stays
+		locked after BOM submit; this is the only writer."""
+		bom = self.bom_revision_reference
+		if not bom or not frappe.get_meta("BOM").has_field("itag_product_revision"):
+			return
+		current = frappe.db.get_value("BOM", bom, "itag_product_revision")
+		if current == self.name:
+			return
+		# A cancelled revision (e.g. the one this revision amends) no longer holds the BOM.
+		if current and frappe.db.get_value("Product Revision", current, "docstatus") != 2:
+			frappe.throw(
+				_("BOM {0} is already linked to Product Revision {1}.").format(bom, current)
+			)
+		frappe.db.set_value("BOM", bom, "itag_product_revision", self.name, update_modified=False)
+		log_audit_event("Product Revision Change", "BOM", bom, {"product_revision": self.name, "action": "linked BOM on submit"})
 
 	def after_insert(self):
 		self.link_amended_from()

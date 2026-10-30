@@ -187,6 +187,8 @@ doc_events = {
 		"validate": [
 			"itag_engineering.itag_engineering_management.release_control.validate_release_control",
 			"itag_engineering.itag_engineering_management.release_control.guard_release_for_production",
+			# v15.5.14 (c): superseded release = same Item/Company, Released for Production.
+			"itag_engineering.itag_engineering_management.release_control.validate_superseded_release",
 		],
 	},
 	"Engineering Change Order": {

@@ -290,6 +290,83 @@ class TestItem6DocumentNamingRule(FrappeTestCase):
 		self.assertTrue(frappe.get_meta("Item").has_field("itag_engineering_item_request"))
 
 
+class TestItemAReadinessRefresh(FrappeTestCase):
+	def test_readiness_write_updates_modified(self):
+		from itag_engineering.itag_engineering_management.bom_readiness_service import evaluate_bom_readiness
+
+		bom = factories.create_test_bom_with_operations()
+		frappe.db.set_value("BOM", bom.name, "modified", "2020-01-01 00:00:00", update_modified=False)
+		evaluate_bom_readiness(bom.name)
+		self.assertGreater(str(frappe.db.get_value("BOM", bom.name, "modified")), "2020-01-01 00:00:00")
+
+	def test_form_reloads_after_evaluate(self):
+		with open(os.path.join(APP, "public", "js", "bom.js")) as f:
+			self.assertIn("frm.reload_doc()", f.read())
+
+
+class TestItemBProductRevisionLinksBom(FrappeTestCase):
+	def _setup(self):
+		bom = factories.create_test_bom_with_operations()
+		pr = frappe.get_doc("Product Revision", bom.itag_product_revision)
+		pr.bom_revision_reference = bom.name
+		return bom, pr
+
+	def test_blank_bom_link_is_filled_on_submit(self):
+		bom, pr = self._setup()
+		frappe.db.set_value("BOM", bom.name, "itag_product_revision", None)
+		pr.link_bom_to_revision()
+		self.assertEqual(frappe.db.get_value("BOM", bom.name, "itag_product_revision"), pr.name)
+
+	def test_bom_linked_to_other_revision_is_refused(self):
+		bom, pr = self._setup()
+		other = factories.create_test_product_revision()
+		frappe.db.set_value("BOM", bom.name, "itag_product_revision", other.name)
+		with self.assertRaises(frappe.ValidationError):
+			pr.link_bom_to_revision()
+
+	def test_called_from_before_submit(self):
+		import inspect
+
+		from itag_engineering.itag_engineering_management.doctype.product_revision.product_revision import (
+			ProductRevision,
+		)
+
+		self.assertIn("link_bom_to_revision", inspect.getsource(ProductRevision.before_submit))
+
+
+class TestItemCSupersessionChecks(FrappeTestCase):
+	def _new(self, old, **kw):
+		values = {"name": "NEW", "item": old.item, "company": old.company, "release_status": "Draft", "superseded_release": old.name}
+		values.update(kw)
+		return frappe._dict(values)
+
+	def test_valid_supersession_passes(self):
+		old = factories.create_fully_approved_engineering_release()
+		release_control.validate_superseded_release(self._new(old))
+
+	def test_other_item_refused(self):
+		old = factories.create_fully_approved_engineering_release()
+		with self.assertRaises(release_control.ReleaseControlError):
+			release_control.validate_superseded_release(self._new(old, item="SOME-OTHER-ITEM"))
+
+	def test_other_company_refused(self):
+		old = factories.create_fully_approved_engineering_release()
+		with self.assertRaises(release_control.ReleaseControlError):
+			release_control.validate_superseded_release(self._new(old, company="Other Co"))
+
+	def test_not_released_refused(self):
+		old = factories.create_fully_approved_engineering_release()
+		frappe.db.set_value("Engineering Release", old.name, "release_status", "Suspended")
+		with self.assertRaises(release_control.ReleaseControlError):
+			release_control.validate_superseded_release(self._new(old))
+
+	def test_hooked_on_validate(self):
+		self.assertIn(
+			"itag_engineering.itag_engineering_management.release_control.validate_superseded_release",
+			hooks.doc_events["Engineering Release"]["validate"],
+		)
+
+
 class TestVersion(FrappeTestCase):
 	def test_version(self):
 		import itag_engineering

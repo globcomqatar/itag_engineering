@@ -213,3 +213,33 @@ def guard_bom_cancel(doc, method=None):
 			ReleaseControlError,
 			title=_("Release control"),
 		)
+
+
+def validate_superseded_release(doc, method=None):
+	"""v15.5.14 (c): Engineering Release.validate (and again at submit, before
+	the old release is marked Superseded). The release named in
+	superseded_release must be for the same Item and Company and be Released
+	for Production. Skipped once this release is itself Released for
+	Production (the old one is Superseded by then)."""
+	if not doc.get("superseded_release") or doc.get("release_status") == RELEASED_FOR_PRODUCTION:
+		return
+	if doc.superseded_release == doc.name:
+		frappe.throw(_("An Engineering Release cannot supersede itself."), ReleaseControlError)
+	old = frappe.db.get_value(
+		"Engineering Release", doc.superseded_release, ["item", "company", "release_status"], as_dict=True
+	)
+	if not old:
+		frappe.throw(_("Superseded Release {0} does not exist.").format(doc.superseded_release), ReleaseControlError)
+	problems = []
+	if old.item != doc.item:
+		problems.append(_("it is for Item {0}, not {1}").format(old.item, doc.item))
+	if old.company != doc.company:
+		problems.append(_("it is for Company {0}, not {1}").format(old.company, doc.company))
+	if old.release_status != RELEASED_FOR_PRODUCTION:
+		problems.append(_("it is {0}, not Released for Production").format(old.release_status))
+	if problems:
+		frappe.throw(
+			_("Cannot supersede Engineering Release {0}: {1}.").format(doc.superseded_release, "; ".join(problems)),
+			ReleaseControlError,
+			title=_("Supersession"),
+		)

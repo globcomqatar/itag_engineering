@@ -216,8 +216,10 @@ class TestWaheedAmendUpdatesItemDetails(_EIRCase):
 			self.assertEqual(item.stock_uom, other_uom[0])
 		expected = build_item_values(amended, code)
 		for field, value in expected.items():
-			if field.startswith("itag_"):
+			if field.startswith("itag_") and field != "itag_engineering_item_request":
 				self.assertEqual(item.get(field), value, field)
+		# v15.5.14: the Item's back-link stays with the original request.
+		self.assertNotEqual(item.itag_engineering_item_request, amended.name)
 		meta = frappe.get_meta("Item")
 		for field, value in (("itag_trim_material", "F8T-STELLITE"), ("itag_end_connection", "F8T-RTJ"),
 				("itag_drawing_number", "F8T-DWG-002")):

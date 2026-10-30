@@ -264,6 +264,9 @@ def submit_engineering_release(release_name):
 		# write happens after the savepoint so it is rolled back too if a
 		# later step in this same transaction fails.
 		if release.superseded_release:
+			from itag_engineering.itag_engineering_management.release_control import validate_superseded_release
+
+			validate_superseded_release(release)  # v15.5.14 (c)
 			frappe.db.set_value(
 				"Engineering Release",
 				release.superseded_release,

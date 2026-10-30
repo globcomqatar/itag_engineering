@@ -227,7 +227,7 @@ def create_item_from_eir(eir_name, eir=None, persist_request=True):
 				if not eir.valve_type:
 					frappe.throw(
 						_(
-							"Select a Valve Type. The item code comes from a Document Naming Rule on Item, or the Item Code Rule on that Valve Type."
+							"Select a Valve Type. The item code comes from the Item Code Rule on that Valve Type, or from a Document Naming Rule on Item."
 						)
 					)
 				frappe.throw(
