@@ -105,14 +105,14 @@ def items_general_to_non_product():
 
 
 def fill_old_product_type_from_itag_item_type(doc, method=None):
-	"""v15.5.14 build 2 (Ahmed, 30-Oct-2026): Item before_validate. The old
-	erpcloud_itagksa field is hidden but stays mandatory, so a hand-made Item
-	would fail on a field the user cannot see. When it is blank, mirror our
-	itag_item_type into it (new Items only;
-	existing Items are left as they are). erpcloud_itagksa itself is not edited."""
-	if not doc.is_new() or not doc.meta.has_field(ITEM_FIELD) or doc.get(ITEM_FIELD):
+	"""v15.5.14 build 2 (Ahmed, 30-Oct-2026): Item before_validate.
+	The old erpcloud_itagksa field is hidden but stays mandatory, and
+	erpcloud_itagksa still reads it. On every save (new and existing Items),
+	mirror our itag_item_type into it when it is a valid option, so the two
+	fields never drift apart. erpcloud_itagksa itself is not edited."""
+	if not doc.meta.has_field(ITEM_FIELD):
 		return
-	if not doc.get(NEW_ITEM_FIELD) and doc.meta.has_field(NEW_ITEM_FIELD):
+	if doc.is_new() and not doc.get(NEW_ITEM_FIELD) and doc.meta.has_field(NEW_ITEM_FIELD):
 		doc.set(NEW_ITEM_FIELD, "Critical")
 	value = doc.get(NEW_ITEM_FIELD)
 	field = doc.meta.get_field(ITEM_FIELD)

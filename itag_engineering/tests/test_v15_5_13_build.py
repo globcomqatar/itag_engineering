@@ -89,6 +89,10 @@ class _ItemTypeFieldCase(FrappeTestCase):
 
 	@classmethod
 	def tearDownClass(cls):
+		# v15.5.14 b2: remove only the Items these tests created.
+		for name in getattr(cls, "_created", []):
+			if frappe.db.exists("Item", name):
+				frappe.delete_doc("Item", name, ignore_permissions=True, force=True)
 		if cls.added_field:
 			frappe.delete_doc("Custom Field", "Item-custom_product_type", ignore_permissions=True, force=True)
 			frappe.db.delete("Property Setter", {"doc_type": "Item", "field_name": "custom_product_type"})
@@ -99,7 +103,10 @@ class _ItemTypeFieldCase(FrappeTestCase):
 	def _item(self, **kw):
 		from itag_engineering.tests.factories import create_fresh_stock_item
 
-		return create_fresh_stock_item(prefix="V13-TYPE")
+		item = create_fresh_stock_item(prefix="V13-TYPE")
+		type(self).__dict__.get("_created") is None and setattr(type(self), "_created", [])
+		type(self)._created.append(item.name)
+		return item
 
 
 class TestItem2ItemTypeDefaultCritical(_ItemTypeFieldCase):
@@ -118,6 +125,7 @@ class TestItem2ItemTypeDefaultCritical(_ItemTypeFieldCase):
 		doc = frappe.new_doc("Item")
 		doc.update({"item_code": frappe.generate_hash(length=8).upper(), "item_group": "All Item Groups", "stock_uom": "Nos"})
 		doc.set(self.FIELD, "Non-Critical")
+		doc.set("itag_item_type", "Non-Critical")  # v15.5.14 b2: old field mirrors ours
 		doc.insert(ignore_permissions=True)
 		self.assertEqual(frappe.db.get_value("Item", doc.name, self.FIELD), "Non-Critical")
 
@@ -128,7 +136,8 @@ class TestItem2ItemTypeDefaultCritical(_ItemTypeFieldCase):
 		doc = frappe.get_doc("Item", item.name)
 		doc.description = (doc.description or "") + " v13"
 		doc.save(ignore_permissions=True)
-		self.assertFalse(frappe.db.get_value("Item", item.name, self.FIELD))
+		# v15.5.14 b2: the hidden old field now mirrors itag_item_type on every save.
+		self.assertEqual(frappe.db.get_value("Item", item.name, self.FIELD), doc.itag_item_type)
 
 	# v15.5.14 #3 superseded the v15.5.13 "no Property Setter / item.js"
 	# tests; see tests/test_v15_5_14_build.py.

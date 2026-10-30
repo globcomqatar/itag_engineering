@@ -108,22 +108,39 @@ class TestHandMadeItemSavesWithHiddenMandatoryOldField(FrappeTestCase):
 		frappe.clear_cache(doctype="Item")
 		getattr(frappe.local, "new_doc_templates", {}).pop("Item", None)
 
+		cls._created = []
+
 	@classmethod
 	def tearDownClass(cls):
-		if cls.cf and not cls.added_field:
-			frappe.db.set_value("Custom Field", cls.cf, "reqd", cls.old_reqd or 0)
-		if cls.added_field:
-			frappe.delete_doc("Custom Field", "Item-custom_product_type", ignore_permissions=True, force=True)
-			frappe.db.delete("Property Setter", {"doc_type": "Item", "field_name": "custom_product_type"})
-		frappe.db.commit()
-		frappe.clear_cache(doctype="Item")
-		super().tearDownClass()
+		try:
+			# Remove only the Items these tests created.
+			for name in cls._created:
+				if frappe.db.exists("Item", name):
+					frappe.delete_doc("Item", name, ignore_permissions=True, force=True)
+		finally:
+			try:
+				if cls.cf and not cls.added_field:
+					frappe.db.set_value("Custom Field", cls.cf, "reqd", cls.old_reqd or 0)
+				if cls.added_field:
+					frappe.delete_doc("Custom Field", "Item-custom_product_type", ignore_permissions=True, force=True)
+					frappe.db.delete("Property Setter", {"doc_type": "Item", "field_name": "custom_product_type"})
+			finally:
+				frappe.db.commit()
+				frappe.clear_cache(doctype="Item")
+				super().tearDownClass()
+
+	def _new_item(self, **kw):
+		d = {"doctype": "Item", "item_code": "V14HAND-" + frappe.generate_hash(length=6),
+			"item_name": "Hand made", "item_group": "All Item Groups", "stock_uom": "Nos"}
+		d.update(kw)
+		item = frappe.get_doc(d).insert(ignore_permissions=True)
+		type(self)._created.append(item.name)
+		return item
 
 	def test_item_without_request_saves(self):
 		field = frappe.get_meta("Item").get_field("custom_product_type")
 		self.assertTrue(field.hidden and field.reqd)
-		item = frappe.get_doc({"doctype": "Item", "item_code": "V14HAND-" + frappe.generate_hash(length=6),
-			"item_name": "Hand made", "item_group": "All Item Groups", "stock_uom": "Nos"}).insert(ignore_permissions=True)
+		item = self._new_item()
 		self.assertEqual(item.itag_item_type, "Critical")
 		# Saved without error; the hidden mandatory field holds a valid value.
 		self.assertIn(frappe.db.get_value("Item", item.name, "custom_product_type"), field.options.split("\n"))
@@ -138,8 +155,15 @@ class TestHandMadeItemSavesWithHiddenMandatoryOldField(FrappeTestCase):
 		fill_old_product_type_from_itag_item_type(doc)
 		self.assertEqual(doc.custom_product_type, "Non-Product")
 
-	def test_explicit_old_value_kept(self):
-		item = frappe.get_doc({"doctype": "Item", "item_code": "V14HAND-" + frappe.generate_hash(length=6),
-			"item_name": "Hand made", "item_group": "All Item Groups", "stock_uom": "Nos",
-			"itag_item_type": "Non-Critical", "custom_product_type": "General"}).insert(ignore_permissions=True)
-		self.assertEqual(frappe.db.get_value("Item", item.name, "custom_product_type"), "General")
+	def test_fields_match_after_editing_existing_item(self):
+		item = self._new_item(itag_item_type="Critical")
+		doc = frappe.get_doc("Item", item.name)
+		doc.itag_item_type = "Non-Critical"
+		doc.save(ignore_permissions=True)
+		row = frappe.db.get_value("Item", item.name, ["itag_item_type", "custom_product_type"], as_dict=True)
+		self.assertEqual(row.itag_item_type, "Non-Critical")
+		self.assertEqual(row.custom_product_type, "Non-Critical")
+
+	def test_new_item_old_field_follows_itag_item_type(self):
+		item = self._new_item(itag_item_type="Non-Critical", custom_product_type="General")
+		self.assertEqual(frappe.db.get_value("Item", item.name, "custom_product_type"), "Non-Critical")

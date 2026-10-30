@@ -165,7 +165,8 @@ class TestItem3ItemType(_EIRCase):
 		frappe.db.set_value("Item", code, "custom_product_type", "General", update_modified=False)
 		amended = self._amend(eir, item_type="Non-Critical")  # cancel saves the General Item (validated)
 		self.assertEqual(frappe.db.get_value("Item", code, "disabled"), 1)
-		self.assertEqual(frappe.db.get_value("Item", code, "custom_product_type"), "General")
+		# v15.5.14 b2: the save on cancel mirrors itag_item_type into the old field.
+		self.assertEqual(frappe.db.get_value("Item", code, "custom_product_type"), frappe.db.get_value("Item", code, "itag_item_type"))
 		amended.submit()
 		self.assertEqual(frappe.db.get_value("Item", code, ["disabled", "custom_product_type"]), (0, "Non-Critical"))
 
