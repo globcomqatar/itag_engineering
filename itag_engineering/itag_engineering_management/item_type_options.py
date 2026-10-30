@@ -37,8 +37,24 @@ def ensure_item_product_type_options():
 
 def ensure_item_product_type_options_and_default():
 	"""after_migrate entry point. v15.5.14 build 2: options only; the Critical
-	default now lives on our own itag_item_type field (no Property Setter)."""
-	return ensure_item_product_type_options()
+	default now lives on our own itag_item_type field (no Property Setter).
+	The old erpcloud_itagksa field is hidden on the Item form."""
+	options = ensure_item_product_type_options()
+	hide_old_item_product_type()
+	return options
+
+
+def hide_old_item_product_type():
+	"""v15.5.14 build 2 (Waheed via Ahmed, 30-Oct-2026): one Property Setter,
+	Item.custom_product_type hidden = 1. Idempotent; values and every other
+	property of the field are untouched. No-op when the field is absent."""
+	field = frappe.get_meta("Item").get_field(ITEM_FIELD)
+	if not field:
+		return False
+	if not field.hidden:
+		make_property_setter("Item", ITEM_FIELD, "hidden", 1, "Check", validate_fields_for_doctype=False)
+		frappe.clear_cache(doctype="Item")
+	return True
 
 
 def rename_general_to_non_product():

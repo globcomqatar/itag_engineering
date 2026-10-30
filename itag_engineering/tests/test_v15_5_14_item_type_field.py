@@ -55,3 +55,37 @@ class TestItagItemTypeCopyPatch(FrappeTestCase):
 		import os
 		with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), "patches.txt")) as f:
 			self.assertIn("v15_5_14.copy_item_type_to_itag_item_type", f.read())
+
+
+class TestOldItemTypeHidden(FrappeTestCase):
+	@classmethod
+	def setUpClass(cls):
+		super().setUpClass()
+		cls.added_field = _ensure_erpcloud_like_product_type_field()
+
+	@classmethod
+	def tearDownClass(cls):
+		if cls.added_field:
+			frappe.delete_doc("Custom Field", "Item-custom_product_type", ignore_permissions=True, force=True)
+			frappe.db.delete("Property Setter", {"doc_type": "Item", "field_name": "custom_product_type"})
+			frappe.db.commit()
+			frappe.clear_cache(doctype="Item")
+		super().tearDownClass()
+
+	def test_hidden_idempotent_and_values_untouched(self):
+		from itag_engineering.itag_engineering_management.item_type_options import (
+			ensure_item_product_type_options_and_default,
+		)
+		item = factories.create_fresh_stock_item(prefix="V14HID")
+		frappe.db.set_value("Item", item.name, "custom_product_type", "Non-Critical", update_modified=False)
+		before = frappe.get_meta("Item").get_field("custom_product_type")
+		before_props = (before.fieldtype, before.reqd, before.default)
+		ensure_item_product_type_options_and_default()
+		ensure_item_product_type_options_and_default()
+		field = frappe.get_meta("Item").get_field("custom_product_type")
+		self.assertEqual(field.hidden, 1)
+		self.assertEqual((field.fieldtype, field.reqd, field.default), before_props)
+		self.assertEqual(frappe.db.count("Property Setter",
+			{"doc_type": "Item", "field_name": "custom_product_type", "property": "hidden"}), 1)
+		self.assertEqual(frappe.db.get_value("Item", item.name, "custom_product_type"), "Non-Critical")
+		self.assertFalse(frappe.get_meta("Item").get_field("itag_item_type").hidden)
