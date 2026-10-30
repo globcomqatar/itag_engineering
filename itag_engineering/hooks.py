@@ -49,7 +49,7 @@ after_migrate = [
 	# v15.5.14 D4/D5: ECO/ECR Master Manager row, no delete for User/Manager.
 	"itag_engineering.install.apply_change_document_permissions",
 	# v15.5.12 #3: last, so it runs after every app's fixtures.
-	# v15.5.14 #3: also sets the Critical field default (Property Setter).
+	# v15.5.14 build 2: options only; Critical default is on itag_item_type.
 	"itag_engineering.itag_engineering_management.item_type_options.ensure_item_product_type_options_and_default",
 ]
 
@@ -168,8 +168,8 @@ override_whitelisted_methods = {
 
 doc_events = {
 	"Item": {
-		# v15.5.14 #3: Item Type Critical is now a field default (Property
-		# Setter from item_type_options.ensure_item_product_type_options).
+		# v15.5.14 build 2: Item Type Critical is the default of our own
+		# Item.itag_item_type custom field.
 		# v15.5.14 #6: item_code = name when a Document Naming Rule named it.
 		"before_validate": "itag_engineering.itag_engineering_management.item_naming.sync_item_code_with_naming_rule",
 	},

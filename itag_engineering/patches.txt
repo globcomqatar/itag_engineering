@@ -18,3 +18,4 @@ itag_engineering.patches.v15_5_8.engineering_item_request_submittable
 itag_engineering.patches.v15_5_10.item_request_links
 itag_engineering.patches.v15_5_12.item_type_non_product
 itag_engineering.patches.v15_5_13.item_product_type_general_to_non_product
+itag_engineering.patches.v15_5_14.copy_item_type_to_itag_item_type

@@ -36,10 +36,9 @@ def ensure_item_product_type_options():
 
 
 def ensure_item_product_type_options_and_default():
-	"""after_migrate entry point: options first, then the Critical default."""
-	options = ensure_item_product_type_options()
-	ensure_item_product_type_default()
-	return options
+	"""after_migrate entry point. v15.5.14 build 2: options only; the Critical
+	default now lives on our own itag_item_type field (no Property Setter)."""
+	return ensure_item_product_type_options()
 
 
 def rename_general_to_non_product():
@@ -53,31 +52,24 @@ def rename_general_to_non_product():
 	return names
 
 
-DEFAULT_PRODUCT_TYPE = "Critical"
+NEW_ITEM_FIELD = "itag_item_type"
 
 
-def ensure_item_product_type_default():
-	"""v15.5.14 #3 (Waheed, 30-Oct-2026): Item Type Critical on a new Item is
-	a standard field default - a Property Setter (Item.custom_product_type
-	.default = Critical) - replacing the v15.5.13 before_insert hook and
-	item.js. Frappe applies it on the new-Item form and on every insert that
-	leaves the field blank. Existing Items are not touched. The
-	erpcloud_itagksa field itself is not edited. Idempotent; no-op when the
-	field is not installed or has no Critical option."""
-	field = frappe.get_meta("Item").get_field(ITEM_FIELD)
-	if not field or field.fieldtype != "Select":
-		return None
-	if DEFAULT_PRODUCT_TYPE not in (field.options or "").split("\n"):
-		return None
-	if field.default == DEFAULT_PRODUCT_TYPE:
-		return field.default
-	make_property_setter(
-		"Item", ITEM_FIELD, "default", DEFAULT_PRODUCT_TYPE, "Text", validate_fields_for_doctype=False
-	)
-	frappe.clear_cache(doctype="Item")
-	# new_doc() keeps a per-process template; drop it so the default applies now.
-	getattr(frappe.local, "new_doc_templates", {}).pop("Item", None)
-	return DEFAULT_PRODUCT_TYPE
+def copy_product_type_to_itag_item_type():
+	"""v15.5.14 build 2: one-time copy of Item.custom_product_type into our
+	own Item.itag_item_type, with General -> Non-Product. custom_product_type
+	is read only, never written. Nothing deleted. Returns {item: new value}."""
+	meta = frappe.get_meta("Item")
+	if not meta.has_field(NEW_ITEM_FIELD) or not meta.has_field(ITEM_FIELD):
+		return {}
+	valid = set(REQUIRED_OPTIONS)
+	changed = {}
+	for name, old in frappe.get_all("Item", fields=["name", ITEM_FIELD], as_list=True):
+		new = "Non-Product" if old == "General" else old
+		if new in valid:
+			frappe.db.set_value("Item", name, NEW_ITEM_FIELD, new, update_modified=False)
+			changed[name] = new
+	return changed
 
 
 def items_general_to_non_product():

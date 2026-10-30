@@ -73,39 +73,26 @@ class TestD3BomCancelGuard(FrappeTestCase):
 
 
 class TestItem3CriticalFieldDefault(FrappeTestCase):
-	FIELD = "custom_product_type"
+	"""v15.5.14 build 2: Critical is the default of our own itag_item_type."""
 
-	@classmethod
-	def setUpClass(cls):
-		super().setUpClass()
-		from itag_engineering.itag_engineering_management.item_type_options import (
-			ensure_item_product_type_options_and_default,
-		)
-		from itag_engineering.tests.test_v15_5_12_next_build import _ensure_erpcloud_like_product_type_field
+	FIELD = "itag_item_type"
 
-		cls.added_field = _ensure_erpcloud_like_product_type_field()
-		ensure_item_product_type_options_and_default()
-		getattr(frappe.local, "new_doc_templates", {}).pop("Item", None)
+	def test_field_defined_with_default_critical(self):
+		field = frappe.get_meta("Item").get_field(self.FIELD)
+		self.assertEqual(field.fieldtype, "Select")
+		self.assertEqual(field.options.split("\n"), ["Critical", "Non-Critical", "Non-Product"])
+		self.assertEqual(field.default, "Critical")
 
-	@classmethod
-	def tearDownClass(cls):
-		getattr(frappe.local, "new_doc_templates", {}).pop("Item", None)
-		if cls.added_field:
-			frappe.delete_doc("Custom Field", "Item-custom_product_type", ignore_permissions=True, force=True)
-			frappe.db.delete("Property Setter", {"doc_type": "Item", "field_name": "custom_product_type"})
-			frappe.db.commit()
-			frappe.clear_cache(doctype="Item")
-		super().tearDownClass()
+	def test_no_default_property_setter_created(self):
+		from unittest.mock import patch
+		from itag_engineering.itag_engineering_management import item_type_options
 
-	def test_property_setter_default_is_critical(self):
-		self.assertEqual(
-			frappe.db.get_value(
-				"Property Setter", {"doc_type": "Item", "field_name": self.FIELD, "property": "default"}, "value"
-			),
-			"Critical",
-		)
+		with patch.object(item_type_options, "make_property_setter") as mps:
+			item_type_options.ensure_item_product_type_options_and_default()
+		self.assertFalse([c for c in mps.call_args_list if c.args[2] == "default"])
 
 	def test_item_outside_request_defaults_critical(self):
+		getattr(frappe.local, "new_doc_templates", {}).pop("Item", None)
 		item = factories.create_fresh_stock_item(prefix="V14-TYPE")
 		self.assertEqual(frappe.db.get_value("Item", item.name, self.FIELD), "Critical")
 
@@ -113,6 +100,7 @@ class TestItem3CriticalFieldDefault(FrappeTestCase):
 		from itag_engineering.itag_engineering_management import item_type_options
 
 		self.assertFalse(hasattr(item_type_options, "default_new_item_product_type"))
+		self.assertFalse(hasattr(item_type_options, "ensure_item_product_type_default"))
 		self.assertNotIn("Item", hooks.doctype_js)
 		self.assertNotIn("before_insert", hooks.doc_events["Item"])
 		self.assertFalse(os.path.exists(os.path.join(APP, "public", "js", "item.js")))

@@ -43,6 +43,16 @@ def get_custom_fields():
 				"insert_after": "itag_valve_type",
 			},
 			{
+				# v15.5.14 build 2 (Waheed via Ahmed, 30-Oct-2026): Item Type owned
+				# by itag_engineering, independent of erpcloud_itagksa.
+				"fieldname": "itag_item_type",
+				"label": "Item Type",
+				"fieldtype": "Select",
+				"options": "Critical\nNon-Critical\nNon-Product",
+				"default": "Critical",
+				"insert_after": "itag_engineering_item_request",
+			},
+			{
 				"fieldname": "itag_column_break_1",
 				"fieldtype": "Column Break",
 				"insert_after": "itag_engineering_item_request",

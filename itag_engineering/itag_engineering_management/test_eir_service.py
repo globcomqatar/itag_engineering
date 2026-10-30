@@ -172,9 +172,8 @@ class TestEirService(FrappeTestCase):
 		self.assertEqual(first, "990-00001")
 		self.assertEqual(second, "990-00002")
 		self.assertEqual(other, "992-00001")
-		if frappe.get_meta("Item").has_field("custom_product_type"):
-			self.assertEqual(frappe.db.get_value("Item", first, "custom_product_type"), "Critical")
-			self.assertEqual(frappe.db.get_value("Item", other, "custom_product_type"), "Non-Critical")
+		self.assertEqual(frappe.db.get_value("Item", first, "itag_item_type"), "Critical")
+		self.assertEqual(frappe.db.get_value("Item", other, "itag_item_type"), "Non-Critical")
 
 	def test_create_item_copies_item_description_to_item(self):
 		item_code = submit_eir_and_get_item(self.eir.name)

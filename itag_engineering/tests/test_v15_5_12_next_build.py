@@ -155,7 +155,7 @@ class TestItem3ItemType(_EIRCase):
 		eir = self._eir(title="F8T NonProduct Valve", item_category="Manufactured", item_type="Non-Product").insert()
 		eir.submit()
 		eir.reload()
-		self.assertEqual(frappe.db.get_value("Item", eir.created_item, "custom_product_type"), "Non-Product")
+		self.assertEqual(frappe.db.get_value("Item", eir.created_item, "itag_item_type"), "Non-Product")
 
 	def test_cancel_and_amend_when_item_still_on_general(self):
 		eir = self._eir(title="F8T General Item Valve", item_category="Manufactured").insert()
