@@ -14,7 +14,7 @@ required_apps = ["erpnext"]
 # (rather than a doctype/ folder + hand-edit) is the sanctioned way to add
 # a client-side button to it without ever touching core files.
 # v15.5.13 #2: Item form shows Item Type Critical on a new Item.
-doctype_js = {"BOM": "public/js/bom.js", "Item": "public/js/item.js"}
+doctype_js = {"BOM": "public/js/bom.js"}
 
 # Installation
 # ------------
@@ -46,8 +46,11 @@ after_migrate = [
 	"itag_engineering.install.apply_item_request_submit_permissions",
 	# v15.5.13 #6: Engineering User may add master values (no delete).
 	"itag_engineering.install.apply_master_value_create_permissions",
+	# v15.5.14 D4/D5: ECO/ECR Master Manager row, no delete for User/Manager.
+	"itag_engineering.install.apply_change_document_permissions",
 	# v15.5.12 #3: last, so it runs after every app's fixtures.
-	"itag_engineering.itag_engineering_management.item_type_options.ensure_item_product_type_options",
+	# v15.5.14 #3: also sets the Critical field default (Property Setter).
+	"itag_engineering.itag_engineering_management.item_type_options.ensure_item_product_type_options_and_default",
 ]
 
 # Testing
@@ -165,8 +168,10 @@ override_whitelisted_methods = {
 
 doc_events = {
 	"Item": {
-		# v15.5.13 #2: new Items default to Item Type Critical (insert only).
-		"before_insert": "itag_engineering.itag_engineering_management.item_type_options.default_new_item_product_type",
+		# v15.5.14 #3: Item Type Critical is now a field default (Property
+		# Setter from item_type_options.ensure_item_product_type_options).
+		# v15.5.14 #6: item_code = name when a Document Naming Rule named it.
+		"before_validate": "itag_engineering.itag_engineering_management.item_naming.sync_item_code_with_naming_rule",
 	},
 	"BOM": {
 		"before_insert": "itag_engineering.itag_engineering_management.release_control.prepare_bom_from_bom_creator",
@@ -175,6 +180,8 @@ doc_events = {
 			"itag_engineering.itag_engineering_management.item_request_links.validate_one_per_request",
 		],
 		"before_submit": "itag_engineering.itag_engineering_management.release_control.guard_bom_submit",
+		# v15.5.14 D3: on top of ERPNext's own parent-BOM / linked-doc block.
+		"before_cancel": "itag_engineering.itag_engineering_management.release_control.guard_bom_cancel",
 	},
 	"Engineering Release": {
 		"validate": [
@@ -186,7 +193,13 @@ doc_events = {
 		"on_update": "itag_engineering.itag_engineering_management.eco_auto_hold_service.on_eco_update",
 	},
 	"Work Order": {
-		"before_submit": "itag_engineering.itag_engineering_management.work_order_baseline.freeze_baseline_before_submit",
+		# v15.5.14 D2: ERPNext's validate_bom_no stays; we add only the
+		# engineering release check (warn on save, refuse on submit).
+		"validate": "itag_engineering.itag_engineering_management.release_control.warn_work_order_unreleased_bom",
+		"before_submit": [
+			"itag_engineering.itag_engineering_management.release_control.block_work_order_unreleased_bom",
+			"itag_engineering.itag_engineering_management.work_order_baseline.freeze_baseline_before_submit",
+		],
 	},
 	"Job Card": {
 		# Job Card's "start"/"complete" actions are status transitions, not

@@ -80,12 +80,12 @@ class _ItemTypeFieldCase(FrappeTestCase):
 	def setUpClass(cls):
 		super().setUpClass()
 		from itag_engineering.itag_engineering_management.item_type_options import (
-			ensure_item_product_type_options,
+			ensure_item_product_type_options_and_default,
 		)
 		from itag_engineering.tests.test_v15_5_12_next_build import _ensure_erpcloud_like_product_type_field
 
 		cls.added_field = _ensure_erpcloud_like_product_type_field()
-		ensure_item_product_type_options()
+		ensure_item_product_type_options_and_default()
 
 	@classmethod
 	def tearDownClass(cls):
@@ -108,20 +108,18 @@ class TestItem2ItemTypeDefaultCritical(_ItemTypeFieldCase):
 		item = self._item()
 		self.assertEqual(frappe.db.get_value("Item", item.name, self.FIELD), "Critical")
 
-	def test_automatic_first_option_becomes_critical(self):
-		# The erpcloud-like field starts with General, which Frappe fills in.
+	def test_new_item_form_shows_critical(self):
+		# v15.5.14 #3: the field default (Property Setter) replaces the old
+		# "automatic first option" override.
 		doc = frappe.new_doc("Item")
-		self.assertEqual(doc.get(self.FIELD), "General")
-		item = self._item()
-		self.assertEqual(frappe.db.get_value("Item", item.name, self.FIELD), "Critical")
+		self.assertEqual(doc.get(self.FIELD), "Critical")
 
 	def test_chosen_value_is_kept(self):
-		from itag_engineering.itag_engineering_management.item_type_options import default_new_item_product_type
-
 		doc = frappe.new_doc("Item")
+		doc.update({"item_code": frappe.generate_hash(length=8).upper(), "item_group": "All Item Groups", "stock_uom": "Nos"})
 		doc.set(self.FIELD, "Non-Critical")
-		default_new_item_product_type(doc)
-		self.assertEqual(doc.get(self.FIELD), "Non-Critical")
+		doc.insert(ignore_permissions=True)
+		self.assertEqual(frappe.db.get_value("Item", doc.name, self.FIELD), "Non-Critical")
 
 	def test_existing_item_left_alone(self):
 		item = self._item()
@@ -132,20 +130,8 @@ class TestItem2ItemTypeDefaultCritical(_ItemTypeFieldCase):
 		doc.save(ignore_permissions=True)
 		self.assertFalse(frappe.db.get_value("Item", item.name, self.FIELD))
 
-	def test_no_property_setter_for_default(self):
-		self.assertFalse(
-			frappe.db.exists(
-				"Property Setter", {"doc_type": "Item", "field_name": self.FIELD, "property": "default"}
-			)
-		)
-
-	def test_item_form_script_registered(self):
-		from itag_engineering import hooks
-
-		self.assertEqual(hooks.doctype_js.get("Item"), "public/js/item.js")
-		self.assertIn(
-			"item_type_options.default_new_item_product_type", hooks.doc_events["Item"]["before_insert"]
-		)
+	# v15.5.14 #3 superseded the v15.5.13 "no Property Setter / item.js"
+	# tests; see tests/test_v15_5_14_build.py.
 
 
 def _user(key, roles):

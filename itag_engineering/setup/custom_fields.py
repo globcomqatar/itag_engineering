@@ -33,9 +33,19 @@ def get_custom_fields():
 				"insert_after": "itag_product_family",
 			},
 			{
+				# v15.5.14 #6: back-link from the Item to the request that created it.
+				"fieldname": "itag_engineering_item_request",
+				"label": "Engineering Item Request",
+				"fieldtype": "Link",
+				"options": "Engineering Item Request",
+				"read_only": 1,
+				"no_copy": 1,
+				"insert_after": "itag_valve_type",
+			},
+			{
 				"fieldname": "itag_column_break_1",
 				"fieldtype": "Column Break",
-				"insert_after": "itag_valve_type",
+				"insert_after": "itag_engineering_item_request",
 			},
 			{
 				"fieldname": "itag_nominal_size",

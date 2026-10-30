@@ -11,6 +11,7 @@ from itag_engineering.itag_engineering_management.duplicate_service import (
 	find_possible_duplicates,
 )
 from itag_engineering.itag_engineering_management.item_code_service import reserve_item_code
+from itag_engineering.itag_engineering_management.item_naming import matching_document_naming_rule
 from itag_engineering.itag_engineering_management.response import success
 
 ITEM_FIELD_MAP = {
@@ -182,6 +183,7 @@ def build_item_values(eir, item_code):
 		"description": build_item_description(eir) or eir.request_title,
 		"itag_engineering_status": "Approved",
 		"itag_engineering_classification": eir.item_category,
+		"itag_engineering_item_request": eir.name,  # v15.5.14 back-link
 	}
 	# erpcloud_itagksa makes Item Type mandatory on Item.
 	values["custom_product_type"] = eir.get("item_type") or "Critical"  # v15.5.12 #3
@@ -202,41 +204,65 @@ def create_item_from_eir(eir_name, eir=None, persist_request=True):
 	if eir.docstatus != 1:
 		frappe.throw(_("Submit the Engineering Item Request to create the Item."))
 
-	item_code = eir.reserved_item_code
-	if not item_code:
-		eir.apply_series_from_valve_type()
-		if not eir.item_code_rule:
-			if not eir.valve_type:
+	# v15.5.14 #6: a matching Document Naming Rule on Item names the Item
+	# (prefix + number; the prefix may read Item fields). The Item Code Rule
+	# is only used as a fallback when no Document Naming Rule matches (open
+	# question for Waheed: drop the fallback once every Valve Type has a
+	# Document Naming Rule).
+	probe = frappe.get_doc(build_item_values(eir, None))
+	naming_rule = None if eir.reserved_item_code else matching_document_naming_rule(probe)
+
+	if naming_rule:
+		item = probe
+		item.item_code = None
+		# No set_name: Frappe's Document Naming Rule runs before ERPNext's
+		# Item.autoname, so Stock Settings' naming series cannot override it.
+		item.insert(ignore_permissions=True)
+		item_code = item.name
+	else:
+		item_code = eir.reserved_item_code
+		if not item_code:
+			eir.apply_series_from_valve_type()
+			if not eir.item_code_rule:
+				if not eir.valve_type:
+					frappe.throw(
+						_(
+							"Select a Valve Type. The item code comes from a Document Naming Rule on Item, or the Item Code Rule on that Valve Type."
+						)
+					)
 				frappe.throw(
 					_(
-						"Select a Valve Type. The item code comes from the Item Code Rule on that Valve Type."
-					)
+						"No Document Naming Rule on Item matches this request, and Valve Type {0} has no Item Code Series."
+					).format(eir.valve_type)
 				)
-			frappe.throw(
-				_(
-					"Valve Type {0} has no Item Code Series. Open that Valve Type and set its Item Code Rule there."
-				).format(eir.valve_type)
+			values = {itag_field: eir.get(eir_field) for itag_field, eir_field in ITEM_FIELD_MAP.items()}
+			item_code = reserve_item_code(eir.item_code_rule, values)
+			eir.reserved_item_code = item_code
+			log_audit_event(
+				"Item Code Reservation", "Engineering Item Request", eir.name, {"item_code": item_code}
 			)
-		values = {itag_field: eir.get(eir_field) for itag_field, eir_field in ITEM_FIELD_MAP.items()}
-		item_code = reserve_item_code(eir.item_code_rule, values)
-		eir.reserved_item_code = item_code
-		log_audit_event(
-			"Item Code Reservation", "Engineering Item Request", eir.name, {"item_code": item_code}
+		item = frappe.get_doc(build_item_values(eir, item_code))
+		# set_name skips autoname, so Stock Settings "Item Naming By" =
+		# Naming Series cannot replace the reserved code (QA defect D1).
+		item.insert(ignore_permissions=True, set_name=item_code)
+		frappe.db.set_value(
+			"Item Code Reservation",
+			{"item_code": item_code},
+			{"status": "Consumed", "consumed_by_item": item.name},
 		)
 
-	item = frappe.get_doc(build_item_values(eir, item_code))
-	item.insert(ignore_permissions=True)
-
-	frappe.db.set_value(
-		"Item Code Reservation",
-		{"item_code": item_code},
-		{"status": "Consumed", "consumed_by_item": item.item_code},
-	)
+	# Name-match check: never leave a wrongly named Item behind (rolls back).
+	if item.name != item_code or item.item_code != item.name:
+		frappe.throw(
+			_("Item was created as {0} but its code should be {1}. Nothing was saved.").format(
+				item.name, item_code
+			)
+		)
 	eir.db_set(
 		{
 			"reserved_item_code": item_code,
-			"item_code_rule": eir.item_code_rule,
-			"code_pattern": eir.code_pattern,
+			"item_code_rule": None if naming_rule else eir.item_code_rule,
+			"code_pattern": naming_rule or eir.code_pattern,
 			"created_item": item.item_code,
 			"workflow_state": "Item Created",
 		}
@@ -273,8 +299,8 @@ def reenable_item_for_amended(eir, item_code):
 	_check_eir_action_permission()
 	item = frappe.get_doc("Item", item_code)
 	values = build_item_values(eir, item_code)
-	for key in ("doctype", "item_code"):
-		values.pop(key, None)
+	for key in ("doctype", "item_code", "itag_engineering_item_request"):
+		values.pop(key, None)  # the back-link stays with the original request
 	item.update(values)
 	item.disabled = 0
 	item.save(ignore_permissions=True)  # role gate above; Item.validate runs

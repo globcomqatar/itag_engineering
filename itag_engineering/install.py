@@ -713,7 +713,8 @@ def apply_item_request_submit_permissions():
 # JSON carries the rights; Custom DocPerm rows on a site (they replace the
 # JSON rows) get the same. Rows are only updated, never added or removed.
 MASTER_VALUE_DOCTYPES = ("ITAG Nominal Size", "ITAG Pressure Class", "ITAG Body Material")
-MASTER_VALUE_USER_RIGHTS = {"read": 1, "create": 1, "delete": 0}
+# v15.5.14 D6: Engineering User may also edit master values; delete stays 0.
+MASTER_VALUE_USER_RIGHTS = {"read": 1, "create": 1, "write": 1, "delete": 0}
 
 
 def apply_master_value_create_permissions():
@@ -731,3 +732,47 @@ def apply_master_value_create_permissions():
 				changed = True
 	if changed:
 		frappe.clear_cache()
+
+
+# v15.5.14 D4/D5 (Waheed, 30-Oct-2026): ECO and ECR. Engineering Master
+# Manager gets a row matching Engineering Manager; delete is removed for
+# Engineering User and Engineering Manager (so Master Manager, matching the
+# Manager row, has no delete either). The DocType JSON carries the standard
+# rows; this keeps any Custom DocPerm rows (site customisation) in line.
+CHANGE_DOCTYPES = ("Engineering Change Order", "Engineering Change Request")
+NO_DELETE_ROLES = ("Engineering User", "Engineering Manager")
+PERM_FLAGS = ("read", "write", "create", "delete", "submit", "cancel", "amend", "report", "export", "import", "share", "print", "email")
+
+
+def apply_change_document_permissions():
+	"""Idempotent. Only touches Custom DocPerm rows when the doctype has them."""
+	changed = False
+	for doctype in CHANGE_DOCTYPES:
+		rows = frappe.get_all(
+			"Custom DocPerm", filters={"parent": doctype, "permlevel": 0}, fields=["name", "role", *PERM_FLAGS]
+		)
+		if not rows:
+			continue
+		for row in rows:
+			if row.role in NO_DELETE_ROLES and row.delete:
+				frappe.db.set_value("Custom DocPerm", row.name, "delete", 0)
+				row.delete = 0
+				changed = True
+		manager = next((r for r in rows if r.role == "Engineering Manager"), None)
+		if manager and not any(r.role == "Engineering Master Manager" for r in rows):
+			perm = frappe.get_doc(
+				{
+					"doctype": "Custom DocPerm",
+					"parent": doctype,
+					"parenttype": "DocType",
+					"parentfield": "permissions",
+					"role": "Engineering Master Manager",
+					"permlevel": 0,
+					**{f: manager.get(f) or 0 for f in PERM_FLAGS},
+				}
+			)
+			perm.db_insert()
+			changed = True
+	if changed:
+		frappe.clear_cache()
+	return changed

@@ -35,6 +35,13 @@ def ensure_item_product_type_options():
 	return options
 
 
+def ensure_item_product_type_options_and_default():
+	"""after_migrate entry point: options first, then the Critical default."""
+	options = ensure_item_product_type_options()
+	ensure_item_product_type_default()
+	return options
+
+
 def rename_general_to_non_product():
 	"""Idempotent in-place update of Engineering Item Request.item_type
 	(all docstatuses). No record is deleted. Items are not touched."""
@@ -49,33 +56,28 @@ def rename_general_to_non_product():
 DEFAULT_PRODUCT_TYPE = "Critical"
 
 
-def _automatic_value(field):
-	"""What Frappe puts in the field on a new Item when nobody chooses: the
-	field's own default, else the first Select option."""
-	if field.default:
-		return field.default
-	return (field.options or "").split("\n", 1)[0]
-
-
-def default_new_item_product_type(doc, method=None):
-	"""v15.5.13 #2 (Waheed, Ahmed agreed): Item.before_insert. A new Item
-	gets Item Type Critical unless Critical, Non-Critical or Non-Product was
-	set (by the user or mapped from the request). A blank value, or the
-	value Frappe filled in automatically from the erpcloud_itagksa field
-	(its default or first option, e.g. General), becomes Critical. Existing
-	Items are never touched (insert only). No Property Setter and no edit
-	to the erpcloud_itagksa field."""
-	field = doc.meta.get_field(ITEM_FIELD)
+def ensure_item_product_type_default():
+	"""v15.5.14 #3 (Waheed, 30-Oct-2026): Item Type Critical on a new Item is
+	a standard field default - a Property Setter (Item.custom_product_type
+	.default = Critical) - replacing the v15.5.13 before_insert hook and
+	item.js. Frappe applies it on the new-Item form and on every insert that
+	leaves the field blank. Existing Items are not touched. The
+	erpcloud_itagksa field itself is not edited. Idempotent; no-op when the
+	field is not installed or has no Critical option."""
+	field = frappe.get_meta("Item").get_field(ITEM_FIELD)
 	if not field or field.fieldtype != "Select":
-		return
-	options = (field.options or "").split("\n")
-	if DEFAULT_PRODUCT_TYPE not in options:
-		return
-	value = doc.get(ITEM_FIELD)
-	if value in REQUIRED_OPTIONS:
-		return
-	if not value or value == _automatic_value(field):
-		doc.set(ITEM_FIELD, DEFAULT_PRODUCT_TYPE)
+		return None
+	if DEFAULT_PRODUCT_TYPE not in (field.options or "").split("\n"):
+		return None
+	if field.default == DEFAULT_PRODUCT_TYPE:
+		return field.default
+	make_property_setter(
+		"Item", ITEM_FIELD, "default", DEFAULT_PRODUCT_TYPE, "Text", validate_fields_for_doctype=False
+	)
+	frappe.clear_cache(doctype="Item")
+	# new_doc() keeps a per-process template; drop it so the default applies now.
+	getattr(frappe.local, "new_doc_templates", {}).pop("Item", None)
+	return DEFAULT_PRODUCT_TYPE
 
 
 def items_general_to_non_product():

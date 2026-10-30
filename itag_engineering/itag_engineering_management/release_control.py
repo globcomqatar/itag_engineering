@@ -148,3 +148,68 @@ def prepare_bom_from_bom_creator(doc, method=None):
 			doc.itag_drawing_revision = creator.itag_drawing_revision
 		if creator.itag_product_revision and not doc.get("itag_product_revision"):
 			doc.itag_product_revision = creator.itag_product_revision
+
+
+# ---------------------------------------------------------------------------
+# v15.5.14 D2/D3 (Waheed, 30-Oct-2026). ERPNext's own checks stay as they are:
+# Work Order.validate_bom_no (BOM active/submitted/for this item) and BOM's
+# linked-document cancel block (parent BOMs, Work Orders). We add only the
+# engineering release check on top.
+# ---------------------------------------------------------------------------
+RELEASED_FOR_PRODUCTION = "Released for Production"
+CANCEL_BLOCKING_RELEASE_STATUSES = (RELEASED_FOR_PRODUCTION, "Suspended")
+
+
+def released_engineering_release_for_bom(bom):
+	"""Name of a Released for Production Engineering Release whose BOM is
+	`bom`, else None."""
+	if not bom:
+		return None
+	rows = frappe.get_all(
+		"Engineering Release",
+		filters={"bom": bom, "release_status": RELEASED_FOR_PRODUCTION, "docstatus": ["<", 2]},
+		pluck="name",
+		limit=1,
+	)
+	return rows[0] if rows else None
+
+
+def _work_order_bom_message(doc):
+	return _(
+		"BOM {0} on Work Order {1} is not the BOM of an Engineering Release that is "
+		"Released for Production. Release it first, or pick the released BOM."
+	).format(doc.bom_no, doc.name)
+
+
+def warn_work_order_unreleased_bom(doc, method=None):
+	"""Work Order.validate: warn only (a save is never blocked, so ERPNext's
+	draft Work Orders from Production Plan / Sales Order still save)."""
+	if doc.docstatus != 0 or not doc.bom_no:
+		return
+	if not released_engineering_release_for_bom(doc.bom_no):
+		frappe.msgprint(_work_order_bom_message(doc), title=_("Engineering release"), indicator="orange")
+
+
+def block_work_order_unreleased_bom(doc, method=None):
+	"""Work Order.before_submit: refuse."""
+	if not released_engineering_release_for_bom(doc.bom_no):
+		frappe.throw(_work_order_bom_message(doc), ReleaseControlError, title=_("Engineering release"))
+
+
+def guard_bom_cancel(doc, method=None):
+	"""BOM.before_cancel: refuse while the BOM's Engineering Release is
+	Released for Production or Suspended."""
+	rows = frappe.get_all(
+		"Engineering Release",
+		filters={"bom": doc.name, "release_status": ["in", CANCEL_BLOCKING_RELEASE_STATUSES], "docstatus": ["<", 2]},
+		fields=["name", "release_status"],
+		limit=1,
+	)
+	if rows:
+		frappe.throw(
+			_(
+				"Cannot cancel BOM {0}: Engineering Release {1} is {2}. Supersede or withdraw that release first."
+			).format(doc.name, rows[0].name, rows[0].release_status),
+			ReleaseControlError,
+			title=_("Release control"),
+		)

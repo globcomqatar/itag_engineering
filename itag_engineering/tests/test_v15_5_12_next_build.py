@@ -129,7 +129,7 @@ class TestItem3ItemType(_EIRCase):
 		frappe.clear_cache(doctype="Item")
 		hooks = frappe.get_hooks("after_migrate", app_name="itag_engineering")
 		self.assertEqual(
-			hooks[-1], "itag_engineering.itag_engineering_management.item_type_options.ensure_item_product_type_options"
+			hooks[-1], "itag_engineering.itag_engineering_management.item_type_options.ensure_item_product_type_options_and_default"
 		)
 		frappe.get_attr(hooks[-1])()
 		self.assertIn("Non-Product", self._item_options())
