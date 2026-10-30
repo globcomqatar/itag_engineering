@@ -40,10 +40,13 @@ def matching_document_naming_rule(doc):
 
 
 def sync_item_code_with_naming_rule(doc, method=None):
-	"""Item.before_validate. Only on insert: when the name was set by a
-	Document Naming Rule (so it differs from item_code), copy it into
-	item_code. Saved Items are never renamed or re-coded here."""
-	if not doc.flags.in_insert or not doc.name:
+	"""Item.before_validate. Only on insert, and only when a Document Naming
+	Rule actually matches this Item (Ahmed's review, 30-Oct-2026): copy the
+	rule-generated name into item_code. Items named by Stock Settings'
+	naming series or by a typed Item Code (no matching rule) are left
+	exactly as ERPNext set them. Saved Items are never re-coded here."""
+	if not doc.flags.in_insert or not doc.name or doc.item_code == doc.name:
 		return
-	if doc.item_code != doc.name:
-		doc.item_code = doc.name
+	if not matching_document_naming_rule(doc):
+		return
+	doc.item_code = doc.name

@@ -211,6 +211,7 @@ class TestItem6DocumentNamingRule(FrappeTestCase):
 		)
 
 		ensure_item_product_type_options_and_default()
+		cls.VT_NAME = VT
 		cls.prefix = "V14" + frappe.generate_hash(length=4).upper() + "-"
 		cls.dnr = frappe.get_doc(
 			{
@@ -237,6 +238,7 @@ class TestItem6DocumentNamingRule(FrappeTestCase):
 
 		TestFix8ItemRequestSubmit._cleanup(self)
 		frappe.db.delete("Item", {"item_code": ["like", "V14%"]})
+		frappe.db.delete("Item", {"item_name": ["like", "V14 plain%"]})
 
 	def _eir(self, **kw):
 		from itag_engineering.tests.test_fix8_item_request_submit import TestFix8ItemRequestSubmit
@@ -261,15 +263,47 @@ class TestItem6DocumentNamingRule(FrappeTestCase):
 		frappe.db.set_default("item_naming_by", "Naming Series")
 		self._check(self._eir())
 
+	def _plain_item(self, **kw):
+		values = {"doctype": "Item", "item_name": "V14 plain " + frappe.generate_hash(length=5), "item_group": "Products", "stock_uom": "Nos"}
+		values.update(kw)
+		return frappe.get_doc(values).insert(ignore_permissions=True)
+
+	def test_glue_rule_matched_copies_name(self):
+		item = self._plain_item(itag_valve_type=self.VT_NAME)
+		self.assertTrue(item.name.startswith(self.prefix))
+		self.assertEqual(item.item_code, item.name)
+
+	def test_glue_no_rule_naming_series_unchanged(self):
+		frappe.db.set_default("item_naming_by", "Naming Series")
+		item = self._plain_item()
+		self.assertFalse(item.name.startswith(self.prefix))
+		self.assertEqual(item.item_code, item.name)  # ERPNext's own behaviour
+
+	def test_glue_no_rule_typed_code_not_overwritten(self):
+		frappe.db.set_default("item_naming_by", "Item Code")
+		code = "V14TYPED-" + frappe.generate_hash(length=6).upper()
+		item = self._plain_item(item_code=code)
+		self.assertEqual((item.name, item.item_code), (code, code))
+
+	def test_glue_skips_when_no_rule_matches(self):
+		from itag_engineering.itag_engineering_management.item_naming import sync_item_code_with_naming_rule
+
+		doc = frappe.new_doc("Item")
+		doc.update({"name": "SERIES-0001", "item_code": "TYPED-1"})
+		doc.flags.in_insert = True
+		sync_item_code_with_naming_rule(doc)
+		self.assertEqual(doc.item_code, "TYPED-1")
+		doc.itag_valve_type = self.VT_NAME
+		sync_item_code_with_naming_rule(doc)
+		self.assertEqual(doc.item_code, "SERIES-0001")
+
 	def test_glue_runs_only_on_insert(self):
 		from itag_engineering.itag_engineering_management.item_naming import sync_item_code_with_naming_rule
 
-		doc = frappe._dict(name="X-1", item_code="Y", flags=frappe._dict(in_insert=False))
+		doc = frappe.new_doc("Item")
+		doc.update({"name": "X-1", "item_code": "Y", "itag_valve_type": self.VT_NAME})
 		sync_item_code_with_naming_rule(doc)
 		self.assertEqual(doc.item_code, "Y")
-		doc.flags.in_insert = True
-		sync_item_code_with_naming_rule(doc)
-		self.assertEqual(doc.item_code, "X-1")
 
 	def test_item_code_rule_kept_and_fallback_uses_set_name(self):
 		self.dnr.db_set("disabled", 1)
