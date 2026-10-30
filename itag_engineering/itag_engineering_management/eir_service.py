@@ -186,8 +186,10 @@ def build_item_values(eir, item_code):
 		"itag_engineering_item_request": eir.name,  # v15.5.14 back-link
 	}
 	values["itag_item_type"] = eir.get("item_type") or "Critical"  # v15.5.14 build 2
-	# erpcloud_itagksa makes its own Item Type mandatory on Item, so it is
-	# still filled when present (dropped below by has_field when absent).
+	# Dual-write (Ahmed, 30-Oct-2026): erpcloud_itagksa makes its Item Type
+	# (custom_product_type) mandatory on Item, and we never edit that app, so
+	# an Item cannot save without it. itag_item_type is our source of truth;
+	# the old field just mirrors it. Dropped below by has_field when absent.
 	values["custom_product_type"] = values["itag_item_type"]
 	for itag_field, eir_field in ITEM_FIELD_MAP.items():
 		values[itag_field] = eir.get(eir_field)
