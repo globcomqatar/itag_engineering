@@ -93,6 +93,16 @@ database; overlapping `bench run-tests`/`bench migrate` invocations have caused 
 (`pymysql.err.OperationalError: 1213`) that produce dozens of false-positive test failures.
 Check `ps aux | grep bench` before starting a run if there's any doubt one might still be live.
 
+## Cloud Agent bench
+
+On a Cursor Cloud Agent the bench is native, not the `frappe-docker_devcontainer-frappe-1`
+container. Bench root is `/home/ubuntu/frappe-bench`, site `frappedevelopment.localhost`,
+and `apps/itag_engineering` is a symlink to `/workspace`. MariaDB and the bench Redis
+instances, plus Desk on `http://127.0.0.1:8000`, are started by the environment start
+script (tmux session `frappe-web`, login `Administrator` / `admin`). Stop that session
+before `bench migrate` or `bench run-tests`. The long-lived frappe-docker bench described
+above is unchanged for local development.
+
 ## Development workflow — follow this for any future work in this app
 
 1. **Plan** each build in detail before implementing (see `docs/superpowers/plans/` for the
